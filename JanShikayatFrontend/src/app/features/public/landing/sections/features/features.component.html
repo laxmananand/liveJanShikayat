@@ -1,0 +1,29 @@
+<section class="section section-paper" id="features">
+  <div class="container">
+    <div class="section-heading split-heading">
+      <div>
+        <span class="section-kicker">02 / Core Modules</span>
+        <h2>शिकायत प्रबंधन के लिए<br><span class="accent-text">ज़रूरी हर डिजिटल सुविधा</span></h2>
+      </div>
+      <p>डिजिटल वर्कफ़्लो को ध्यान में रखते हुए प्रमुख प्रशासनिक मॉड्यूल एक ही एकीकृत अनुभव में व्यवस्थित किए गए हैं।</p>
+    </div>
+
+    <div class="feature-grid">
+      <article class="feature-card" *ngFor="let item of features; let i = index">
+        <div class="feature-top">
+          <span class="feature-no">MODULE 0{{i + 1}}</span>
+          <div class="feature-icon">
+            <i class="fa-solid" [ngClass]="item.icon"></i>
+          </div>
+        </div>
+        
+        <h3>{{item.title}}</h3>
+        <p>{{item.text}}</p>
+        
+        <div class="feature-footer">
+          <span class="explore-btn">विस्तार से <i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

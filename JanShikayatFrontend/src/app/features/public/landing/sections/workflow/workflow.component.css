@@ -1,0 +1,230 @@
+.workflow-section {
+  background: #933b12;
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+  padding: 110px 0;
+}
+
+.workflow-bg-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  background: none;
+  pointer-events: none;
+}
+
+.light-heading h2 {
+  color: #ffffff;
+}
+
+.accent-text-light {
+  color: #f4b48a;
+}
+
+.light-heading p {
+  color: #f6dccd;
+}
+
+.timeline-wrapper {
+  margin-top: 50px;
+  position: relative;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  position: relative;
+  gap: 14px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  left: 3%;
+  right: 3%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 1;
+}
+
+.timeline-item {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-marker-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-marker {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #7a300f;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  place-items: center;
+  color: #f4b48a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  transition: all 0.3s ease;
+}
+
+.timeline-item:first-child .timeline-marker {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #933b12;
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+}
+
+.timeline-item:hover .timeline-marker {
+  transform: scale(1.1);
+  border-color: #f4b48a;
+  background: #4a2417;
+  color: #ffffff;
+}
+
+.timeline-card {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 20px 14px;
+  width: 100%;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-item:hover .timeline-card {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(232, 183, 126, 0.5);
+}
+
+.timeline-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: rgba(210, 105, 30, 0.14);
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  color: #f4b48a;
+  font-size: 1.1rem;
+}
+
+.timeline-card h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.timeline-card p {
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: #a88a7c;
+  margin: 0;
+}
+
+@media (max-width: 1199.98px) {
+  .timeline {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .timeline::before {
+    display: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .workflow-section {
+    padding: 70px 0;
+  }
+  .timeline-wrapper {
+    margin-top: 36px;
+  }
+  .timeline {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    position: relative;
+  }
+  .timeline::before {
+    display: block;
+    top: 24px;
+    bottom: 24px;
+    left: 25px;
+    width: 2px;
+    height: auto;
+    right: auto;
+    background: #d2691e;
+    z-index: 1;
+  }
+  .timeline-item {
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .timeline-marker-wrap {
+    margin-bottom: 0;
+    flex: none;
+    z-index: 2;
+  }
+  .timeline-marker {
+    width: 52px;
+    height: 52px;
+    font-size: 0.8rem;
+  }
+  .timeline-card {
+    text-align: left;
+    align-items: flex-start;
+    padding: 16px 18px;
+    border-radius: 8px;
+  }
+  .timeline-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
+  .timeline-card h3 {
+    font-size: 0.88rem;
+    margin-bottom: 4px;
+  }
+  .timeline-card p {
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .timeline-marker {
+    width: 44px;
+    height: 44px;
+    font-size: 0.75rem;
+  }
+  .timeline::before {
+    left: 21px;
+    top: 20px;
+    bottom: 20px;
+  }
+  .timeline-item {
+    gap: 12px;
+  }
+  .timeline-card {
+    padding: 14px;
+  }
+}

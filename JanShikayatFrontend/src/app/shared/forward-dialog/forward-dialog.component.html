@@ -1,0 +1,64 @@
+<div class="fw-backdrop" *ngIf="record as r" (click)="close()">
+  <div class="fw-modal" role="dialog" aria-modal="true" aria-labelledby="forwardTitle" (click)="$event.stopPropagation()">
+    <div class="fw-head">
+      <div>
+        <span class="fw-kicker"><i class="fa-solid fa-share-from-square"></i> अग्रेषित करें / Forward</span>
+        <h2 id="forwardTitle">{{ r.applicantName }}</h2>
+        <small class="fw-sub">आवेदन संख्या {{ r.applicationNo || r.id }} • {{ r.villageName }}, {{ r.blockName }}, {{ r.districtName }}</small>
+      </div>
+      <button type="button" class="fw-close" (click)="close()" aria-label="बंद करें">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="fw-body" novalidate>
+      <!-- 1. Category -->
+      <div class="fw-field">
+        <label for="fwCategory"><span class="fw-step">1</span> श्रेणी / Category <span class="req">*</span></label>
+        <select id="fwCategory" formControlName="categoryId" (change)="onCategoryChange()" [class.has-error]="isInvalid('categoryId')">
+          <option value="" disabled>-- श्रेणी चुनें / Select category --</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ label(c) }}</option>
+        </select>
+        <span class="fw-error" *ngIf="isInvalid('categoryId')">कृपया श्रेणी चुनें / Please select a category.</span>
+      </div>
+
+      <!-- 2. Branch -->
+      <div class="fw-field">
+        <label for="fwBranch"><span class="fw-step">2</span> शाखा / Branch <span class="req">*</span></label>
+        <select id="fwBranch" formControlName="branchId" (change)="onBranchChange()" [class.has-error]="isInvalid('branchId')">
+          <option value="" disabled>{{ category ? '-- शाखा चुनें / Select branch --' : '-- पहले श्रेणी चुनें / Select category first --' }}</option>
+          <option *ngFor="let b of branches" [value]="b.id">{{ label(b) }}</option>
+        </select>
+        <span class="fw-error" *ngIf="isInvalid('branchId')">कृपया शाखा चुनें / Please select a branch.</span>
+      </div>
+
+      <!-- 3. Complaint type -->
+      <div class="fw-field">
+        <label for="fwType"><span class="fw-step">3</span> शिकायत का प्रकार / Complaint Type <span class="req">*</span></label>
+        <select id="fwType" formControlName="complaintTypeId" [class.has-error]="isInvalid('complaintTypeId')">
+          <option value="" disabled>{{ form.controls.branchId.value ? '-- प्रकार चुनें / Select type --' : '-- पहले शाखा चुनें / Select branch first --' }}</option>
+          <option *ngFor="let t of complaintTypes" [value]="t.id">{{ label(t) }}</option>
+        </select>
+        <span class="fw-error" *ngIf="isInvalid('complaintTypeId')">कृपया शिकायत का प्रकार चुनें / Please select a complaint type.</span>
+      </div>
+
+      <!-- Remarks -->
+      <div class="fw-field">
+        <label for="fwRemarks">टिप्पणी / Remarks <small>(वैकल्पिक / optional)</small></label>
+        <textarea id="fwRemarks" rows="3" formControlName="remarks" maxlength="500" placeholder="अग्रेषण हेतु टिप्पणी लिखें / Add a note for the branch"></textarea>
+      </div>
+
+      <span class="fw-error" *ngIf="errorMessage">{{ errorMessage }}</span>
+
+      <div class="fw-foot">
+        <button type="button" class="fw-btn fw-btn-ghost" (click)="close()" [disabled]="submitting">
+          रद्द करें / Cancel
+        </button>
+        <button type="submit" class="fw-btn fw-btn-primary" [disabled]="submitting">
+          <i class="fa-solid" [ngClass]="submitting ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i>
+          अग्रेषित करें / Forward
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

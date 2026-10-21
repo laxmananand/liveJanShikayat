@@ -1,0 +1,84 @@
+<div class="page-header">
+  <div>
+    <span class="section-kicker">प्रशासन</span>
+    <h1>उपयोगकर्ता प्रबंधन</h1>
+    <p>शाखा अधिकारी, विभागाध्यक्ष एवं सक्षम प्राधिकारियों के लिए नए खाते बनाएं।</p>
+  </div>
+</div>
+
+<div class="um-grid">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="card" novalidate>
+    <h2 class="card-title"><i class="fa-solid fa-user-plus"></i> नया खाता बनाएं</h2>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label>पूरा नाम <span class="req">*</span></label>
+        <input type="text" formControlName="fullName" />
+      </div>
+      <div class="form-field">
+        <label>पदनाम</label>
+        <input type="text" formControlName="designation" placeholder="जैसे एसडीओ पटना सदर" />
+      </div>
+      <div class="form-field">
+        <label>ईमेल <span class="req">*</span></label>
+        <input type="email" formControlName="email" />
+      </div>
+      <div class="form-field">
+        <label>अस्थायी पासवर्ड <span class="req">*</span></label>
+        <input type="password" formControlName="password" autocomplete="new-password" />
+        <span class="error-text" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">कम से कम 6 अक्षर।</span>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>भूमिका <span class="req">*</span></label>
+      <div class="role-picker">
+        <label *ngFor="let r of roles" [class.active]="form.value.role === r.value">
+          <input type="radio" formControlName="role" [value]="r.value" />
+          <i class="fa-solid" [ngClass]="r.icon"></i>
+          <span>{{ r.label }}</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-field" *ngIf="form.value.role === 'BranchOfficer'">
+      <label>शाखा (42 में से 1)</label>
+      <select formControlName="branchId">
+        <option [ngValue]="null">शाखा चुनें</option>
+        <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.code }} — {{ b.nameHindi || b.name }}</option>
+      </select>
+    </div>
+    <div class="form-field" *ngIf="form.value.role === 'DepartmentHead'">
+      <label>विभाग</label>
+      <select formControlName="departmentId">
+        <option [ngValue]="null">विभाग चुनें</option>
+        <option *ngFor="let d of departments" [ngValue]="d.id">{{ d.nameHindi || d.name }}</option>
+      </select>
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="fa-solid fa-circle-exclamation"></i><span>{{ errorMessage }}</span>
+    </div>
+    <div class="alert alert-success" *ngIf="message">
+      <i class="fa-solid fa-circle-check"></i><span>{{ message }}</span>
+    </div>
+
+    <button type="submit" class="btn btn-accent" [disabled]="submitting">
+      <ng-container *ngIf="!submitting"><i class="fa-solid fa-user-check"></i> खाता बनाएं</ng-container>
+      <ng-container *ngIf="submitting"><i class="fa-solid fa-circle-notch fa-spin"></i> बनाया जा रहा है…</ng-container>
+    </button>
+  </form>
+
+  <aside class="card guide-card">
+    <h2 class="card-title"><i class="fa-solid fa-sitemap"></i> भूमिकाएँ एवं अधिकार</h2>
+    <ul>
+      <li *ngFor="let r of roles">
+        <span class="g-icon"><i class="fa-solid" [ngClass]="r.icon"></i></span>
+        <div>
+          <b>{{ r.title }}</b>
+          <small>{{ r.help }}</small>
+        </div>
+      </li>
+    </ul>
+  </aside>
+</div>

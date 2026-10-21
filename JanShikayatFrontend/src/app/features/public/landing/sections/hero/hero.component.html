@@ -1,0 +1,211 @@
+<section id="home" class="hero-section">
+
+  <div class="container hero-container">
+    <div class="hero-grid">
+      <!-- Hero Left Column: Editorial & Interactive Search -->
+      <div class="hero-left-col">
+        <!-- Official Eyebrow Pill -->
+        <div class="hero-eyebrow-pill">
+          <span class="eyebrow-text">विभागीय जन शिकायत निदान पोर्टल</span>
+          <span class="eyebrow-divider">·</span>
+          <span class="eyebrow-dept">गृह विभाग, बिहार सरकार</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="hero-headline">
+          आपकी शिकायत,<br>
+          <span class="gold-gradient-text">पारदर्शी समाधान एवं त्वरित न्याय।</span>
+        </h1>
+
+        <!-- Subheading Paragraph -->
+        <p class="hero-lead">
+          जन शिकायतों के सुगम ऑनलाइन पंजीकरण, स्वचालित विभागीय आवंटन, वास्तविक समय में अनुश्रवण (Live Tracking) एवं समयबद्ध पारदर्शी निस्तारण हेतु गृह विभाग की आधिकारिक डिजिटल नागरिक सेवा प्रणाली।
+        </p>
+
+      </div>
+
+      <!-- Hero Right Column: Interactive Live Dashboard Showcase -->
+      <div class="hero-right-col">
+        <div class="hero-showcase-wrapper">
+
+          <!-- Sample case card -->
+          <div class="showcase-card">
+            <!-- Card Tabs -->
+            <div class="card-tabs-row">
+              <button 
+                type="button" 
+                class="card-tab" 
+                [class.active]="activeTab==='status'" 
+                (click)="setTab('status')">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>लाइव केस</span>
+              </button>
+              <button 
+                type="button" 
+                class="card-tab" 
+                [class.active]="activeTab==='guide'" 
+                (click)="setTab('guide')">
+                <i class="fa-solid fa-list-check"></i>
+                <span>४ सरल चरण</span>
+              </button>
+              <button 
+                type="button" 
+                class="card-tab" 
+                [class.active]="activeTab==='helpline'" 
+                (click)="setTab('helpline')">
+                <i class="fa-solid fa-headset"></i>
+                <span>सहायता</span>
+              </button>
+            </div>
+
+            <!-- TAB 1: Live Status View -->
+            <div class="card-tab-body" *ngIf="activeTab==='status'">
+              <div class="ref-badge-row">
+                <div class="ref-texts">
+                  <small>उदाहरण · Application Reference ID</small>
+                  <strong>{{ sampleRef }}</strong>
+                </div>
+                <button 
+                  type="button" 
+                  class="btn-copy-ref" 
+                  (click)="copyRefId(sampleRef)" 
+                  title="संख्या कॉपी करें"
+                  aria-label="संख्या कॉपी करें">
+                  <i class="fa-solid" [ngClass]="copiedId ? 'fa-check text-accent' : 'fa-copy'"></i>
+                  <span class="copy-bubble" *ngIf="copiedId">कॉपी हो गया!</span>
+                </button>
+              </div>
+
+              <div class="current-status-box">
+                <div class="status-avatar">
+                  <i class="fa-solid fa-file-circle-check"></i>
+                </div>
+                <div class="status-meta">
+                  <span class="meta-label">वर्तमान स्थिति</span>
+                  <span class="meta-title">समीक्षा उपरांत अग्रेषित (78%)</span>
+                </div>
+              </div>
+
+              <!-- Animated Progress Bar -->
+              <div class="card-progress-wrap">
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: 78%"></div>
+                </div>
+              </div>
+
+              <!-- Pipeline Steps -->
+              <div class="pipeline-milestones">
+                <div class="mile-step completed">
+                  <span class="step-circle"><i class="fa-solid fa-check"></i></span>
+                  <span class="step-name">पंजीकृत</span>
+                </div>
+                <div class="mile-step completed">
+                  <span class="step-circle"><i class="fa-solid fa-check"></i></span>
+                  <span class="step-name">सत्यापन</span>
+                </div>
+                <div class="mile-step active-step">
+                  <span class="step-circle"><i class="fa-solid fa-arrow-right"></i></span>
+                  <span class="step-name">अग्रेषित</span>
+                </div>
+                <div class="mile-step">
+                  <span class="step-circle"><i class="fa-solid fa-flag-checkered"></i></span>
+                  <span class="step-name">निस्तारित</span>
+                </div>
+              </div>
+
+              <!-- Activity Audit Feed -->
+              <div class="case-activity-feed">
+                <div class="feed-item">
+                  <div class="feed-icon"><i class="fa-solid fa-user-tie"></i></div>
+                  <div class="feed-info">
+                    <span class="feed-action">जांच रिपोर्ट संलग्न एवं समीक्षित</span>
+                    <span class="feed-time">आज, 11:42 AM · गृह रक्षा वाहिनी मुख्यालय</span>
+                  </div>
+                  <i class="fa-solid fa-circle-check feed-check"></i>
+                </div>
+
+                <div class="feed-item">
+                  <div class="feed-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                  <div class="feed-info">
+                    <span class="feed-action">Field Inspection Report अपलोड</span>
+                    <span class="feed-time">23 सितम्बर 2026 · जिला जांच दल</span>
+                  </div>
+                  <i class="fa-solid fa-circle-check feed-check"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: 4-Step Guide View -->
+            <div class="card-tab-body" *ngIf="activeTab==='guide'">
+              <div class="guide-steps-list">
+                <div class="guide-step-card">
+                  <div class="step-num-bubble">1</div>
+                  <div class="step-info">
+                    <strong>ऑनलाइन विवरण दर्ज करें</strong>
+                    <small>नागरिक पोर्टल पर अपना नाम, मोबाइल व शिकायत का संक्षिप्त विवरण भरें</small>
+                  </div>
+                </div>
+                <div class="guide-step-card">
+                  <div class="step-num-bubble">2</div>
+                  <div class="step-info">
+                    <strong>साक्ष्य व दस्तावेज़ संलग्न करें</strong>
+                    <small>संबंधित आवेदन पत्र, साक्ष्य या रिपोर्ट PDF/फोटो प्रारूप में अपलोड करें</small>
+                  </div>
+                </div>
+                <div class="guide-step-card">
+                  <div class="step-num-bubble">3</div>
+                  <div class="step-info">
+                    <strong>यूनिक शिकायत संख्या प्राप्त करें</strong>
+                    <small>पंजीकरण होते ही स्क्रीन पर यूनिक शिकायत संख्या दिखेगी — इसे सुरक्षित रखें</small>
+                  </div>
+                </div>
+                <div class="guide-step-card">
+                  <div class="step-num-bubble">4</div>
+                  <div class="step-info">
+                    <strong>समयबद्ध समाधान एवं फीडबैक</strong>
+                    <small>जांच अधिकारी द्वारा पारदर्शी निस्तारण व नागरिक संतुष्टि प्रमाणीकरण</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: Helpline View -->
+            <div class="card-tab-body" *ngIf="activeTab==='helpline'">
+              <div class="helpline-sheet">
+                <a [href]="'tel:' + contact.helplineTel" class="helpline-contact-row">
+                  <div class="contact-icon-box">
+                    <i class="fa-solid fa-phone-volume"></i>
+                  </div>
+                  <div class="contact-details">
+                    <small>टोल-फ्री नागरिक हेल्पलाइन</small>
+                    <strong>{{ contact.helplineDisplay }}</strong>
+                  </div>
+                </a>
+
+                <a [href]="'mailto:' + contact.email" class="helpline-contact-row">
+                  <div class="contact-icon-box">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                  </div>
+                  <div class="contact-details">
+                    <small>विभागीय ई-मेल संपर्क</small>
+                    <strong>{{ contact.email }}</strong>
+                  </div>
+                </a>
+
+                <div class="helpline-contact-row">
+                  <div class="contact-icon-box">
+                    <i class="fa-solid fa-clock"></i>
+                  </div>
+                  <div class="contact-details">
+                    <small>सेवा उपलब्धता</small>
+                    <strong>{{ contact.serviceHours }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

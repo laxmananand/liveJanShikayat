@@ -1,0 +1,22 @@
+.entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-block { padding: 26px; }
+
+.req { color: var(--accent); }
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  .btn { padding: 13px 26px; }
+}
+
+@media (max-width: 575.98px) {
+  .form-block { padding: 18px 16px; }
+  .form-actions .btn { flex: 1; }
+}

@@ -1,0 +1,70 @@
+<div class="details-backdrop" *ngIf="record as s" (click)="close()">
+  <div class="details-modal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle" (click)="$event.stopPropagation()">
+    <div class="details-head">
+      <div>
+        <span class="section-kicker"><i class="fa-solid fa-ticket"></i> आवेदन संख्या: {{ s.applicationNo || s.id }}</span>
+        <h2 id="detailsTitle">{{ s.applicantName }}</h2>
+      </div>
+      <button type="button" class="btn-close" (click)="close()" aria-label="बंद करें">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="details-body">
+      <h3><i class="fa-solid fa-user"></i> शिकायतकर्ता की जानकारी</h3>
+      <dl class="details-grid">
+        <div><dt>आवेदक का नाम</dt><dd>{{ s.applicantName || '—' }}</dd></div>
+        <div><dt>पिता / पति का नाम</dt><dd>{{ s.fatherHusbandName || '—' }}</dd></div>
+        <div><dt>मोबाइल नंबर</dt><dd>{{ s.mobileNumber || '—' }}</dd></div>
+        <div><dt>मोबाइल नंबर 2</dt><dd>{{ s.mobileNumber2 || '—' }}</dd></div>
+        <div><dt>ईमेल आईडी</dt><dd>{{ s.emailId || '—' }}</dd></div>
+        <div><dt>आवेदन की तिथि</dt><dd>{{ s.applicationDate ? (s.applicationDate | date: 'dd-MM-yyyy') : '—' }}</dd></div>
+        <div class="full"><dt>पता</dt><dd>{{ s.address || '—' }}</dd></div>
+      </dl>
+
+      <h3><i class="fa-solid fa-map-location-dot"></i> स्थान</h3>
+      <dl class="details-grid">
+        <div><dt>जिला</dt><dd>{{ s.districtName || '—' }}</dd></div>
+        <div><dt>प्रखंड / ब्लॉक</dt><dd>{{ s.blockName || '—' }}</dd></div>
+        <div><dt>पंचायत</dt><dd>{{ s.panchayatName || '—' }}</dd></div>
+        <div><dt>गाँव</dt><dd>{{ s.villageName || '—' }}</dd></div>
+        <div><dt>पिन कोड</dt><dd>{{ s.pinCode || '—' }}</dd></div>
+      </dl>
+
+      <h3><i class="fa-solid fa-file-pdf"></i> संलग्न दस्तावेज़</h3>
+      <div class="doc-row">
+        <button *ngIf="s.documentBase64" type="button" class="btn btn-primary-accent" (click)="openDoc(s)">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> PDF खोलें
+        </button>
+        <span *ngIf="!s.documentBase64" class="no-doc">कोई दस्तावेज़ उपलब्ध नहीं</span>
+      </div>
+
+      <h3><i class="fa-solid fa-comments"></i> टिप्पणियाँ / Remarks</h3>
+      <div class="remarks">
+        <p class="no-doc" *ngIf="remarksLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…</p>
+        <p class="no-doc" *ngIf="!remarksLoading && !remarks.length">अभी कोई टिप्पणी नहीं है।</p>
+        <ul class="remark-list" *ngIf="remarks.length">
+          <li *ngFor="let m of remarks">
+            <p>{{ m.remark }}</p>
+            <small>{{ m.remarkBy }}<ng-container *ngIf="m.remarkByRole"> ({{ m.remarkByRole }})</ng-container> • {{ m.createdDate | date: 'dd-MM-yyyy HH:mm' }}</small>
+          </li>
+        </ul>
+
+        <textarea rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
+                  placeholder="अपनी टिप्पणी लिखें / Write your remark" aria-label="टिप्पणी"></textarea>
+        <span class="remark-error" *ngIf="remarkError">{{ remarkError }}</span>
+        <div class="remark-actions">
+          <button type="button" class="btn btn-primary-accent" (click)="addRemark()" [disabled]="savingRemark || !remarkText.trim()">
+            <i class="fa-solid" [ngClass]="savingRemark ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> टिप्पणी जोड़ें / Add remark
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="details-foot">
+      <button type="button" class="btn btn-ghost" (click)="close()">
+        <i class="fa-solid fa-check"></i> बंद करें
+      </button>
+    </div>
+  </div>
+</div>

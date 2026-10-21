@@ -1,0 +1,324 @@
+.records-page {
+  padding: 1.5rem;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.records-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+
+  h1 {
+    margin: 0.25rem 0;
+    font-size: 1.75rem;
+    color: #4a2417;
+  }
+  .sub {
+    margin: 0;
+    color: #6b5444;
+    font-size: 0.95rem;
+  }
+  .section-kicker {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #d2691e;
+    text-transform: uppercase;
+  }
+}
+
+.records-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  .search-box {
+    position: relative;
+    flex: 1;
+    max-width: 420px;
+
+    i {
+      position: absolute;
+      top: 50%;
+      left: 0.75rem;
+      transform: translateY(-50%);
+      color: #9b8572;
+    }
+    input {
+      width: 100%;
+      padding: 0.7rem 0.85rem 0.7rem 2.4rem;
+      border: 1px solid #e0d4c8;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+  }
+
+  .count-pill {
+    background: #f3e9df;
+    color: #4a2417;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+
+  &.btn-ghost {
+    background: #f3e9df;
+    color: #4a2417;
+  }
+  &.btn-primary-accent {
+    background: #d2691e;
+    color: #fff;
+  }
+}
+
+.alert-error {
+  background: #fdecea;
+  color: #a4291c;
+  border: 1px solid #f5c6c0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.loading-row {
+  color: #6b5444;
+  padding: 2rem;
+  text-align: center;
+}
+
+.table-wrap {
+  border: 1px solid #ece3d8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+
+  thead th {
+    background: #4a2417;
+    color: #fff;
+    font-size: 0.92rem;
+    padding: 0.85rem 0.7rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 0.8rem 0.7rem;
+    border-bottom: 1px solid #f0e8df;
+    color: #3a2a1d;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+  }
+  .col-sn {
+    width: 3rem;
+  }
+  .col-doc {
+    width: 6.5rem;
+  }
+  .col-view {
+    width: 7rem;
+  }
+  .col-act {
+    width: 14rem;
+  }
+  .main {
+    display: block;
+    font-weight: 600;
+  }
+  .sub {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    color: #7a6352;
+
+    i {
+      font-size: 0.72rem;
+    }
+  }
+  .app-no {
+    display: block;
+    font-family: ui-monospace, Consolas, monospace;
+    font-weight: 700;
+    color: #4a2417;
+    white-space: nowrap;
+  }
+  tbody tr:nth-child(even) {
+    background: #fbf7f2;
+  }
+
+  .doc-link {
+    color: #c0392b;
+    text-decoration: none;
+    font-weight: 600;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  .no-doc {
+    color: #b0a090;
+  }
+
+  .col-action {
+    text-align: center;
+  }
+
+  .btn-view {
+    background: #4a2417;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.9rem;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      background: #9e4e2c;
+    }
+  }
+}
+
+.records-table .btn-forward {
+  background: #fff;
+  color: #4a2417;
+  border: 1.5px solid #4a2417;
+  border-radius: 6px;
+  padding: 0.35rem 0.85rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  white-space: normal;
+  text-align: center;
+  justify-content: center;
+  max-width: 100%;
+
+  &:hover {
+    background: #4a2417;
+    color: #fff;
+  }
+}
+
+.alert-info {
+  background: #eef5fb;
+  color: #1f4e79;
+  border: 1px solid #c9dff0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.forwarded-to {
+  margin: 0.4rem auto 0;
+  max-width: 230px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem 0.35rem;
+  font-size: 0.78rem;
+  color: #166534;
+  text-align: center;
+
+  span {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+  small {
+    width: 100%;
+    color: #6b5444;
+  }
+}
+
+// Narrow screens: each application becomes a card, so nothing scrolls sideways
+@media (max-width: 860px) {
+  .table-wrap {
+    border: none;
+    overflow: visible;
+  }
+  .records-table {
+    thead {
+      display: none;
+    }
+    tbody tr {
+      display: block;
+      border: 1px solid #ece3d8;
+      border-radius: 12px;
+      margin-bottom: 0.85rem;
+      padding: 0.4rem 0.2rem;
+      background: #fff;
+    }
+    tbody tr:nth-child(even) {
+      background: #fff;
+    }
+    tbody td {
+      display: block;
+      position: relative;
+      width: auto;
+      min-height: 2.4rem;
+      border-bottom: 1px dashed #f0e8df;
+      padding: 0.55rem 0.8rem 0.55rem 8.6rem;
+      text-align: left;
+
+      &::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.8rem;
+        top: 0.6rem;
+        width: 7.2rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #9e4e2c;
+      }
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+    .col-action {
+      text-align: left;
+    }
+    .forwarded-to {
+      margin: 0.4rem 0 0;
+      justify-content: flex-start;
+      text-align: left;
+    }
+  }
+}

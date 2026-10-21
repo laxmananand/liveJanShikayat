@@ -1,0 +1,761 @@
+/* =========================================================
+   VIBHAGIY JAN SHIKAYAT NIDAN PORTAL
+   Header & navbar styles
+   Theme: dark brown (#4a2417) & orange (#d2691e) on blush
+   ========================================================= */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1050;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================
+   2. Main Navigation Bar
+   ========================================== */
+.main-navbar {
+  background: #f6ebe7;
+  border-bottom: 1px solid rgba(60, 32, 20, 0.08);
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 25px 0;
+}
+
+.site-header.is-scrolled .main-navbar {
+  padding: 10px 0;
+  background: #f6ebe7;
+  border-bottom-color: rgba(210, 105, 30, 0.2);
+  box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10);
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Official Brand Identity */
+.brand-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.brand-crest {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: #26140c;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.crest-outer-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 8px;
+  border: 1.5px dashed rgba(210, 105, 30, 0.5);
+  pointer-events: none;
+}
+
+
+.crest-inner-ring {
+  position: absolute;
+  inset: 2px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+
+.crest-icon {
+  font-size: 1.25rem;
+  color: #f7e2c8;
+  position: relative;
+  z-index: 1;
+}
+
+.crest-pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: #d2691e;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
+.brand-identity:hover .brand-crest {
+  transform: scale(1.05) rotate(-2deg);
+  box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10);
+}
+
+.brand-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: #3b1d10;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.brand-name .accent-highlight {
+  color: #d2691e;
+  background: #d2691e;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-subname {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7a5a4c;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.tag-sep {
+  color: #d2691e;
+  margin: 0 4px;
+}
+
+/* ==========================================
+   3. Desktop Navigation Menu
+   ========================================== */
+.desktop-menu-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-links-list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #3b1d10;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.22s ease;
+}
+
+.nav-link i {
+  font-size: 0.82rem;
+  color: #7a5a4c;
+  transition: all 0.22s ease;
+}
+
+.nav-link:hover {
+  color: #d2691e;
+  background: rgba(210, 105, 30, 0.08);
+}
+
+.nav-link:hover i {
+  color: #d2691e;
+}
+
+.nav-link.active {
+  color: #3b1d10;
+  background: #f6ebe7;
+  font-weight: 700;
+}
+
+.nav-link.active i {
+  color: #4a2417;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2.5px;
+  background: #d2691e;
+  border-radius: 10px;
+}
+
+/* Actions Group */
+.nav-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 6px;
+  border-left: 1px solid rgba(59, 29, 16, 0.12);
+  padding-left: 14px;
+}
+
+/* Admin Login Button */
+.btn-nav-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 5px;
+  background: rgba(74, 36, 23, 0.07);
+  border: 1px solid rgba(74, 36, 23, 0.2);
+  color: #442214;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.btn-nav-admin i {
+  color: #4a2417;
+  font-size: 0.85rem;
+  transition: color 0.25s ease;
+}
+
+.btn-nav-admin:hover {
+  background: #442214;
+  color: #ffffff;
+  border-color: #442214;
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+}
+
+.btn-nav-admin:hover i {
+  color: #e5935c;
+}
+
+/* Primary CTA Button */
+.btn-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: #d2691e;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+
+.btn-nav-cta i {
+  font-size: 0.82rem;
+}
+
+.btn-nav-cta:hover {
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  background: #a94f18;
+  color: #ffffff;
+}
+
+/* ==========================================
+   4. Mobile Hamburger Button
+   ========================================== */
+.mobile-toggle-btn {
+  display: none;
+  background: #fbf6f3;
+  border: 1px solid rgba(59, 29, 16, 0.12);
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.mobile-toggle-btn:hover {
+  background: #f6ebe7;
+  border-color: rgba(210, 105, 30, 0.4);
+}
+
+.hamburger-box {
+  width: 20px;
+  height: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #3b1d10;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-toggle-btn.is-open .top-line {
+  transform: translateY(7px) rotate(45deg);
+  background: #d2691e;
+}
+
+.mobile-toggle-btn.is-open .mid-line {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.mobile-toggle-btn.is-open .btm-line {
+  transform: translateY(-7px) rotate(-45deg);
+  background: #d2691e;
+}
+
+/* ==========================================
+   5. Mobile Drawer & Backdrop
+   ========================================== */
+.mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(38, 20, 12, 0.65);
+  z-index: 1060;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(390px, 88vw);
+  background: #ffffff;
+  z-index: 1070;
+  box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-drawer.is-open {
+  transform: translateX(0);
+}
+
+/* Drawer Header */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #26140c;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(210, 105, 30, 0.25);
+}
+
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drawer-crest {
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(210, 105, 30, 0.4);
+  display: grid;
+  place-items: center;
+  color: #f7e2c8;
+  font-size: 1.15rem;
+}
+
+.drawer-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.drawer-title span {
+  color: #e5935c;
+}
+
+.drawer-subtitle {
+  font-size: 0.68rem;
+  color: #d6bdb2;
+  display: block;
+}
+
+.drawer-close-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawer-close-btn:hover {
+  background: #d2691e;
+  border-color: #d2691e;
+}
+
+.drawer-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f9f3f1;
+  padding: 8px 20px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #442214;
+  border-bottom: 1px solid #e6d3ca;
+}
+
+/* Drawer Body */
+.drawer-body {
+  padding: 16px 20px;
+  flex: 1;
+}
+
+.drawer-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 11px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #3b1d10;
+  background: #fbf6f3;
+  border: 1px solid #ecdcd4;
+  transition: all 0.22s ease;
+}
+
+.link-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 5px;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 0.88rem;
+  color: #4a2417;
+  margin-right: 12px;
+  border: 1px solid #dcc4b8;
+  transition: all 0.2s ease;
+}
+
+.link-title {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.link-arrow {
+  color: #a88a7c;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.drawer-nav-link:hover,
+.drawer-nav-link.active {
+  background: #f6ebe7;
+  border-color: #dcc4b8;
+  color: #3b1d10;
+}
+
+.drawer-nav-link:hover .link-icon,
+.drawer-nav-link.active .link-icon {
+  background: #442214;
+  color: #f4b48a;
+  border-color: #442214;
+}
+
+.drawer-nav-link:hover .link-arrow {
+  transform: translateX(3px);
+  color: #d2691e;
+}
+
+/* Drawer Action Cards */
+.drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ecdcd4;
+}
+
+.drawer-btn-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #d2691e;
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+}
+
+.drawer-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #442214;
+  color: #ffffff;
+  padding: 11px 18px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.drawer-btn-secondary i {
+  color: #e5935c;
+}
+
+.drawer-btn-admin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #3b1d10;
+  border: 1px solid #dcc4b8;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Drawer Footer */
+.drawer-footer {
+  padding: 18px 20px;
+  background: #fbf6f3;
+  border-top: 1px solid #ecdcd4;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drawer-helpline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #ecdcd4;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #3b1d10;
+}
+
+.helpline-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(210, 105, 30, 0.14);
+  color: #d2691e;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+}
+
+.drawer-helpline small {
+  display: block;
+  font-size: 0.68rem;
+  color: #7a5a4c;
+}
+
+.drawer-helpline strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #3b1d10;
+}
+
+.drawer-meta-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: #7a5a4c;
+}
+
+.drawer-lang, .drawer-font {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.drawer-lang button, .drawer-font button {
+  background: #ffffff;
+  border: 1px solid #dcc4b8;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #3b1d10;
+}
+
+.drawer-lang button.active, .drawer-font button.active {
+  background: #d2691e;
+  color: #ffffff;
+  border-color: #d2691e;
+}
+
+/* ==========================================
+   6. Responsive Layout Breakpoints
+   ========================================== */
+@media (min-width: 992px) {
+  .mobile-toggle-btn,
+  .mobile-backdrop,
+  .mobile-drawer {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .nav-links-list {
+    gap: 0;
+  }
+  .nav-link {
+    padding: 7px 9px;
+    font-size: 0.86rem;
+  }
+  .brand-name {
+    font-size: 1.12rem;
+  }
+  .btn-nav-cta {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+  .btn-nav-admin {
+    padding: 7px 11px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .desktop-menu-wrap {
+    display: none !important;
+  }
+
+  .mobile-toggle-btn {
+    display: flex;
+  }
+
+  .main-navbar {
+    padding: 12px 0;
+  }
+
+  .brand-crest {
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+  }
+
+  .crest-icon {
+    font-size: 1.1rem;
+  }
+
+  .brand-name {
+    font-size: 1.08rem;
+  }
+
+  .brand-subname {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .portal-badge {
+    display: none;
+  }
+
+  .govt-name {
+    font-size: 0.74rem;
+  }
+
+  .brand-identity {
+    gap: 10px;
+  }
+
+  .brand-crest {
+    width: 38px;
+    height: 38px;
+    border-radius: 5px;
+  }
+
+  .brand-name {
+    font-size: 0.98rem;
+  }
+
+  .brand-subname {
+    font-size: 0.62rem;
+  }
+
+  .mobile-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .brand-subname {
+    display: none;
+  }
+  .brand-name {
+    font-size: 0.92rem;
+  }
+}

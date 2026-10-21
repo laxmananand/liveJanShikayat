@@ -1,0 +1,267 @@
+<!-- Page banner -->
+<section class="page-hero">
+  <div class="page-hero-glow"></div>
+  <div class="container">
+    <nav class="crumbs" aria-label="breadcrumb">
+      <a routerLink="/" fragment="home"><i class="fa-solid fa-house-chimney"></i> होम</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>ऑनलाइन शिकायत पंजीकरण</span>
+    </nav>
+    <span class="section-kicker">नागरिक सेवा / Online Registration</span>
+    <h1>नई शिकायत <span class="gold">ऑनलाइन दर्ज करें</span></h1>
+    <p>अपनी शिकायत का विवरण भरें, सहायक PDF संलग्न करें और तुरंत यूनिक शिकायत संख्या प्राप्त करें।</p>
+  </div>
+</section>
+
+<section class="register-section">
+  <div class="container">
+    <!-- ── Success state ── -->
+    <div class="success-card" *ngIf="created; else formTpl">
+      <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <span class="section-kicker">पंजीकरण सफल</span>
+      <h2>आपकी शिकायत सफलतापूर्वक दर्ज हो गई है</h2>
+      <p>कृपया नीचे दी गई शिकायत संख्या सुरक्षित रखें। इसी संख्या से आप शिकायत की स्थिति ट्रैक कर सकते हैं।</p>
+
+      <div class="ref-box">
+        <div>
+          <small>Unique Complaint Reference Number</small>
+          <strong>{{ created.complaintNumber }}</strong>
+        </div>
+        <button type="button" class="copy-btn" (click)="copyNumber()" [attr.aria-label]="'संख्या कॉपी करें'">
+          <i class="fa-solid" [ngClass]="copied ? 'fa-check' : 'fa-copy'"></i>
+          <span>{{ copied ? 'कॉपी हो गया' : 'कॉपी करें' }}</span>
+        </button>
+      </div>
+
+      <div class="success-meta">
+        <span><i class="fa-solid fa-calendar-check"></i> पंजीकरण: {{ created.registeredAt | date: 'dd-MM-yyyy, h:mm a' }}</span>
+        <span><i class="fa-solid fa-file-pdf"></i> {{ created.documentAttached ? 'PDF संलग्न' : 'कोई PDF संलग्न नहीं' }}</span>
+      </div>
+
+      <div class="success-actions">
+        <a class="btn btn-accent" routerLink="/" [queryParams]="{ track: created.complaintNumber }" fragment="track">
+          <i class="fa-solid fa-location-crosshairs"></i> स्थिति ट्रैक करें
+        </a>
+        <button type="button" class="btn btn-outline" (click)="startNew()">
+          <i class="fa-solid fa-file-circle-plus"></i> नई शिकायत दर्ज करें
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Form ── -->
+    <ng-template #formTpl>
+      <div class="register-grid">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="register-form" novalidate>
+          <!-- Step 1 -->
+          <div class="form-block">
+            <div class="block-head">
+              <span class="block-num">01</span>
+              <div>
+                <h2>आवेदक का विवरण</h2>
+                <small>Applicant Details</small>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="applicantName">आवेदक का नाम <span class="req">*</span></label>
+                <input id="applicantName" type="text" formControlName="applicantName" placeholder="पूरा नाम" />
+                <span class="error-text" *ngIf="invalid('applicantName')">आवेदक का नाम आवश्यक है।</span>
+              </div>
+              <div class="form-field">
+                <label for="guardianName">पिता / पति / अभिभावक का नाम <span class="req">*</span></label>
+                <input id="guardianName" type="text" formControlName="guardianName" />
+                <span class="error-text" *ngIf="invalid('guardianName')">यह जानकारी आवश्यक है।</span>
+              </div>
+              <div class="form-field">
+                <label for="mobileNumber">मोबाइल नंबर <span class="req">*</span></label>
+                <input id="mobileNumber" type="tel" inputmode="numeric" maxlength="10" formControlName="mobileNumber" placeholder="10 अंकों का मोबाइल नंबर" />
+                <span class="error-text" *ngIf="invalid('mobileNumber')">कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।</span>
+              </div>
+              <div class="form-field">
+                <label for="email">ई-मेल (वैकल्पिक)</label>
+                <input id="email" type="email" formControlName="email" placeholder="name@example.com" />
+                <span class="error-text" *ngIf="invalid('email')">कृपया मान्य ई-मेल दर्ज करें।</span>
+              </div>
+              <div class="form-field full-width">
+                <label for="address">पूरा पता <span class="req">*</span></label>
+                <input id="address" type="text" formControlName="address" placeholder="मकान / गाँव / मोहल्ला, डाकघर" />
+                <span class="error-text" *ngIf="invalid('address')">पता आवश्यक है।</span>
+              </div>
+              <div class="form-field">
+                <label for="district">जिला <span class="req">*</span></label>
+                <select id="district" formControlName="district">
+                  <option value="" disabled>जिला चुनें</option>
+                  <option *ngFor="let d of districts" [value]="d">{{ d }}</option>
+                </select>
+                <span class="error-text" *ngIf="invalid('district')">जिला चुनें।</span>
+              </div>
+              <div class="form-field">
+                <label for="block">प्रखंड / ब्लॉक <span class="req">*</span></label>
+                <input id="block" type="text" formControlName="block" />
+                <span class="error-text" *ngIf="invalid('block')">प्रखंड आवश्यक है।</span>
+              </div>
+              <div class="form-field">
+                <label for="policeStation">थाना</label>
+                <input id="policeStation" type="text" formControlName="policeStation" />
+              </div>
+              <div class="form-field">
+                <label for="area">क्षेत्र / मोहल्ला</label>
+                <input id="area" type="text" formControlName="area" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="form-block">
+            <div class="block-head">
+              <span class="block-num">02</span>
+              <div>
+                <h2>शिकायत का विवरण</h2>
+                <small>Complaint Details</small>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field full-width">
+                <label for="subject">विषय <span class="req">*</span></label>
+                <input id="subject" type="text" formControlName="subject" placeholder="शिकायत का संक्षिप्त विषय" />
+                <span class="error-text" *ngIf="invalid('subject')">विषय आवश्यक है।</span>
+              </div>
+              <div class="form-field">
+                <label for="category">श्रेणी <span class="req">*</span></label>
+                <input id="category" type="text" formControlName="category" list="categoryList" placeholder="जैसे भूमि विवाद" />
+                <datalist id="categoryList">
+                  <option *ngFor="let c of categories" [value]="c"></option>
+                </datalist>
+                <span class="error-text" *ngIf="invalid('category')">श्रेणी आवश्यक है।</span>
+              </div>
+              <div class="form-field">
+                <label for="subCategory">उप-श्रेणी</label>
+                <input id="subCategory" type="text" formControlName="subCategory" />
+              </div>
+              <div class="form-field">
+                <label for="departmentId">संबंधित विभाग</label>
+                <select id="departmentId" formControlName="departmentId">
+                  <option [ngValue]="null">ज्ञात नहीं (विभाग द्वारा तय किया जाएगा)</option>
+                  <option *ngFor="let d of departments" [ngValue]="d.id">{{ d.nameHindi || d.name }}</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="oppositeParty">प्रतिपक्ष (यदि कोई हो)</label>
+                <input id="oppositeParty" type="text" formControlName="oppositeParty" />
+              </div>
+              <div class="form-field full-width">
+                <label for="description">शिकायत का विस्तृत विवरण <span class="req">*</span></label>
+                <textarea id="description" rows="6" formControlName="description" maxlength="5000"
+                          placeholder="घटना / समस्या का स्पष्ट विवरण, तिथि व स्थान सहित"></textarea>
+                <div class="field-foot">
+                  <span class="error-text" *ngIf="invalid('description')">विवरण आवश्यक है।</span>
+                  <span class="counter">{{ descriptionLength }} / 5000</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="form-block" id="documents">
+            <div class="block-head">
+              <span class="block-num">03</span>
+              <div>
+                <h2>सहायक दस्तावेज़</h2>
+                <small>Supporting PDF (optional)</small>
+              </div>
+            </div>
+
+            <label class="file-drop" *ngIf="!selectedFile">
+              <input type="file" accept="application/pdf,.pdf" (change)="onFileSelected($event)" />
+              <span class="file-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+              <span>
+                <strong>आवेदन पत्र / साक्ष्य PDF चुनें</strong>
+                <small>केवल PDF · अधिकतम 10 MB</small>
+              </span>
+            </label>
+
+            <div class="file-chosen" *ngIf="selectedFile">
+              <i class="fa-solid fa-file-pdf"></i>
+              <div>
+                <strong>{{ selectedFile.name }}</strong>
+                <small>{{ (selectedFile.size / 1024 / 1024) | number: '1.0-2' }} MB</small>
+              </div>
+              <button type="button" (click)="removeFile()" aria-label="फ़ाइल हटाएं"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="error-text" *ngIf="fileError">{{ fileError }}</p>
+          </div>
+
+          <!-- Declaration, CAPTCHA & submit -->
+          <div class="form-block submit-block">
+            <div class="captcha-row">
+              <div class="form-field captcha-field">
+                <label for="captchaCode">सुरक्षा कोड (CAPTCHA) <span class="req">*</span></label>
+                <div class="captcha-box">
+                  <div class="captcha-img" [class.loading]="captchaLoading">
+                    <img *ngIf="captcha && !captchaError" [src]="captcha.image" alt="सुरक्षा कोड चित्र" width="170" height="56" />
+                    <span *ngIf="captchaError" class="captcha-fail">कोड लोड नहीं हुआ</span>
+                  </div>
+                  <button type="button" class="captcha-refresh" (click)="refreshCaptcha()" [disabled]="captchaLoading"
+                          title="नया कोड" aria-label="नया सुरक्षा कोड लोड करें">
+                    <i class="fa-solid fa-rotate-right" [class.fa-spin]="captchaLoading"></i>
+                  </button>
+                  <input id="captchaCode" type="text" formControlName="captchaCode" maxlength="10"
+                         autocomplete="off" autocapitalize="characters" spellcheck="false"
+                         placeholder="चित्र में दिखे अक्षर" />
+                </div>
+                <span class="error-text" *ngIf="invalid('captchaCode')">चित्र में दिखाया गया कोड दर्ज करें।</span>
+              </div>
+            </div>
+
+            <label class="declaration" [class.invalid]="invalid('declaration')">
+              <input type="checkbox" formControlName="declaration" />
+              <span>मैं घोषणा करता/करती हूँ कि मेरे द्वारा दी गई सभी जानकारी मेरी जानकारी में सत्य एवं सही है। गलत जानकारी देने पर नियमानुसार कार्रवाई की जा सकती है।</span>
+            </label>
+
+            <div class="alert alert-error" *ngIf="errorMessage">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <span>{{ errorMessage }}</span>
+            </div>
+
+            <button type="submit" class="btn btn-accent submit-btn" [disabled]="submitting">
+              <ng-container *ngIf="!submitting"><i class="fa-solid fa-paper-plane"></i> शिकायत दर्ज करें</ng-container>
+              <ng-container *ngIf="submitting"><i class="fa-solid fa-circle-notch fa-spin"></i> दर्ज हो रही है...</ng-container>
+            </button>
+          </div>
+        </form>
+
+        <!-- Side panel -->
+        <aside class="register-aside">
+          <div class="aside-card navy">
+            <h3><i class="fa-solid fa-list-check"></i> ४ सरल चरण</h3>
+            <ol>
+              <li><b>विवरण भरें</b><small>आवेदक एवं शिकायत की जानकारी</small></li>
+              <li><b>PDF संलग्न करें</b><small>आवेदन पत्र या साक्ष्य (वैकल्पिक)</small></li>
+              <li><b>शिकायत संख्या प्राप्त करें</b><small>स्क्रीन पर तुरंत प्रदर्शित</small></li>
+              <li><b>स्थिति ट्रैक करें</b><small>संख्या से किसी भी समय</small></li>
+            </ol>
+          </div>
+
+          <div class="aside-card">
+            <h3><i class="fa-solid fa-headset"></i> सहायता</h3>
+            <a class="aside-contact" [href]="'tel:' + contact.helplineTel">
+              <i class="fa-solid fa-phone-volume"></i>
+              <span><small>टोल-फ्री हेल्पलाइन</small><b>{{ contact.helplineDisplay }}</b></span>
+            </a>
+            <a class="aside-contact" [href]="'mailto:' + contact.email">
+              <i class="fa-solid fa-envelope-open-text"></i>
+              <span><small>ई-मेल</small><b>{{ contact.email }}</b></span>
+            </a>
+          </div>
+
+          <div class="aside-note">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>आपकी व्यक्तिगत जानकारी केवल अधिकृत विभागीय पदाधिकारियों को दिखाई देती है।</span>
+          </div>
+        </aside>
+      </div>
+    </ng-template>
+  </div>
+</section>

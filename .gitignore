@@ -1,0 +1,63 @@
+# ===================== General / OS =====================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+*.swp
+
+# ===================== Editors / IDEs =====================
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ===================== Secrets / env =====================
+.env
+.env.*
+appsettings.*.local.json
+secrets.json
+
+# ===================== Backend (.NET) =====================
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ll]og/
+[Ll]ogs/
+TestResults/
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+*.pdb
+*.cache
+publish/
+*.pubxml
+*.publishproj
+
+# User-uploaded complaint documents (runtime data, not source)
+janshikayatBackend/janshikayat/wwwroot/janshikayatDocument/*
+!janshikayatBackend/janshikayat/wwwroot/janshikayatDocument/.gitkeep
+
+# ===================== Frontend (Angular / Node) =====================
+node_modules/
+dist/
+out-tsc/
+tmp/
+.angular/
+.sass-cache/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+testem.log

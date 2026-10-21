@@ -1,0 +1,108 @@
+<section class="section tracking-section" id="track">
+  <div class="container">
+    <div class="tracking-card glass-elevation">
+      <div class="tracking-copy">
+        <span class="section-kicker">04 / Live Case Tracking</span>
+        <h2>आपकी शिकायत अभी<br><span class="accent-text">किस चरण में है?</span></h2>
+        <p>अपने Unique Complaint / Application Reference Number से आवेदन की वर्तमान स्थिति और संपूर्ण Processing History पारदर्शी रूप से देखें।</p>
+
+        <!-- Shows the searched complaint's stage; the design's example stage until then -->
+        <app-status-flow class="flow-wrap" [status]="result?.status ?? 'ForwardedToDepartment'"></app-status-flow>
+      </div>
+
+      <div class="tracking-form-wrap">
+        <form class="tracking-form" (ngSubmit)="search()">
+          <label for="complaintId" class="form-label">
+            <i class="fa-solid fa-receipt"></i> Unique Complaint / Application Number
+          </label>
+
+          <div class="input-wrap">
+            <i class="fa-solid fa-hashtag input-icon"></i>
+            <input
+              id="complaintId"
+              [(ngModel)]="complaintId"
+              name="complaintId"
+              placeholder="उदा. JS20260001"
+              autocomplete="off"
+              maxlength="40">
+            <button type="submit" class="search-btn" [disabled]="searching">
+              <ng-container *ngIf="!searching">
+                <span>स्थिति देखें</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </ng-container>
+              <ng-container *ngIf="searching">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <span>खोज जारी...</span>
+              </ng-container>
+            </button>
+          </div>
+
+          <div class="track-error" *ngIf="errorMessage">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <!-- Live result from the database -->
+          <div class="track-result" *ngIf="result">
+            <div class="tr-head">
+              <div class="tr-ref">
+                <i class="fa-solid fa-file-shield"></i>
+                <strong>{{ result.complaintNumber }}</strong>
+              </div>
+              <span class="tr-status" [class.success]="result.status === 'Disposed'">
+                <i class="fa-solid" [ngClass]="result.status === 'Disposed' ? 'fa-circle-check' : 'fa-arrows-rotate'"></i>
+                {{ statusLabel(result.status) }}
+              </span>
+              <button type="button" class="tr-close" (click)="clear()" title="बंद करें" aria-label="बंद करें">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div class="tr-grid">
+              <div class="tr-cell">
+                <span>आवंटित विभाग</span>
+                <b>{{ result.departmentNameHindi || result.departmentName || 'आवंटन प्रक्रियाधीन' }}</b>
+              </div>
+              <div class="tr-cell">
+                <span>पंजीकरण तिथि</span>
+                <b>{{ result.registeredAt | date: 'dd-MM-yyyy' }}</b>
+              </div>
+              <div class="tr-cell">
+                <span>अंतिम अपडेट</span>
+                <b>{{ result.lastUpdatedAt | date: 'dd-MM-yyyy, h:mm a' }}</b>
+              </div>
+              <div class="tr-cell" *ngIf="result.closedAt">
+                <span>निस्तारण तिथि</span>
+                <b>{{ result.closedAt | date: 'dd-MM-yyyy' }}</b>
+              </div>
+            </div>
+
+            <div class="tr-progress">
+              <div class="tr-progress-meta">
+                <span>निस्तारण प्रगति</span>
+                <b>{{ statusProgress(result.status) }}%</b>
+              </div>
+              <div class="tr-progress-bg">
+                <div class="tr-progress-fill" [style.width.%]="statusProgress(result.status)"></div>
+              </div>
+            </div>
+
+            <ol class="tr-timeline">
+              <li *ngFor="let t of result.timeline; let i = index; let last = last" [class.latest]="last">
+                <span class="tl-dot"></span>
+                <div>
+                  <b>{{ timelineLabel(i, t.status) }}</b>
+                  <small>{{ t.at | date: 'dd-MM-yyyy, h:mm a' }}</small>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <small class="form-note">
+            <i class="fa-solid fa-circle-info"></i> स्थिति सीधे विभागीय डेटाबेस से प्राप्त होती है। गोपनीयता हेतु व्यक्तिगत विवरण प्रदर्शित नहीं किए जाते।
+          </small>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

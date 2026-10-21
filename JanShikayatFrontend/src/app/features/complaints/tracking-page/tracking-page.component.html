@@ -1,0 +1,789 @@
+<div class="tracking-page-wrapper">
+  <!-- ── Toast Popup Notification ── -->
+  <div class="toast-popup" *ngIf="toastMessage">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>{{ toastMessage }}</span>
+  </div>
+
+  <!-- ── Page Header ── -->
+  <div class="page-header">
+    <div class="header-text-block">
+      <nav class="breadcrumb-trail" aria-label="breadcrumb">
+        <a routerLink="/dashboard"><i class="fa-solid fa-gauge-high"></i> डैशबोर्ड</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span>शिकायत ट्रैकिंग</span>
+      </nav>
+      <div class="header-badges-row">
+        <span class="section-kicker">
+          <i class="fa-solid fa-route"></i> विभागीय ट्रैकिंग प्रणाली / Grievance Tracking Portal
+        </span>
+        <span class="live-pulse-badge">
+          <span class="pulse-dot"></span> रियल-टाइम स्थिति (Live Status)
+        </span>
+      </div>
+      <h1 class="page-title">शिकायत ट्रैकिंग एवं स्थिति जांच (Grievance Tracking)</h1>
+      <p class="page-sub">
+        शिकायत संदर्भ संख्या (Tracking ID), मोबाइल नंबर अथवा आवेदक के नाम से परिवाद की वास्तविक स्थिति, वर्तमान शाखा एवं अपलोड किए गए दस्तावेज़ों को ट्रैक करें।
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a *ngIf="auth.hasRole('SuperAdmin')" routerLink="/complaints/entry" class="btn btn-primary-accent">
+        <i class="fa-solid fa-file-signature"></i> नई प्रविष्टि दर्ज करें
+      </a>
+      <a routerLink="/complaints" class="btn btn-outline">
+        <i class="fa-solid fa-folder-open"></i> सभी शिकायतें
+      </a>
+    </div>
+  </div>
+
+  <!-- ── KPI Metric Ribbon ── -->
+  <div class="kpi-ribbon-grid">
+    <div class="kpi-card card-total" (click)="quickFilter('')" title="सभी शिकायतें देखें">
+      <div class="kpi-icon-wrap">
+        <i class="fa-solid fa-folder-tree"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">कुल ट्रैक किए गए परिवाद</span>
+        <div class="kpi-number">{{ totalCount }}</div>
+      </div>
+      <div class="kpi-trend">
+        <i class="fa-solid fa-chart-line"></i> 100% रिकॉर्ड
+      </div>
+    </div>
+
+    <div class="kpi-card card-pending" (click)="quickFilter('Pending')" title="लंबित शिकायतें देखें">
+      <div class="kpi-icon-wrap">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">लंबित / समीक्षाधीन</span>
+        <div class="kpi-number">{{ pendingCount }}</div>
+      </div>
+      <div class="kpi-trend trend-amber">
+        <i class="fa-solid fa-hourglass-half"></i> प्रारंभिक स्तर
+      </div>
+    </div>
+
+    <div class="kpi-card card-enquiry" (click)="quickFilter('ForwardedForFieldEnquiry')" title="स्थलीय जांच देखें">
+      <div class="kpi-icon-wrap">
+        <i class="fa-solid fa-person-military-pointing"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">अग्रेषित / स्थलीय जांच</span>
+        <div class="kpi-number">{{ underEnquiryCount }}</div>
+      </div>
+      <div class="kpi-trend trend-blue">
+        <i class="fa-solid fa-share-nodes"></i> जांच दल के पास
+      </div>
+    </div>
+
+    <div class="kpi-card card-approved" (click)="quickFilter('ActionTakenOrDisposed')" title="स्वीकृत एवं निस्तारित देखें">
+      <div class="kpi-icon-wrap">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">कार्रवाई संपन्न / स्वीकृत</span>
+        <div class="kpi-number">{{ approvedCount }}</div>
+      </div>
+      <div class="kpi-trend trend-green">
+        <i class="fa-solid fa-shield-halved"></i> अनुमोदित / निष्पादित
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Search & Filter Console ("The Control Center") ── -->
+  <div class="search-console-card">
+    <div class="console-header-strip">
+      <div class="strip-left">
+        <i class="fa-solid fa-magnifying-glass-location"></i>
+        <span>परिवाद खोज एवं फ़िल्टर कंसोल (Search & Filter Console)</span>
+      </div>
+      <div class="strip-right">
+        <span class="filter-tip">ट्रैकिंग आईडी, नाम, या मोबाइल से तुरंत खोजें</span>
+      </div>
+    </div>
+
+    <div class="console-body">
+      <div class="search-inputs-grid">
+        <!-- 1. Search Query Input -->
+        <div class="form-group search-query-group">
+          <label for="trackSearchInput" class="form-label">
+            खोज शब्द (Search Query)
+          </label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-magnifying-glass field-icon"></i>
+            <input
+              id="trackSearchInput"
+              type="text"
+              [(ngModel)]="searchQuery"
+              (keyup.enter)="onSearch()"
+              placeholder="शिकायत संख्या (उदा. JS2026/04/8921), आवेदक का नाम या मोबाइल नंबर..."
+            />
+            <button
+              type="button"
+              class="clear-input-btn"
+              *ngIf="searchQuery"
+              (click)="searchQuery = ''; applyFilters()"
+              title="साफ़ करें"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Status Dropdown -->
+        <div class="form-group status-filter-group">
+          <label for="statusSelect" class="form-label">
+            वर्तमान स्थिति (Status)
+          </label>
+          <div class="input-icon-wrap select-wrap">
+            <i class="fa-solid fa-layer-group field-icon"></i>
+            <select id="statusSelect" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+              <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+            <i class="fa-solid fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+
+        <!-- 3. District Dropdown -->
+        <div class="form-group district-filter-group">
+          <label for="districtSelect" class="form-label">
+            जिला (District)
+          </label>
+          <div class="input-icon-wrap select-wrap">
+            <i class="fa-solid fa-location-dot field-icon"></i>
+            <select id="districtSelect" [(ngModel)]="selectedDistrict" (change)="applyFilters()">
+              <option value="">-- सभी 38 जिले --</option>
+              <option *ngFor="let dist of districts" [value]="dist">{{ dist }}</option>
+            </select>
+            <i class="fa-solid fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="console-action-btns">
+          <button type="button" class="btn btn-search-track" (click)="onSearch()" [disabled]="searching">
+            <i class="fa-solid" [ngClass]="searching ? 'fa-circle-notch fa-spin' : 'fa-magnifying-glass'"></i>
+            <span>{{ searching ? 'खोज जारी है...' : 'खोजें एवं ट्रैक करें' }}</span>
+          </button>
+          <button type="button" class="btn btn-reset-filter" (click)="onReset()" title="सभी फ़िल्टर साफ़ करें">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>रीसेट</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Filter Chips -->
+      <div class="quick-filter-chips">
+        <span class="chips-title"><i class="fa-solid fa-bolt"></i> त्वरित फ़िल्टर:</span>
+        <button
+          type="button"
+          class="filter-chip"
+          [class.active]="selectedStatus === '' && !searchQuery"
+          (click)="quickFilter('')"
+        >
+          सभी परिवाद (All)
+        </button>
+        <button
+          type="button"
+          class="filter-chip chip-pending"
+          [class.active]="selectedStatus === 'Pending'"
+          (click)="quickFilter('Pending')"
+        >
+          <i class="fa-solid fa-circle-dot"></i> लंबित (Pending)
+        </button>
+        <button
+          type="button"
+          class="filter-chip chip-review"
+          [class.active]="selectedStatus === 'UnderReview'"
+          (click)="quickFilter('UnderReview')"
+        >
+          <i class="fa-solid fa-spinner"></i> समीक्षाधीन (Under Review)
+        </button>
+        <button
+          type="button"
+          class="filter-chip chip-enquiry"
+          [class.active]="selectedStatus === 'ForwardedForFieldEnquiry'"
+          (click)="quickFilter('ForwardedForFieldEnquiry')"
+        >
+          <i class="fa-solid fa-person-military-pointing"></i> स्थलीय जांच (Field Enquiry)
+        </button>
+        <button
+          type="button"
+          class="filter-chip chip-approved"
+          [class.active]="selectedStatus === 'ActionTaken'"
+          (click)="quickFilter('ActionTaken')"
+        >
+          <i class="fa-solid fa-circle-check"></i> स्वीकृत / कार्रवाई संपन्न
+        </button>
+        <button
+          type="button"
+          class="filter-chip chip-closed"
+          [class.active]="selectedStatus === 'Disposed'"
+          (click)="quickFilter('Disposed')"
+        >
+          <i class="fa-solid fa-archive"></i> निस्तारित (Disposed)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Results Meta Bar ── -->
+  <div class="results-meta-bar">
+    <div class="meta-left">
+      <span class="results-count-tag">
+        <i class="fa-solid fa-list-check"></i>
+        कुल <strong>{{ filteredList.length }}</strong> परिवाद ट्रैक किए गए
+      </span>
+      <span class="active-filter-indicator" *ngIf="selectedStatus || searchQuery || selectedDistrict">
+        (फ़िल्टर सक्रिय)
+      </span>
+    </div>
+
+    <div class="meta-right">
+      <div class="view-mode-toggle">
+        <button
+          type="button"
+          class="btn-toggle-view"
+          [class.active]="viewMode === 'table'"
+          (click)="viewMode = 'table'"
+          title="तालिका ग्रिड दृश्य"
+        >
+          <i class="fa-solid fa-table-cells"></i> तालिका दृश्य
+        </button>
+        <button
+          type="button"
+          class="btn-toggle-view"
+          [class.active]="viewMode === 'cards'"
+          (click)="viewMode = 'cards'"
+          title="कार्ड्स दृश्य"
+        >
+          <i class="fa-solid fa-grip"></i> कार्ड दृश्य
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Loading State ── -->
+  <div class="loading-state-card" *ngIf="loading">
+    <div class="spinner-bubble">
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+    </div>
+    <h3>परिवाद डेटा लोड हो रहा है...</h3>
+    <p>विभागीय डाटाबेस से शिकायतों एवं संलग्न पीडीएफ़ की स्थिति प्राप्त की जा रही है।</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       DATA GRID: TABLE VIEW (MODERN, CLEAN, RICH)
+       ══════════════════════════════════════════════════════ -->
+  <div class="table-grid-container" *ngIf="!loading && viewMode === 'table' && filteredList.length > 0">
+    <div class="table-responsive-wrapper">
+      <table class="tracking-table">
+        <thead>
+          <tr>
+            <th class="th-tracking-id">शिकायत संख्या / स्रोत</th>
+            <th class="th-applicant">आवेदक विवरण</th>
+            <th class="th-date">आवेदन तिथि</th>
+            <th class="th-subject">विषय एवं श्रेणी</th>
+            <th class="th-custody">कहाँ लंबित है (वर्तमान स्थान)</th>
+            <th class="th-status">वर्तमान स्थिति</th>
+            <th class="th-stepper">प्रगति ट्रैकर</th>
+            <th class="th-pdf">संलग्न दस्तावेज़ (PDF)</th>
+            <th class="th-actions text-right">कार्यवाही</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of filteredList" class="tracking-row" [class.highlighted]="item.complaintNumber === copiedId">
+            <!-- 1. Tracking ID & Source -->
+            <td class="td-tracking-id">
+              <div class="tracking-pill-box">
+                <span class="tracking-code-val">{{ item.complaintNumber }}</span>
+                <button
+                  type="button"
+                  class="btn-row-copy"
+                  (click)="copyTrackingId(item.complaintNumber, $event)"
+                  title="ट्रैकिंग आईडी कॉपी करें"
+                >
+                  <i class="fa-solid" [ngClass]="copiedId === item.complaintNumber ? 'fa-check' : 'fa-copy'"></i>
+                </button>
+              </div>
+              <span class="source-sub-badge" [ngClass]="item.source.toLowerCase()">
+                <i class="fa-solid fa-share-nodes"></i> {{ sourceLabel(item.source) }}
+              </span>
+            </td>
+
+            <!-- 2. Applicant Info -->
+            <td class="td-applicant">
+              <div class="applicant-cell">
+                <strong class="app-name">{{ item.applicantName }}</strong>
+                <span class="app-guardian" *ngIf="item.guardianName">
+                  <i class="fa-solid fa-user-group"></i> {{ item.guardianName }}
+                </span>
+                <span class="app-mobile" *ngIf="item.mobileNumber">
+                  <i class="fa-solid fa-phone"></i> {{ item.mobileNumber }}
+                </span>
+              </div>
+            </td>
+
+            <!-- 3. Date -->
+            <td class="td-date">
+              <div class="date-badge">
+                <i class="fa-regular fa-calendar-days"></i>
+                <span>{{ item.complaintDate | date: 'dd-MM-yyyy' }}</span>
+              </div>
+            </td>
+
+            <!-- 4. Subject & Category -->
+            <td class="td-subject">
+              <div class="subject-wrap">
+                <span class="subject-text" [title]="item.subject">{{ item.subject }}</span>
+                <span class="category-chip">
+                  <i class="fa-solid fa-tag"></i> {{ item.category || 'सामान्य परिवाद' }}
+                </span>
+              </div>
+            </td>
+
+            <!-- 5. Where Grievance Exists (Current Custody) -->
+            <td class="td-custody">
+              <div class="custody-card-pill">
+                <div class="custody-place">
+                  <i class="fa-solid fa-building-flag"></i>
+                  <strong>{{ item.currentCustody }}</strong>
+                </div>
+                <div class="custody-officer" *ngIf="item.custodyOfficer">
+                  <i class="fa-solid fa-user-tie"></i>
+                  <span>{{ item.custodyOfficer }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- 6. Status Badge -->
+            <td class="td-status">
+              <span class="status-pill status-{{ item.status }}">
+                <span class="status-pulse-dot"></span>
+                {{ statusLabel(item.status) }}
+              </span>
+            </td>
+
+            <!-- 7. Progress Stepper -->
+            <td class="td-stepper">
+              <div class="mini-stepper-wrap" [title]="'प्रगति स्तर ' + item.lifecycleStage + '/5'">
+                <div class="stepper-dots">
+                  <span class="dot done" title="1. पंजीकरण"><i class="fa-solid fa-check"></i></span>
+                  <span class="line" [class.done]="item.lifecycleStage >= 2"></span>
+                  <span class="dot" [class.done]="item.lifecycleStage >= 2" [class.active]="item.lifecycleStage === 2" title="2. समीक्षा">
+                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 2 ? 'fa-check' : 'fa-circle'"></i>
+                  </span>
+                  <span class="line" [class.done]="item.lifecycleStage >= 3"></span>
+                  <span class="dot" [class.done]="item.lifecycleStage >= 3" [class.active]="item.lifecycleStage === 3" title="3. अग्रेषित">
+                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 3 ? 'fa-check' : 'fa-circle'"></i>
+                  </span>
+                  <span class="line" [class.done]="item.lifecycleStage >= 4"></span>
+                  <span class="dot" [class.done]="item.lifecycleStage >= 4" [class.active]="item.lifecycleStage === 4" title="4. जांच">
+                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 4 ? 'fa-check' : 'fa-circle'"></i>
+                  </span>
+                  <span class="line" [class.done]="item.lifecycleStage >= 5"></span>
+                  <span class="dot" [class.done]="item.lifecycleStage >= 5" [class.active]="item.lifecycleStage === 5" title="5. निस्तारित">
+                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 5 ? 'fa-check' : 'fa-flag-checkered'"></i>
+                  </span>
+                </div>
+                <span class="stepper-caption">{{ statusProgress(item.status) }}% पूर्ण</span>
+              </div>
+            </td>
+
+            <!-- 8. Uploaded PDF Document (Popup Trigger) -->
+            <td class="td-pdf">
+              <button
+                type="button"
+                class="btn btn-view-pdf"
+                (click)="openPdfModal(item)"
+                title="संलग्न पीडीएफ़ पॉपअप में देखें"
+              >
+                <div class="pdf-btn-icon">
+                  <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <div class="pdf-btn-info">
+                  <span class="pdf-btn-title">PDF देखें</span>
+                  <small class="pdf-btn-size">{{ item.pdfFileSize || '5MB PDF' }}</small>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square open-ext-icon"></i>
+              </button>
+            </td>
+
+            <!-- 9. Actions -->
+            <td class="td-actions text-right">
+              <div class="actions-inline-group">
+                <button
+                  type="button"
+                  class="btn btn-action-icon btn-detail-action"
+                  (click)="openDetailDrawer(item)"
+                  title="पूर्ण विवरण देखें"
+                >
+                  <i class="fa-solid fa-circle-info"></i>
+                </button>
+                <a
+                  [routerLink]="['/complaints', item.id]"
+                  class="btn btn-action-icon btn-link-action"
+                  title="शिकायत पृष्ठ पर जाएं"
+                >
+                  <i class="fa-solid fa-arrow-right"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       DATA GRID: CARDS VIEW (ALTERNATIVE MODERN DISPLAY)
+       ══════════════════════════════════════════════════════ -->
+  <div class="cards-grid-container" *ngIf="!loading && viewMode === 'cards' && filteredList.length > 0">
+    <div class="tracking-card-item" *ngFor="let item of filteredList">
+      <div class="card-top-strip">
+        <div class="card-ref-badge">
+          <span class="ref-code">{{ item.complaintNumber }}</span>
+          <button type="button" class="btn-copy-card" (click)="copyTrackingId(item.complaintNumber, $event)" title="कॉपी करें">
+            <i class="fa-solid" [ngClass]="copiedId === item.complaintNumber ? 'fa-check' : 'fa-copy'"></i>
+          </button>
+        </div>
+        <span class="status-pill status-{{ item.status }}">
+          <span class="status-pulse-dot"></span>
+          {{ statusLabel(item.status) }}
+        </span>
+      </div>
+
+      <div class="card-main-content">
+        <h3 class="card-subject" [title]="item.subject">{{ item.subject }}</h3>
+
+        <div class="card-applicant-row">
+          <div class="applicant-avatar">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="applicant-names">
+            <strong>{{ item.applicantName }}</strong>
+            <small>{{ item.guardianName || 'अभिभावक' }} • <i class="fa-solid fa-phone"></i> {{ item.mobileNumber }}</small>
+          </div>
+        </div>
+
+        <div class="card-custody-box">
+          <span class="custody-kicker"><i class="fa-solid fa-building-flag"></i> वर्तमान स्थिति एवं स्थान (Where Grievance Exists)</span>
+          <div class="custody-title">{{ item.currentCustody }}</div>
+          <small class="custody-sub"><i class="fa-solid fa-user-tie"></i> प्राधिकारी: {{ item.custodyOfficer }}</small>
+        </div>
+
+        <!-- Mini Stepper in Card -->
+        <div class="card-stepper-bar">
+          <div class="stepper-dots">
+            <span class="dot done"><i class="fa-solid fa-check"></i></span>
+            <span class="line" [class.done]="item.lifecycleStage >= 2"></span>
+            <span class="dot" [class.done]="item.lifecycleStage >= 2">
+              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 2 ? 'fa-check' : 'fa-circle'"></i>
+            </span>
+            <span class="line" [class.done]="item.lifecycleStage >= 3"></span>
+            <span class="dot" [class.done]="item.lifecycleStage >= 3">
+              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 3 ? 'fa-check' : 'fa-circle'"></i>
+            </span>
+            <span class="line" [class.done]="item.lifecycleStage >= 4"></span>
+            <span class="dot" [class.done]="item.lifecycleStage >= 4">
+              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 4 ? 'fa-check' : 'fa-circle'"></i>
+            </span>
+            <span class="line" [class.done]="item.lifecycleStage >= 5"></span>
+            <span class="dot" [class.done]="item.lifecycleStage >= 5">
+              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 5 ? 'fa-check' : 'fa-flag-checkered'"></i>
+            </span>
+          </div>
+          <span class="card-step-text">{{ statusLabel(item.status) }} ({{ statusProgress(item.status) }}%)</span>
+        </div>
+      </div>
+
+      <div class="card-footer-actions">
+        <button type="button" class="btn btn-card-pdf" (click)="openPdfModal(item)">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span>संलग्न PDF देखें</span>
+        </button>
+        <button type="button" class="btn btn-card-detail" (click)="openDetailDrawer(item)">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>विवरण</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Empty State ── -->
+  <div class="empty-results-card" *ngIf="!loading && filteredList.length === 0">
+    <div class="empty-icon-box">
+      <i class="fa-solid fa-folder-open"></i>
+    </div>
+    <h3>कोई परिवाद नहीं मिला (No Grievances Found)</h3>
+    <p>
+      आपके द्वारा दर्ज किए गए खोज शब्दों अथवा फ़िल्टर से संबंधित कोई शिकायत प्राप्त नहीं हुई।
+    </p>
+    <div class="empty-actions">
+      <button type="button" class="btn btn-outline" (click)="onReset()">
+        <i class="fa-solid fa-rotate-right"></i> सभी फ़िल्टर साफ़ करें
+      </button>
+      <a *ngIf="auth.hasRole('SuperAdmin')" routerLink="/complaints/entry" class="btn btn-primary-accent">
+        <i class="fa-solid fa-file-pen"></i> शिकायत प्रविष्टि
+      </a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       POPUP MODAL: UPLOADED PDF VIEWER (CREATIVE & MODERN)
+       ══════════════════════════════════════════════════════ -->
+  <div class="pdf-modal-backdrop" *ngIf="showPdfModal" (click)="closePdfModal()">
+    <div class="pdf-modal-window" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <!-- Modal Header -->
+      <div class="pdf-modal-header">
+        <div class="pdf-modal-title-wrap">
+          <div class="pdf-modal-icon">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <div class="pdf-title-info">
+            <h3 class="modal-filename">{{ currentDocName }}</h3>
+            <div class="pdf-meta-badges">
+              <span class="badge-tag tag-type"><i class="fa-solid fa-file-shield"></i> {{ currentDocType }}</span>
+              <span class="badge-tag tag-size">{{ currentDocSize }}</span>
+              <span class="badge-tag tag-ref" *ngIf="activePdfComplaint">
+                <i class="fa-solid fa-ticket"></i> {{ activePdfComplaint.complaintNumber }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pdf-modal-actions">
+          <button type="button" class="btn-pdf-act" (click)="downloadCurrentPdf()" title="पीडीएफ़ डाउनलोड करें">
+            <i class="fa-solid fa-download"></i> <span>डाउनलोड</span>
+          </button>
+          <button type="button" class="btn-pdf-act" (click)="printCurrentPdf()" title="प्रिंट करें">
+            <i class="fa-solid fa-print"></i> <span>प्रिंट</span>
+          </button>
+          <button type="button" class="btn-pdf-act" (click)="openPdfInNewTab()" title="नए टैब में खोलें">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </button>
+          <button type="button" class="btn-close-pdf-modal" (click)="closePdfModal()" aria-label="बंद करें" title="बंद करें">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Viewer Viewport) -->
+      <div class="pdf-modal-body">
+        <!-- Spinner while loading PDF -->
+        <div class="pdf-loading-spinner" *ngIf="loadingPdf">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>पीडीएफ़ दस्तावेज़ लोड हो रहा है...</span>
+        </div>
+
+        <!-- Real Streamed PDF iframe -->
+        <iframe
+          *ngIf="!loadingPdf && safePdfUrl"
+          [src]="safePdfUrl"
+          class="pdf-embed-frame"
+          title="संबंधित पीडीएफ दस्तावेज़"
+        ></iframe>
+
+        <!-- High-fidelity Government Fallback Document Viewer -->
+        <div class="pdf-docket-preview" *ngIf="!loadingPdf && (!safePdfUrl || isFallbackDoc) && activePdfComplaint">
+          <div class="docket-sheet">
+            <!-- Sheet Header -->
+            <div class="docket-header">
+              <div class="docket-emblem-col">
+                <div class="docket-ashoka">बिहार सरकार • GOVERNMENT OF BIHAR</div>
+                <h2 class="docket-portal">लोक शिकायत निवारण अधिकार एवं जन शिकायत समाधान प्रणाली</h2>
+                <div class="docket-sub">संबंधित आधिकारिक परिवाद पत्र / संलग्न दस्तावेज़ (PDF Docket)</div>
+              </div>
+              <div class="docket-stamp-box">
+                <div class="docket-seal-circle">
+                  <i class="fa-solid fa-stamp"></i>
+                  <span>प्रमाणित</span>
+                </div>
+                <small>डिजिटल सत्यापन</small>
+              </div>
+            </div>
+
+            <!-- Docket Reference Strip -->
+            <div class="docket-ref-strip">
+              <div class="ref-col">
+                <span class="lbl">शिकायत ट्रैकिंग संख्या / Ref No.:</span>
+                <span class="val">{{ activePdfComplaint.complaintNumber }}</span>
+              </div>
+              <div class="ref-col right">
+                <span class="lbl">पंजीकरण तिथि:</span>
+                <span class="val">{{ activePdfComplaint.complaintDate | date: 'dd-MM-yyyy' }}</span>
+              </div>
+            </div>
+
+            <!-- Complainant Particulars -->
+            <table class="docket-table">
+              <tbody>
+                <tr>
+                  <th style="width: 25%;">आवेदक का नाम:</th>
+                  <td style="width: 25%;"><strong>{{ activePdfComplaint.applicantName }}</strong></td>
+                  <th style="width: 25%;">पिता / पति का नाम:</th>
+                  <td style="width: 25%;">{{ activePdfComplaint.guardianName || 'सुरेश प्रसाद' }}</td>
+                </tr>
+                <tr>
+                  <th>मोबाइल नंबर:</th>
+                  <td>{{ activePdfComplaint.mobileNumber || '9876543210' }}</td>
+                  <th>आवेदन का स्रोत:</th>
+                  <td><strong>{{ sourceLabel(activePdfComplaint.source) }}</strong></td>
+                </tr>
+                <tr>
+                  <th>स्थान व क्षेत्र:</th>
+                  <td>{{ activePdfComplaint.block || 'पटना सदर' }}, {{ activePdfComplaint.district || 'पटना' }}</td>
+                  <th>वर्तमान स्थिति:</th>
+                  <td><strong style="color: #065f46;">{{ statusLabel(activePdfComplaint.status) }}</strong></td>
+                </tr>
+                <tr>
+                  <th>कहाँ लंबित है:</th>
+                  <td colspan="3"><strong>{{ activePdfComplaint.currentCustody }}</strong> (प्राधिकारी: {{ activePdfComplaint.custodyOfficer }})</td>
+                </tr>
+                <tr>
+                  <th>शिकायत का विषय:</th>
+                  <td colspan="3"><em>{{ activePdfComplaint.subject }}</em></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Docket Body Content -->
+            <div class="docket-content-section">
+              <h4>आवेदन पत्र का सारांश (Summary of Grievance):</h4>
+              <p>
+                महोदय, सविनय निवेदन है कि आवेदक {{ activePdfComplaint.applicantName }} द्वारा प्रस्तुत परिवाद के संबंध में विभागीय पोर्टल पर आवश्यक प्रविष्टि की गई है। इस परिवाद के साथ आवेदक द्वारा साक्ष्य के रूप में संलग्न पीडीएफ दस्तावेज़ विभागीय रिकॉर्ड में सुरक्षित संधारित है।
+              </p>
+              <p>
+                वर्तमान में यह परिवाद <strong>{{ activePdfComplaint.currentCustody }}</strong> के संज्ञान में अग्रसारित किया गया है एवं नियमानुसार निर्धारित समय-सीमा के भीतर आवश्यक कार्रवाई सुनिश्चित की जा रही है।
+              </p>
+            </div>
+
+            <!-- Docket Footer & Verification Seal -->
+            <div class="docket-footer">
+              <div class="docket-footer-left">
+                <span>दस्तावेज़ नाम: {{ currentDocName }}</span><br>
+                <span>मुद्रण तिथि: {{ activePdfComplaint.complaintDate | date: 'dd-MM-yyyy, hh:mm a' }}</span>
+              </div>
+              <div class="docket-footer-right">
+                <div class="sign-seal">
+                  <i class="fa-solid fa-signature"></i>
+                  <span>नोडल अधिकारी, जन शिकायत कोषांग</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       DETAIL DRAWER / SLIDEOVER (QUICK GRIEVANCE TIMELINE)
+       ══════════════════════════════════════════════════════ -->
+  <div class="drawer-backdrop" *ngIf="showDetailDrawer" (click)="closeDetailDrawer()">
+    <div class="drawer-panel" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <div class="drawer-title-box">
+          <i class="fa-solid fa-file-circle-check"></i>
+          <div>
+            <h3>शिकायत विस्तृत विवरण</h3>
+            <span class="drawer-sub" *ngIf="selectedDetail">{{ selectedDetail.complaintNumber }}</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close-drawer" (click)="closeDetailDrawer()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="drawer-body" *ngIf="selectedDetail">
+        <!-- Status Box -->
+        <div class="drawer-status-card status-{{ selectedDetail.status }}">
+          <div class="status-head">
+            <span class="status-name">{{ statusLabel(selectedDetail.status) }}</span>
+            <span class="status-pct">{{ statusProgress(selectedDetail.status) }}% पूर्ण</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" [style.width.%]="statusProgress(selectedDetail.status)"></div>
+          </div>
+        </div>
+
+        <!-- Particulars List -->
+        <div class="drawer-section">
+          <h4><i class="fa-solid fa-user"></i> आवेदक विवरण</h4>
+          <div class="drawer-grid">
+            <div class="drawer-item">
+              <span class="lbl">नाम:</span>
+              <strong class="val">{{ selectedDetail.applicantName }}</strong>
+            </div>
+            <div class="drawer-item">
+              <span class="lbl">पिता / पति:</span>
+              <strong class="val">{{ selectedDetail.guardianName }}</strong>
+            </div>
+            <div class="drawer-item">
+              <span class="lbl">मोबाइल:</span>
+              <strong class="val">{{ selectedDetail.mobileNumber }}</strong>
+            </div>
+            <div class="drawer-item">
+              <span class="lbl">स्थान:</span>
+              <strong class="val">{{ selectedDetail.district }} ({{ selectedDetail.block }})</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subject & Description -->
+        <div class="drawer-section">
+          <h4><i class="fa-solid fa-heading"></i> परिवाद विषय एवं विवरण</h4>
+          <p class="drawer-subject"><strong>{{ selectedDetail.subject }}</strong></p>
+          <div class="drawer-desc" *ngIf="selectedDetail.description">
+            {{ selectedDetail.description }}
+          </div>
+        </div>
+
+        <!-- Documents Attached -->
+        <div class="drawer-section">
+          <h4><i class="fa-solid fa-folder-open"></i> संलग्न दस्तावेज़</h4>
+          <div class="drawer-doc-box">
+            <i class="fa-solid fa-file-pdf"></i>
+            <div class="doc-meta">
+              <strong>Aavedan_{{ selectedDetail.complaintNumber }}.pdf</strong>
+              <small>आवेदन पत्र (PDF) • 1.45 MB</small>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              (click)="openPdfModal(selectedDetail); closeDetailDrawer()"
+            >
+              <i class="fa-solid fa-eye"></i> देखें
+            </button>
+          </div>
+        </div>
+
+        <!-- Timeline History -->
+        <div class="drawer-section" *ngIf="selectedDetail.history && selectedDetail.history.length > 0">
+          <h4><i class="fa-solid fa-timeline"></i> अग्रेषण एवं कार्यवाही इतिहास</h4>
+          <div class="timeline-list">
+            <div class="timeline-item" *ngFor="let h of selectedDetail.history">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <strong>{{ statusLabel(h.toStatus) }}</strong>
+                <p>{{ h.reason || 'संबंधित शाखा को अग्रेषित किया गया।' }}</p>
+                <small>{{ h.actionByName }} • {{ h.actionAt | date: 'dd-MM-yyyy, hh:mm a' }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <a [routerLink]="['/complaints', selectedDetail?.id]" class="btn btn-primary-accent" (click)="closeDetailDrawer()">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> पूर्ण शिकायत पृष्ठ पर जाएं
+        </a>
+        <button type="button" class="btn btn-outline" (click)="closeDetailDrawer()">
+          बंद करें
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

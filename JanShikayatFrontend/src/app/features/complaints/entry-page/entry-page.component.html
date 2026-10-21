@@ -1,0 +1,924 @@
+<div class="entry-page-wrapper">
+  <!-- Toast Notification -->
+  <div class="toast-popup" *ngIf="toastMessage">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>{{ toastMessage }}</span>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <nav class="breadcrumb-trail" aria-label="breadcrumb">
+        <a routerLink="/dashboard"><i class="fa-solid fa-gauge-high"></i> डैशबोर्ड</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <span>शिकायत प्रविष्टि</span>
+      </nav>
+      <span class="section-kicker">
+        <i class="fa-solid fa-file-signature"></i> विभागीय प्रविष्टि पोर्टल / Entry Page
+      </span>
+      <h1 class="page-title">शिकायत प्रविष्टि (Entry Page)</h1>
+      <p class="page-sub">
+        ऑफ़लाइन एवं विभिन्न सरकारी पोर्टलों से प्राप्त शिकायतों की आधिकारिक प्रविष्टि करें।
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/complaints" class="btn btn-outline">
+        <i class="fa-solid fa-folder-open"></i> सभी शिकायतें देखें
+      </a>
+    </div>
+  </div>
+
+  <!-- ── SUCCESS CONFIRMATION STATE ── -->
+  <div class="success-screen-card" *ngIf="successComplaint">
+    <div class="success-badge-wrap">
+      <div class="success-icon-box">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <span class="success-kicker">प्रविष्टि सफल / Registered Successfully</span>
+      <h2>शिकायत का पंजीकरण सफलतापूर्वक हो गया है</h2>
+      <p>
+        शिकायत को सिस्टम में पंजीकृत कर दिया गया है। आगामी समीक्षा एवं जांच हेतु नीचे दी गई यूनिक आवेदन संख्या नोट रखें।
+      </p>
+    </div>
+
+    <div class="ref-number-card">
+      <div class="ref-info">
+        <small>यूनिक शिकायत संदर्भ संख्या (Unique Complaint Reference Number)</small>
+        <span class="ref-code">{{ successComplaint.complaintNumber }}</span>
+      </div>
+      <button type="button" class="btn btn-copy" (click)="copyComplaintNumber()">
+        <i class="fa-solid" [ngClass]="copied ? 'fa-check' : 'fa-copy'"></i>
+        <span>{{ copied ? 'कॉपी हो गया' : 'संख्या कॉपी करें' }}</span>
+      </button>
+    </div>
+
+    <div class="registered-summary-grid">
+      <div class="summary-item">
+        <span class="lbl"><i class="fa-solid fa-user"></i> आवेदक का नाम:</span>
+        <strong class="val">{{ form.get('applicantName')?.value }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="lbl"><i class="fa-solid fa-phone"></i> मोबाइल नंबर:</span>
+        <strong class="val">{{ form.get('mobileNumber')?.value }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="lbl"><i class="fa-solid fa-location-dot"></i> जिला व ब्लॉक:</span>
+        <strong class="val">{{ locationNames().district }} • {{ locationNames().block }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="lbl"><i class="fa-solid fa-route"></i> आवेदन स्रोत:</span>
+        <strong class="val source-tag">{{ form.get('applicationSource')?.value }}</strong>
+      </div>
+    </div>
+
+    <div class="success-actions-bar">
+      <button type="button" class="btn btn-accent" (click)="printReceipt()">
+        <i class="fa-solid fa-print"></i> रसीद प्रिंट करें
+      </button>
+      <a [routerLink]="['/complaints', successComplaint.id]" class="btn btn-outline" *ngIf="successComplaint.id !== 9999">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> शिकायत का विवरण देखें
+      </a>
+      <button type="button" class="btn btn-primary-soft" (click)="startNewEntry()">
+        <i class="fa-solid fa-file-circle-plus"></i> नई प्रविष्टि दर्ज करें
+      </button>
+    </div>
+  </div>
+
+  <!-- ── FORM WORKFLOW ── -->
+  <form [formGroup]="form" *ngIf="!successComplaint" novalidate class="entry-form-container">
+
+    <!-- Error Banner if any -->
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         STEP 1: COMPLAINANT INFORMATION (EXACTLY AS IN IMAGE)
+         ══════════════════════════════════════════════════════ -->
+    <div class="step-container" *ngIf="currentStep === 1 && !showPreview">
+
+      <!-- 1. COMPLAINANT INFO CARD -->
+      <div class="form-card complainant-card">
+        <!-- Blue Header matching user image -->
+        <div class="card-header-banner">
+          <div class="header-icon-wrap">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="header-text-wrap">
+            <h2 class="card-header-title">शिकायतकर्ता की जानकारी</h2>
+            <span class="card-header-sub">(कृपया सभी आवश्यक विवरण सही-सही भरें)</span>
+          </div>
+        </div>
+
+        <div class="card-body-content">
+          <div class="two-column-grid">
+            <!-- ── LEFT COLUMN ── -->
+            <div class="grid-column left-col">
+              <!-- 1. आवेदक का नाम -->
+              <div class="form-group">
+                <label for="applicantName" class="form-label">
+                  आवेदक का नाम <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('applicantName')">
+                  <i class="fa-solid fa-user field-icon"></i>
+                  <input
+                    id="applicantName"
+                    type="text"
+                    formControlName="applicantName"
+                    placeholder="आवेदक का नाम दर्ज करें"
+                    autocomplete="name"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('applicantName')">
+                  कृपया आवेदक का नाम दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 2. पिता / पति का नाम -->
+              <div class="form-group">
+                <label for="guardianName" class="form-label">
+                  पिता / पति का नाम <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('guardianName')">
+                  <i class="fa-solid fa-user field-icon"></i>
+                  <input
+                    id="guardianName"
+                    type="text"
+                    formControlName="guardianName"
+                    placeholder="पिता / पति / अभिभावक का नाम दर्ज करें"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('guardianName')">
+                  कृपया पिता / पति का नाम दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 3. मोबाइल नंबर -->
+              <div class="form-group">
+                <label for="mobileNumber" class="form-label">
+                  मोबाइल नंबर <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('mobileNumber')">
+                  <i class="fa-solid fa-phone field-icon"></i>
+                  <input
+                    id="mobileNumber"
+                    type="tel"
+                    inputmode="numeric"
+                    maxlength="10"
+                    formControlName="mobileNumber"
+                    placeholder="10 अंकों का मोबाइल नंबर दर्ज करें"
+                    autocomplete="tel"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('mobileNumber')">
+                  कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 4. मोबाइल नंबर 2 -->
+              <div class="form-group">
+                <label for="mobileNumber2" class="form-label">
+                  मोबाइल नंबर 2
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('mobileNumber2')">
+                  <i class="fa-solid fa-phone field-icon"></i>
+                  <input
+                    id="mobileNumber2"
+                    type="tel"
+                    inputmode="numeric"
+                    maxlength="10"
+                    formControlName="mobileNumber2"
+                    placeholder="वैकल्पिक मोबाइल नंबर दर्ज करें"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('mobileNumber2')">
+                  कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 5. पता -->
+              <div class="form-group address-group">
+                <label for="address" class="form-label">
+                  पता <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap textarea-wrap" [class.has-error]="isInvalid('address')">
+                  <i class="fa-solid fa-house field-icon textarea-icon"></i>
+                  <textarea
+                    id="address"
+                    rows="3"
+                    formControlName="address"
+                    placeholder="घर का पता दर्ज करें"
+                  ></textarea>
+                </div>
+                <span class="field-error" *ngIf="isInvalid('address')">
+                  कृपया पूरा पता दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 6. संबंधित दस्तावेज़ / आवेदन पत्र (PDF) (स्थान: पता के ठीक नीचे) -->
+              <div class="form-group pdf-upload-field-group">
+                <div class="pdf-field-header">
+                  <label for="pdfUploadInput" class="form-label">
+                    संबंधित दस्तावेज़ / आवेदन पत्र (PDF) <span class="req">*</span>
+                  </label>
+                  <span class="file-spec-tag"><i class="fa-solid fa-file-shield"></i> केवल PDF • अधिकतम 200KB</span>
+                </div>
+
+                <div class="pdf-card-box" [class.has-file]="!!pdfFile" [class.has-error]="!!pdfError">
+                  <input
+                    #pdfFileInput
+                    id="pdfUploadInput"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    (change)="onPdfSelected($event)"
+                    class="sr-only-file-input"
+                  />
+
+                  <!-- State 1: No file chosen -->
+                  <div class="pdf-empty-trigger" *ngIf="!pdfFile" (click)="pdfFileInput.click()">
+                    <div class="pdf-upload-symbol">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div class="pdf-upload-instructions">
+                      <span class="pdf-prompt"><strong>फ़ाइल चुनें</strong> या यहाँ क्लिक करें</span>
+                      <small class="pdf-limits">केवल .pdf (अधिकतम 200 KB)</small>
+                    </div>
+                    <button type="button" class="btn btn-browse-action" (click)="$event.stopPropagation(); pdfFileInput.click()">
+                      <i class="fa-solid fa-folder-open"></i> ब्राउज़
+                    </button>
+                  </div>
+
+                  <!-- State 2: File selected and validated -->
+                  <div class="pdf-attached-row" *ngIf="pdfFile">
+                    <div class="pdf-attached-icon">
+                      <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div class="pdf-attached-info">
+                      <strong class="pdf-attached-name" [title]="pdfFile.name">{{ pdfFile.name }}</strong>
+                      <span class="pdf-attached-size">
+                        <i class="fa-solid fa-circle-check"></i> {{ pdfSizeDisplay }}
+                      </span>
+                    </div>
+                    <div class="pdf-attached-actions">
+                      <button
+                        type="button"
+                        class="btn-file-icon-btn change-btn"
+                        (click)="pdfFileInput.click()"
+                        title="दूसरी फ़ाइल चुनें"
+                      >
+                        <i class="fa-solid fa-arrow-rotate-right"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-file-icon-btn remove-btn"
+                        (click)="removePdfFile(pdfFileInput)"
+                        title="फ़ाइल हटाएं"
+                      >
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <span class="field-error" *ngIf="pdfError">
+                  <i class="fa-solid fa-circle-exclamation"></i> {{ pdfError }}
+                </span>
+              </div>
+            </div>
+
+            <!-- ── RIGHT COLUMN ── -->
+            <div class="grid-column right-col">
+              <!-- 7. पिन कोड -->
+              <div class="form-group">
+                <label for="pinCode" class="form-label">
+                  पिन कोड <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('pinCode')">
+                  <i class="fa-solid fa-location-dot field-icon"></i>
+                  <input
+                    id="pinCode"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="6"
+                    formControlName="pinCode"
+                    placeholder="6 अंकों का पिन कोड दर्ज करें"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('pinCode')">
+                  कृपया मान्य 6 अंकों का पिन कोड दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 8. ईमेल आईडी (यदि उपलब्ध हो) -->
+              <div class="form-group">
+                <label for="email" class="form-label">
+                  ईमेल आईडी (यदि उपलब्ध हो)
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
+                  <i class="fa-solid fa-envelope field-icon"></i>
+                  <input
+                    id="email"
+                    type="email"
+                    formControlName="email"
+                    placeholder="ईमेल आईडी दर्ज करें"
+                    autocomplete="email"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('email')">
+                  कृपया मान्य ईमेल पता दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 9. आवेदन की तिथि -->
+              <div class="form-group">
+                <label for="applicationDate" class="form-label">
+                  आवेदन की तिथि <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('applicationDate')">
+                  <i class="fa-regular fa-calendar-days field-icon"></i>
+                  <input
+                    id="applicationDate"
+                    type="date"
+                    formControlName="applicationDate"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('applicationDate')">
+                  आवेदन की तिथि आवश्यक है।
+                </span>
+              </div>
+
+              <!-- 10. जिला -->
+              <div class="form-group">
+                <label for="district" class="form-label">
+                  जिला <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('district')">
+                  <i class="fa-solid fa-map-location-dot field-icon"></i>
+                  <select id="district" formControlName="district" (change)="onDistrictChange()">
+                    <option [ngValue]="null" disabled>{{ loadingDistricts ? 'लोड हो रहा है...' : '-- जिला चुनें --' }}</option>
+                    <option *ngFor="let dist of districts" [ngValue]="dist.districtcode">{{ dist.districtname }}</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+                <span class="field-error" *ngIf="isInvalid('district')">
+                  कृपया जिला का चयन करें।
+                </span>
+              </div>
+
+              <!-- 11. ब्लॉक (जिला चुनने के बाद) -->
+              <div class="form-group">
+                <label for="block" class="form-label">
+                  ब्लॉक <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('block')">
+                  <i class="fa-solid fa-building-columns field-icon"></i>
+                  <select id="block" formControlName="block" (change)="onBlockChange()">
+                    <option [ngValue]="null" disabled>{{ loadingBlocks ? 'लोड हो रहा है...' : (availableBlocks.length ? '-- ब्लॉक चुनें --' : '-- पहले जिला चुनें --') }}</option>
+                    <option *ngFor="let blk of availableBlocks" [ngValue]="blk.blockCode">{{ blockLabel(blk) }}</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+                <span class="field-error" *ngIf="isInvalid('block')">
+                  कृपया ब्लॉक का चयन करें।
+                </span>
+              </div>
+
+              <!-- 12. पंचायत (ब्लॉक चुनने के बाद) -->
+              <div class="form-group">
+                <label for="panchayat" class="form-label">
+                  पंचायत <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('panchayat')">
+                  <i class="fa-solid fa-landmark field-icon"></i>
+                  <select id="panchayat" formControlName="panchayat" (change)="onPanchayatChange()">
+                    <option [ngValue]="null" disabled>{{ loadingPanchayats ? 'लोड हो रहा है...' : (availablePanchayats.length ? '-- पंचायत चुनें --' : '-- पहले ब्लॉक चुनें --') }}</option>
+                    <option *ngFor="let pan of availablePanchayats" [ngValue]="pan.panchayatCode">{{ panchayatLabel(pan) }}</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+                <span class="field-error" *ngIf="isInvalid('panchayat')">
+                  कृपया पंचायत का चयन करें।
+                </span>
+              </div>
+
+              <!-- 13. गाँव (पंचायत चुनने के बाद) -->
+              <div class="form-group">
+                <label for="village" class="form-label">
+                  गाँव
+                </label>
+                <div class="input-icon-wrap select-wrap">
+                  <i class="fa-solid fa-location-dot field-icon"></i>
+                  <select id="village" formControlName="village">
+                    <option [ngValue]="null">{{ loadingVillages ? 'लोड हो रहा है...' : (availableVillages.length ? '-- गाँव चुनें --' : '-- पहले पंचायत चुनें --') }}</option>
+                    <option *ngFor="let vil of availableVillages" [ngValue]="vil.villcode">{{ vil.villname }}</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Application Source (just above Save / Reset) ── -->
+          <div class="form-group source-field">
+            <label class="form-label">
+              <i class="fa-solid fa-route source-label-icon"></i>
+              Application Source <span class="req">*</span>
+            </label>
+            <div class="source-radio-grid">
+              <label
+                *ngFor="let src of applicationSources"
+                class="source-radio-pill"
+                [class.checked]="form.get('applicationSource')?.value === src.id"
+              >
+                <input
+                  type="radio"
+                  name="applicationSource"
+                  formControlName="applicationSource"
+                  [value]="src.id"
+                />
+                <span class="custom-radio-circle"></span>
+                <span class="source-label-text">{{ src.label }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ── Action Buttons Bar (Matching Image Placement) ── -->
+          <div class="form-action-buttons">
+            <button type="button" class="btn btn-primary-proceed" (click)="saveDraft()" [disabled]="submitting">
+              <i class="fa-solid" [ngClass]="submitting ? 'fa-circle-notch fa-spin' : 'fa-floppy-disk'"></i>
+              <span>{{ submitting ? 'सेव हो रहा है...' : 'सेव करें' }}</span>
+            </button>
+            <button type="button" class="btn btn-secondary-reset" (click)="resetForm()">
+              <i class="fa-solid fa-rotate-right"></i> रीसेट करें
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. INFO ALERT BANNER (EXACTLY AS IN IMAGE) -->
+      <div class="entry-info-notice">
+        <i class="fa-solid fa-circle-info notice-icon"></i>
+        <span class="notice-text">
+          आपकी शिकायत का पंजीकरण सफलतापूर्वक होगा और आपको एक आवेदन संख्या प्रदान की जाएगी, जिसके माध्यम से आप अपनी शिकायत की स्थिति देख सकते हैं।
+        </span>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         PREVIEW: TEMPORARILY SAVED DRAFT → EDIT OR FINALISE
+         ══════════════════════════════════════════════════════ -->
+    <div class="step-container" *ngIf="showPreview && draft">
+      <div class="form-card preview-card">
+        <div class="card-header-banner">
+          <div class="header-icon-wrap">
+            <i class="fa-solid fa-eye"></i>
+          </div>
+          <div class="header-text-wrap">
+            <h2 class="card-header-title">आवेदन का पूर्वावलोकन (Preview)</h2>
+            <span class="card-header-sub">(विवरण जाँचें — अंतिम रूप देने के बाद ही आवेदन दर्ज होगा)</span>
+          </div>
+          <span class="draft-chip"><i class="fa-solid fa-floppy-disk"></i> अस्थायी रूप से सेव</span>
+        </div>
+
+        <div class="card-body-content">
+          <div class="preview-grid">
+            <div class="preview-item">
+              <span class="lbl">आवेदक का नाम</span>
+              <strong class="val">{{ draft.values.applicantName }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">पिता / पति का नाम</span>
+              <strong class="val">{{ draft.values.guardianName }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">मोबाइल नंबर</span>
+              <strong class="val">{{ draft.values.mobileNumber }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">मोबाइल नंबर 2</span>
+              <strong class="val">{{ draft.values.mobileNumber2 || '—' }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">ईमेल आईडी</span>
+              <strong class="val">{{ draft.values.email || '—' }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">आवेदन की तिथि</span>
+              <strong class="val">{{ draft.values.applicationDate | date: 'dd-MM-yyyy' }}</strong>
+            </div>
+            <div class="preview-item full">
+              <span class="lbl">पता</span>
+              <strong class="val">{{ draft.values.address }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">पिन कोड</span>
+              <strong class="val">{{ draft.values.pinCode }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">जिला</span>
+              <strong class="val">{{ draft.locationNames.district }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">ब्लॉक</span>
+              <strong class="val">{{ draft.locationNames.block }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">पंचायत</span>
+              <strong class="val">{{ draft.locationNames.panchayat }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">गाँव</span>
+              <strong class="val">{{ draft.locationNames.village }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">आवेदन स्रोत</span>
+              <strong class="val">{{ draft.values.applicationSource }}</strong>
+            </div>
+            <div class="preview-item full" *ngIf="draft.pdf">
+              <span class="lbl">संलग्न दस्तावेज़</span>
+              <strong class="val">
+                <i class="fa-solid fa-file-pdf pdf-icon"></i> {{ draft.pdf.name }} ({{ draft.pdf.size }})
+                <button type="button" class="btn-view-pdf" (click)="viewDraftPdf()">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> देखें
+                </button>
+              </strong>
+            </div>
+          </div>
+
+          <div class="form-action-buttons">
+            <button type="button" class="btn btn-primary-proceed" (click)="finaliseApplication()" [disabled]="finalising">
+              <i class="fa-solid" [ngClass]="finalising ? 'fa-circle-notch fa-spin' : 'fa-check-double'"></i>
+              <span>{{ finalising ? 'अंतिम रूप दिया जा रहा है...' : 'अंतिम रूप दें (Finalise)' }}</span>
+            </button>
+            <button type="button" class="btn btn-secondary-reset" (click)="editDraft()" [disabled]="finalising">
+              <i class="fa-solid fa-pen-to-square"></i> संपादित करें
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         STEP 2: COMPLAINT DETAILS & FINAL SUBMISSION
+         ══════════════════════════════════════════════════════ -->
+    <div class="step-container step-2-container" *ngIf="currentStep === 2">
+      <div class="form-card details-card">
+        <div class="card-header-banner">
+          <div class="header-icon-wrap">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div class="header-text-wrap">
+            <h2 class="card-header-title">शिकायत का विवरण एवं अग्रेषण</h2>
+            <span class="card-header-sub">(चरण 2: विषय, श्रेणी एवं शाखा का चयन करें)</span>
+          </div>
+        </div>
+
+        <div class="card-body-content">
+          <!-- Applicant Quick Summary Pill -->
+          <div class="applicant-mini-badge">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>
+              <strong>{{ form.get('applicantName')?.value }}</strong> •
+              {{ form.get('mobileNumber')?.value }} •
+              {{ locationNames().district }} ({{ locationNames().block }}) •
+              स्रोत: <strong>{{ form.get('applicationSource')?.value }}</strong>
+            </span>
+          </div>
+
+          <div class="two-column-grid">
+            <div class="grid-column left-col">
+              <!-- विषय -->
+              <div class="form-group">
+                <label for="subject" class="form-label">
+                  शिकायत का विषय <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-heading field-icon"></i>
+                  <input
+                    id="subject"
+                    type="text"
+                    formControlName="subject"
+                    placeholder="जैसे: भूमि विवाद अथवा रास्ते का अतिक्रमण"
+                  />
+                </div>
+              </div>
+
+              <!-- श्रेणी -->
+              <div class="form-group">
+                <label for="category" class="form-label">
+                  श्रेणी <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap select-wrap">
+                  <i class="fa-solid fa-layer-group field-icon"></i>
+                  <select id="category" formControlName="category">
+                    <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+
+              <!-- उप-श्रेणी -->
+              <div class="form-group">
+                <label for="subCategory" class="form-label">उप-श्रेणी (वैकल्पिक)</label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-tags field-icon"></i>
+                  <input
+                    id="subCategory"
+                    type="text"
+                    formControlName="subCategory"
+                    placeholder="जैसे: दाखिल-खारिज या अवैध कब्जा"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-column right-col">
+              <!-- शाखा / अनुभाग -->
+              <div class="form-group">
+                <label for="branchId" class="form-label">
+                  संबंधित शाखा / अनुभाग <span class="req">*</span>
+                </label>
+                <div class="input-icon-wrap select-wrap">
+                  <i class="fa-solid fa-building field-icon"></i>
+                  <select id="branchId" formControlName="branchId">
+                    <option *ngFor="let b of branches" [ngValue]="b.id">
+                      {{ b.code }} — {{ b.nameHindi || b.name }}
+                    </option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+
+              <!-- संबंधित विभाग -->
+              <div class="form-group">
+                <label for="departmentId" class="form-label">संबंधित विभाग (वैकल्पिक)</label>
+                <div class="input-icon-wrap select-wrap">
+                  <i class="fa-solid fa-landmark-dome field-icon"></i>
+                  <select id="departmentId" formControlName="departmentId">
+                    <option [ngValue]="null">गृह विभाग (डिफ़ॉल्ट)</option>
+                    <option *ngFor="let d of departments" [ngValue]="d.id">
+                      {{ d.nameHindi || d.name }}
+                    </option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+
+              <!-- PDF Attachment -->
+              <div class="form-group">
+                <label class="form-label">आवेदन पत्र / PDF दस्तावेज़ (वैकल्पिक)</label>
+                <label class="file-uploader-box">
+                  <input type="file" accept="application/pdf" (change)="onFileSelected($event)" />
+                  <i class="fa-solid" [ngClass]="selectedFile ? 'fa-file-pdf file-selected' : 'fa-cloud-arrow-up'"></i>
+                  <div class="uploader-text">
+                    <strong>{{ selectedFile ? selectedFile.name : 'पीडीएफ फ़ाइल चुनें' }}</strong>
+                    <small>{{ selectedFile ? 'बदलने के लिए क्लिक करें' : 'केवल PDF (अधिकतम 10MB)' }}</small>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group full-width-group">
+            <label for="description" class="form-label">
+              विस्तृत विवरण (Description) <span class="req">*</span>
+            </label>
+            <div class="input-icon-wrap textarea-wrap">
+              <i class="fa-solid fa-paragraph field-icon textarea-icon"></i>
+              <textarea
+                id="description"
+                rows="4"
+                formControlName="description"
+                placeholder="शिकायत का पूर्ण विवरण लिखें…"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Submission Action Buttons -->
+          <div class="step-2-actions">
+            <button type="button" class="btn btn-secondary-back" (click)="backToStep1()">
+              <i class="fa-solid fa-arrow-left"></i> पूर्व पृष्ठ पर लौटें (शिकायतकर्ता जानकारी)
+            </button>
+            <button type="button" class="btn btn-primary-submit" (click)="submitComplaint()" [disabled]="submitting">
+              <ng-container *ngIf="!submitting">
+                <i class="fa-solid fa-check-double"></i> शिकायत अंतिम रूप से दर्ज करें
+              </ng-container>
+              <ng-container *ngIf="submitting">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> सबमिट हो रहा है…
+              </ng-container>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- ══════════════════════════════════════════════════════
+       POPUP MODAL: DATA SAVED WITH TRACKING ID & PRINT
+       ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" *ngIf="showSuccessModal" (click)="closeModalOnBackdrop($event)">
+    <div class="save-success-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
+      <!-- Ribbon Header -->
+      <div class="modal-header-ribbon">
+        <div class="modal-gov-branding">
+          <i class="fa-solid fa-landmark-dome"></i>
+          <span>जन शिकायत समाधान पोर्टल • बिहार सरकार</span>
+        </div>
+        <button type="button" class="btn-close-modal" (click)="closeModal()" aria-label="बंद करें">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body-content">
+        <!-- Success Badge & Icon -->
+        <div class="modal-success-badge">
+          <div class="success-icon-pulse">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+
+        <h2 id="saveModalTitle" class="modal-main-title">
+          आपका आवेदन सफलतापूर्वक अंतिम रूप से दर्ज हो गया है!
+        </h2>
+        <p class="modal-sub-title">
+          Your application has been finalised.
+        </p>
+
+        <!-- Tracking ID Highlight Box -->
+        <div class="tracking-id-highlight-box">
+          <div class="tracking-label-row">
+            <span class="tracking-kicker"><i class="fa-solid fa-ticket"></i> शिकायत ट्रैकिंग संख्या (Tracking ID)</span>
+            <span class="tracking-status-chip"><i class="fa-solid fa-circle-check"></i> सुरक्षित एवं पंजीकृत</span>
+          </div>
+          <div class="tracking-number-display">
+            <span class="tracking-id-value">{{ savedTrackingId }}</span>
+            <button type="button" class="btn-copy-tracking" (click)="copyTrackingId()" [title]="copied ? 'कॉपी हो गया' : 'ट्रैकिंग आईडी कॉपी करें'">
+              <i class="fa-solid" [ngClass]="copied ? 'fa-check' : 'fa-copy'"></i>
+              <span>{{ copied ? 'कॉपी हो गया' : 'कॉपी करें' }}</span>
+            </button>
+          </div>
+          <small class="tracking-hint">
+            भविष्य में अपनी शिकायत की स्थिति जांचने एवं पावती रसीद के लिए इस संख्या का उपयोग करें।
+          </small>
+        </div>
+
+        <!-- Summary Details Card -->
+        <div class="modal-summary-card" *ngIf="savedData">
+          <div class="summary-row">
+            <span class="lbl"><i class="fa-solid fa-user"></i> आवेदक का नाम:</span>
+            <strong class="val">{{ savedData.applicantName }}</strong>
+          </div>
+          <div class="summary-row">
+            <span class="lbl"><i class="fa-solid fa-people-roof"></i> पिता / पति का नाम:</span>
+            <strong class="val">{{ savedData.guardianName }}</strong>
+          </div>
+          <div class="summary-row">
+            <span class="lbl"><i class="fa-solid fa-phone"></i> मोबाइल नंबर:</span>
+            <strong class="val">{{ savedData.mobileNumber }} <span *ngIf="savedData.mobileNumber2">/ {{ savedData.mobileNumber2 }}</span></strong>
+          </div>
+          <div class="summary-row">
+            <span class="lbl"><i class="fa-solid fa-calendar-days"></i> आवेदन की तिथि:</span>
+            <strong class="val">{{ savedData.applicationDate }}</strong>
+          </div>
+          <div class="summary-row">
+            <span class="lbl"><i class="fa-solid fa-location-dot"></i> क्षेत्र व स्थान:</span>
+            <strong class="val">{{ savedData.village }}, {{ savedData.panchayat }}, {{ savedData.block }}, {{ savedData.district }} ({{ savedData.pinCode }})</strong>
+          </div>
+          <div class="summary-row">
+            <span class="lbl"><i class="fa-solid fa-route"></i> आवेदन स्रोत:</span>
+            <strong class="val tag-val">{{ savedData.applicationSource }}</strong>
+          </div>
+          <div class="summary-row" *ngIf="savedData.pdfName">
+            <span class="lbl"><i class="fa-solid fa-file-pdf"></i> संलग्न दस्तावेज़:</span>
+            <strong class="val doc-val"><i class="fa-solid fa-paperclip"></i> {{ savedData.pdfName }} ({{ savedData.pdfSize }})</strong>
+          </div>
+        </div>
+
+        <!-- Action Buttons Bar -->
+        <div class="modal-actions-bar">
+          <button type="button" class="btn btn-print-receipt" (click)="printReceipt()">
+            <i class="fa-solid fa-print"></i> रसीद प्रिंट करें (Print)
+          </button>
+          <button type="button" class="btn btn-new-entry" (click)="startNewEntry()">
+            <i class="fa-solid fa-circle-plus"></i> नई प्रविष्टि दर्ज करें
+          </button>
+          <a routerLink="/complaints/finalised" class="btn btn-close-secondary">
+            <i class="fa-solid fa-list-check"></i> अंतिम आवेदन देखें
+          </a>
+          <button type="button" class="btn btn-close-secondary" (click)="closeModal()">
+            <i class="fa-solid fa-check"></i> बंद करें
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       PRINTABLE ACKNOWLEDGMENT SLIP (ONLY VISIBLE ON PRINT)
+       ══════════════════════════════════════════════════════ -->
+  <div id="printableSlip" class="printable-acknowledgment-slip" *ngIf="savedData">
+    <div class="slip-container">
+      <!-- Slip Header -->
+      <div class="slip-header-block">
+        <div class="slip-gov-seal">
+          <div class="slip-ashoka">बिहार सरकार • GOVERNMENT OF BIHAR</div>
+          <h2 class="slip-portal-title">जन शिकायत समाधान एवं लोक शिकायत निवारण अधिकार प्रणाली</h2>
+          <div class="slip-receipt-title">शिकायत पंजीकरण पावती रसीद (Complaint Registration Acknowledgment Slip)</div>
+        </div>
+        <div class="slip-qr-box">
+          <div class="qr-mock-code">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <small>ऑनलाइन ट्रैकिंग कोड</small>
+        </div>
+      </div>
+
+      <!-- Tracking Strip -->
+      <div class="slip-tracking-strip">
+        <div class="slip-tracking-left">
+          <span class="strip-label">शिकायत ट्रैकिंग संख्या / Unique Tracking ID:</span>
+          <span class="strip-code">{{ savedData.trackingId }}</span>
+        </div>
+        <div class="slip-tracking-right">
+          <span class="strip-label">पंजीकरण तिथि एवं समय:</span>
+          <span class="strip-date">{{ currentDateTimeStr }}</span>
+        </div>
+      </div>
+
+      <!-- Complaint Details Table -->
+      <table class="slip-info-table">
+        <tbody>
+          <tr>
+            <th style="width: 24%;">आवेदक का नाम (Applicant)</th>
+            <td style="width: 26%;"><strong>{{ savedData.applicantName }}</strong></td>
+            <th style="width: 24%;">पिता / पति का नाम</th>
+            <td style="width: 26%;">{{ savedData.guardianName }}</td>
+          </tr>
+          <tr>
+            <th>मोबाइल नंबर</th>
+            <td>{{ savedData.mobileNumber }} <span *ngIf="savedData.mobileNumber2">/ {{ savedData.mobileNumber2 }}</span></td>
+            <th>ईमेल आईडी</th>
+            <td>{{ savedData.email || 'उपलब्ध नहीं' }}</td>
+          </tr>
+          <tr>
+            <th>पता (Address)</th>
+            <td colspan="3">{{ savedData.address }}</td>
+          </tr>
+          <tr>
+            <th>गाँव (Village)</th>
+            <td>{{ savedData.village }}</td>
+            <th>पंचायत (Panchayat)</th>
+            <td>{{ savedData.panchayat }}</td>
+          </tr>
+          <tr>
+            <th>प्रखंड / ब्लॉक (Block)</th>
+            <td>{{ savedData.block }}</td>
+            <th>जिला (District)</th>
+            <td><strong>{{ savedData.district }}</strong></td>
+          </tr>
+          <tr>
+            <th>पिन कोड (PIN Code)</th>
+            <td>{{ savedData.pinCode }}</td>
+            <th>आवेदन का स्रोत (Source)</th>
+            <td><strong>{{ savedData.applicationSource }}</strong></td>
+          </tr>
+          <tr>
+            <th>संलग्न दस्तावेज़ (Attached PDF)</th>
+            <td>{{ savedData.pdfName ? (savedData.pdfName + ' • ' + savedData.pdfSize) : 'कोई दस्तावेज़ संलग्न नहीं' }}</td>
+            <th>वर्तमान स्थिति (Status)</th>
+            <td><strong style="color: #065f46;">पंजीकृत / विचाराधीन (Registered)</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Instructions & Notes -->
+      <div class="slip-instructions">
+        <h4>महत्वपूर्ण निर्देश (Important Instructions):</h4>
+        <ol>
+          <li>यह एक कंप्यूटर जनित पावती पर्ची है। इस पर किसी भौतिक हस्ताक्षर या कार्यालय मुहर की आवश्यकता नहीं है।</li>
+          <li>अपनी शिकायत के त्वरित निस्तारण एवं अद्यतन स्थिति जानने हेतु उपर्युक्त <strong>शिकायत ट्रैकिंग संख्या ({{ savedData.trackingId }})</strong> का उपयोग करें।</li>
+          <li>ऑनलाइन स्थिति देखने के लिए आधिकारिक पोर्टल पर जाएं: <strong>janshikayat.bihar.gov.in</strong> अथवा टोल-फ्री हेल्पलाइन <strong>1800-345-6262</strong> पर संपर्क करें।</li>
+        </ol>
+      </div>
+
+      <!-- Slip Footer & Signatures -->
+      <div class="slip-footer-block">
+        <div class="footer-left">
+          <span>प्रविष्टि ऑपरेटर: विभागीय उपयोगकर्ता</span><br>
+          <span>मुद्रण तिथि: {{ currentDateTimeStr }}</span>
+        </div>
+        <div class="footer-right">
+          <div class="stamp-box">
+            <span class="comp-generated">डिजिटल रूप से सत्यापित</span>
+            <span class="office-name">जन शिकायत निवारण कोषांग, बिहार सरकार</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

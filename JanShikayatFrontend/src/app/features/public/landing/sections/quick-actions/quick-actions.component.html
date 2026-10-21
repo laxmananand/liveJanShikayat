@@ -1,0 +1,57 @@
+<section class="quick-actions-section" id="register">
+  <div class="container">
+    <div class="quick-card-wrap glass-elevation">
+      <a class="quick-card primary-action" routerLink="/register">
+        <div class="qa-icon-wrap">
+          <i class="fa-solid fa-file-pen"></i>
+        </div>
+        <div class="qa-content">
+          <small>नई शिकायत ऑनलाइन पंजीकरण</small>
+          <strong>शिकायत दर्ज करें</strong>
+        </div>
+        <div class="qa-arrow">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <a class="quick-card" routerLink="/" fragment="track">
+        <div class="qa-icon-wrap">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </div>
+        <div class="qa-content">
+          <small>Application Reference ID से</small>
+          <strong>शिकायत ट्रैक करें</strong>
+        </div>
+        <div class="qa-arrow">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <a class="quick-card" routerLink="/register" fragment="documents">
+        <div class="qa-icon-wrap">
+          <i class="fa-solid fa-file-pdf"></i>
+        </div>
+        <div class="qa-content">
+          <small>सहायक साक्ष्य व दस्तावेज़</small>
+          <strong>PDF अपलोड करें</strong>
+        </div>
+        <div class="qa-arrow">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <a class="quick-card" [routerLink]="adminLink">
+        <div class="qa-icon-wrap">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <div class="qa-content">
+          <small>अधिकृत विभागीय पोर्टल</small>
+          <strong>{{ loggedIn ? 'डैशबोर्ड' : 'Login' }}</strong>
+        </div>
+        <div class="qa-arrow">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>

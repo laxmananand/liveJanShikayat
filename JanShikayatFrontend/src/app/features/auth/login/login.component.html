@@ -1,0 +1,126 @@
+<div class="login-page">
+
+  <!-- Top brand bar -->
+  <header class="login-topbar">
+    <div class="topbar-inner">
+      <a routerLink="/" class="topbar-brand">
+        <img src="assets/images/Govt_of_Bihar_Logo.png" alt="बिहार सरकार" />
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <span class="topbar-text">
+          <strong>जन शिकायत निदान पोर्टल</strong>
+          <small>गृह विभाग, बिहार सरकार</small>
+        </span>
+      </a>
+      <nav class="topbar-nav">
+        <a routerLink="/">होम</a>
+        <span class="topbar-login"><i class="fa-solid fa-right-to-bracket"></i> लॉगिन</span>
+      </nav>
+    </div>
+  </header>
+
+  <div class="login-card">
+    <!-- Brand panel -->
+    <section class="brand-panel">
+      <div class="brand-copy">
+        <span class="welcome">स्वागत है</span>
+        <h1>विभागीय जन शिकायत<br>निदान पोर्टल</h1>
+        <span class="brand-rule" aria-hidden="true"></span>
+        <h2>गृह विभाग, बिहार सरकार</h2>
+        <span class="brand-pill">अधिकृत विभागीय लॉगिन<br>केवल अधिकारियों हेतु</span>
+        <p>शिकायतों की समीक्षा, अग्रेषण, क्षेत्रीय जांच, कार्रवाई एवं अंतिम निस्तारण — एक ही सुरक्षित प्रणाली में।</p>
+      </div>
+    </section>
+
+    <!-- Form panel -->
+    <section class="form-panel">
+      <div class="form-logos">
+        <div class="logo-row">
+          <img src="assets/images/Govt_of_Bihar_Logo.png" alt="बिहार सरकार" class="govt-img" />
+          <span class="logo-labels">
+            <strong>जन शिकायत</strong>
+            <small>निदान पोर्टल</small>
+          </span>
+        </div>
+        <p class="nic-line">
+          Software Developed and Designed By
+          <img src="assets/images/NIC-Logo.png" alt="NIC" class="nic-img" />
+        </p>
+      </div>
+
+      <h3 class="form-title">साइन इन</h3>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <div class="field-box" [class.invalid]="form.get('email')?.touched && form.get('email')?.invalid">
+            <label for="email"><i class="fa-regular fa-user"></i> यूज़र आईडी</label>
+            <input id="email" type="text" formControlName="email" placeholder="यूज़र आईडी दर्ज करें"
+              autocomplete="username" />
+          </div>
+          <span class="error-text" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+            कृपया यूज़र आईडी दर्ज करें।
+          </span>
+        </div>
+
+        <div class="field">
+          <div class="field-box has-action" [class.invalid]="form.get('password')?.touched && form.get('password')?.invalid">
+            <label for="password"><i class="fa-solid fa-lock"></i> पासवर्ड</label>
+            <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password"
+              placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="eye-btn" (click)="togglePassword()"
+              [attr.aria-label]="showPassword ? 'पासवर्ड छुपाएं' : 'पासवर्ड दिखाएं'">
+              <i class="fa-regular" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
+          <span class="error-text" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+            पासवर्ड आवश्यक है।
+          </span>
+        </div>
+
+        <div class="form-row">
+          <label class="remember">
+            <input type="checkbox" formControlName="remember" />
+            <span>मुझे याद रखें</span>
+          </label>
+          <button type="button" class="link-btn" (click)="forgotPassword()">
+            <i class="fa-regular fa-circle-question"></i> पासवर्ड भूल गए?
+          </button>
+        </div>
+
+        <div class="captcha-row">
+          <div class="captcha-box" aria-label="कैप्चा कोड" role="img">
+            <img *ngIf="captchaImage" [src]="captchaImage" alt="कैप्चा कोड" style="height: 100%; width: auto;" />
+            <span *ngIf="captchaLoading" class="captcha-loading"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+          </div>
+          <button type="button" class="captcha-refresh" (click)="refreshCaptcha()" aria-label="नया कोड" title="नया कोड">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+
+        <div class="field">
+          <div class="field-box single" [class.invalid]="form.get('captcha')?.touched && form.get('captcha')?.invalid">
+            <input id="captcha" type="text" formControlName="captcha" placeholder="ऊपर दिया गया कोड दर्ज करें"
+              autocomplete="off" aria-label="कैप्चा कोड दर्ज करें" />
+          </div>
+        </div>
+
+        <div class="alert alert-error" *ngIf="errorMessage">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="alert alert-info" *ngIf="infoMessage">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>{{ infoMessage }}</span>
+        </div>
+
+        <button type="submit" class="login-btn" [disabled]="loading">
+          <ng-container *ngIf="!loading"><i class="fa-solid fa-right-to-bracket"></i> साइन इन</ng-container>
+          <ng-container *ngIf="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> साइन इन हो रहा है…</ng-container>
+        </button>
+      </form>
+
+      <div class="form-links">
+        <a routerLink="/" class="back-home"><i class="fa-solid fa-arrow-left"></i> होम पर वापस जाएँ</a>      </div>
+    </section>
+  </div>
+</div>

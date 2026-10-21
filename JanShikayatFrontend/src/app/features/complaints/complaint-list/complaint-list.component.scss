@@ -1,0 +1,84 @@
+.filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 20px 22px;
+
+  .form-field {
+    margin-bottom: 0;
+    min-width: 180px;
+  }
+
+  .search-field {
+    flex: 1;
+    min-width: 240px;
+  }
+}
+
+.search-wrap {
+  position: relative;
+
+  i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a88a7c;
+    font-size: 0.85rem;
+  }
+
+  input { padding-left: 38px; }
+}
+
+.table-card { padding: 0; overflow: hidden; }
+
+.table-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f6f0ed;
+  font-size: 0.84rem;
+  color: var(--muted);
+
+  i { color: var(--accent); margin-right: 6px; }
+  b { color: var(--ink); }
+}
+
+.loading-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+
+  i { color: var(--accent); margin-right: 8px; }
+}
+
+.num-cell {
+  font-weight: 700;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.strong-cell { font-weight: 600; }
+
+.sub-line {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.data-table tbody tr { cursor: pointer; }
+
+.subject-cell {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nowrap { white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .filters .form-field { min-width: 100%; }
+  .filters .btn { flex: 1; }
+}

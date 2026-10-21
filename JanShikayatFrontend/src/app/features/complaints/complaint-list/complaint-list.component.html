@@ -1,0 +1,86 @@
+<div class="page-header">
+  <div>
+    <span class="section-kicker">शिकायत रजिस्टर</span>
+    <h1>{{ sourceFilter === 'Online' ? 'ऑनलाइन (नागरिक) शिकायतें' : 'शिकायतें' }}</h1>
+    <p>शिकायत पर क्लिक करके आवेदक का पूरा विवरण एवं संलग्न दस्तावेज़ देखें।</p>
+  </div>
+  <button class="btn btn-outline" (click)="load(true)" [disabled]="loading">
+    <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
+  </button>
+</div>
+
+<div class="filters card">
+  <div class="form-field">
+    <label for="statusFilter">स्थिति</label>
+    <select id="statusFilter" [(ngModel)]="statusFilter" (change)="applyFilters()">
+      <option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</option>
+    </select>
+  </div>
+  <div class="form-field">
+    <label for="districtFilter">जिला</label>
+    <select id="districtFilter" [(ngModel)]="districtFilter" (change)="applyLocalFilters()">
+      <option value="">सभी जिले</option>
+      <option *ngFor="let d of districts" [value]="d">{{ d }}</option>
+    </select>
+  </div>
+  <div class="form-field search-field">
+    <label for="search">खोजें</label>
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="search" type="text" [(ngModel)]="searchTerm" placeholder="क्रमांक, आवेदक, मोबाइल, जिला, गाँव…" (input)="applyLocalFilters()" />
+    </div>
+  </div>
+  <button class="btn btn-outline" *ngIf="hasFilters" (click)="resetFilters()"><i class="fa-solid fa-rotate-left"></i> रीसेट</button>
+</div>
+
+<div class="alert alert-error" *ngIf="errorMessage">
+  <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+</div>
+
+<div class="card table-card">
+  <div class="table-head">
+    <span><i class="fa-solid fa-list"></i> कुल <b>{{ loading ? '…' : complaints.length }}</b> शिकायतें</span>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> शिकायतें लोड हो रही हैं…
+  </div>
+
+  <div class="table-wrap" *ngIf="!loading && complaints.length">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>शिकायत क्रमांक</th>
+          <th>आवेदक</th>
+          <th>मोबाइल</th>
+          <th>स्थान</th>
+          <th>तिथि</th>
+          <th>स्थिति</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of complaints" (click)="openComplaint(c)" tabindex="0" (keyup.enter)="openComplaint(c)">
+          <td class="num-cell">{{ c.applicationNo || c.id }}</td>
+          <td>
+            <div class="strong-cell">{{ c.applicantName }}</div>
+            <small class="sub-line" *ngIf="c.fatherHusbandName">पिता/पति: {{ c.fatherHusbandName }}</small>
+          </td>
+          <td class="nowrap">{{ c.mobileNumber }}</td>
+          <td>
+            <div>{{ c.villageName }}, {{ c.panchayatName }}</div>
+            <small class="sub-line">{{ c.blockName }} • {{ c.districtName }}</small>
+          </td>
+          <td class="nowrap">{{ c.applicationDate ? (c.applicationDate | date: 'dd-MM-yyyy') : '—' }}</td>
+          <td><span class="status-badge" [ngClass]="'status-' + defaultStatus">{{ statusLabel(defaultStatus) }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!loading && !complaints.length && !errorMessage" class="empty-state">
+    <i class="fa-solid fa-folder-open"></i>
+    {{ sourceFilter === 'Online' ? 'अभी कोई ऑनलाइन (नागरिक) शिकायत उपलब्ध नहीं है।' : 'चयनित फ़िल्टर के लिए कोई शिकायत नहीं मिली।' }}
+  </div>
+</div>
+
+<app-applicant-details-modal [record]="selected" (closed)="selected = null"></app-applicant-details-modal>

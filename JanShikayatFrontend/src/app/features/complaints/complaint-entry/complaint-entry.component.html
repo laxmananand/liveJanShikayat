@@ -1,0 +1,139 @@
+<div class="page-header">
+  <div>
+    <span class="section-kicker">शिकायत पंजीकरण</span>
+    <h1>नई शिकायत दर्ज करें</h1>
+    <p>शाखा में प्राप्त (ऑफ़लाइन / अन्य पोर्टल) शिकायत का विवरण दर्ज करें। <span class="req">*</span> चिह्नित फ़ील्ड आवश्यक हैं।</p>
+  </div>
+  <a routerLink="/complaints" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> शिकायत सूची</a>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="entry-form" novalidate>
+  <div class="card form-block">
+    <h2 class="card-title"><i class="fa-solid fa-user"></i> आवेदक का विवरण</h2>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>आवेदक का नाम <span class="req">*</span></label>
+        <input type="text" formControlName="applicantName" />
+      </div>
+      <div class="form-field">
+        <label>पिता / पति / अभिभावक का नाम <span class="req">*</span></label>
+        <input type="text" formControlName="guardianName" />
+      </div>
+      <div class="form-field">
+        <label>मोबाइल नंबर <span class="req">*</span></label>
+        <input type="tel" inputmode="numeric" maxlength="10" formControlName="mobileNumber" placeholder="10 अंकों का मोबाइल नंबर" />
+        <span class="error-text" *ngIf="form.get('mobileNumber')?.touched && form.get('mobileNumber')?.invalid">10 अंकों का मान्य मोबाइल नंबर दर्ज करें।</span>
+      </div>
+      <div class="form-field">
+        <label>ईमेल (वैकल्पिक)</label>
+        <input type="email" formControlName="email" />
+      </div>
+      <div class="form-field full-width">
+        <label>पता <span class="req">*</span></label>
+        <input type="text" formControlName="address" />
+      </div>
+      <div class="form-field">
+        <label>जिला <span class="req">*</span></label>
+        <select formControlName="district">
+          <option value="" disabled>जिला चुनें</option>
+          <option *ngFor="let d of districts" [value]="d">{{ d }}</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>प्रखंड / ब्लॉक <span class="req">*</span></label>
+        <input type="text" formControlName="block" />
+      </div>
+      <div class="form-field">
+        <label>थाना</label>
+        <input type="text" formControlName="policeStation" />
+      </div>
+      <div class="form-field">
+        <label>क्षेत्र / मोहल्ला</label>
+        <input type="text" formControlName="area" />
+      </div>
+      <div class="form-field">
+        <label>प्रतिपक्ष (यदि कोई हो)</label>
+        <input type="text" formControlName="oppositeParty" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-block">
+    <h2 class="card-title"><i class="fa-solid fa-file-lines"></i> शिकायत का विवरण</h2>
+    <div class="form-grid">
+      <div class="form-field full-width">
+        <label>विषय <span class="req">*</span></label>
+        <input type="text" formControlName="subject" />
+      </div>
+      <div class="form-field">
+        <label>श्रेणी <span class="req">*</span></label>
+        <input type="text" formControlName="category" list="entryCategoryList" placeholder="जैसे भूमि विवाद" />
+        <datalist id="entryCategoryList">
+          <option *ngFor="let c of categories" [value]="c"></option>
+        </datalist>
+      </div>
+      <div class="form-field">
+        <label>उप-श्रेणी</label>
+        <input type="text" formControlName="subCategory" />
+      </div>
+      <div class="form-field full-width">
+        <label>विस्तृत विवरण <span class="req">*</span></label>
+        <textarea rows="5" formControlName="description"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card form-block">
+    <h2 class="card-title"><i class="fa-solid fa-route"></i> स्रोत एवं आवंटन</h2>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>शिकायत की तिथि <span class="req">*</span></label>
+        <input type="date" formControlName="complaintDate" />
+      </div>
+      <div class="form-field">
+        <label>स्रोत</label>
+        <select formControlName="source">
+          <option *ngFor="let s of sources" [value]="s">{{ sourceLabel(s) }}</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>शाखा / अनुभाग <span class="req">*</span></label>
+        <select formControlName="branchId">
+          <option [ngValue]="null" disabled>शाखा चुनें</option>
+          <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.code }} — {{ b.nameHindi || b.name }}</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>संबंधित विभाग</label>
+        <select formControlName="departmentId">
+          <option [ngValue]="null">अभी ज्ञात नहीं</option>
+          <option *ngFor="let d of departments" [ngValue]="d.id">{{ d.nameHindi || d.name }}</option>
+        </select>
+      </div>
+      <div class="form-field full-width">
+        <label>शिकायत की पीडीएफ (वैकल्पिक)</label>
+        <label class="file-drop">
+          <input type="file" accept="application/pdf" (change)="onFileSelected($event)" />
+          <span class="file-icon"><i class="fa-solid" [ngClass]="selectedFile ? 'fa-file-pdf' : 'fa-cloud-arrow-up'"></i></span>
+          <span>
+            <strong>{{ selectedFile ? selectedFile.name : 'पीडीएफ फ़ाइल चुनें' }}</strong>
+            <small>{{ selectedFile ? 'बदलने के लिए क्लिक करें' : 'केवल PDF' }}</small>
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div class="form-actions">
+    <a routerLink="/complaints" class="btn btn-outline">रद्द करें</a>
+    <button type="submit" class="btn btn-accent" [disabled]="submitting">
+      <ng-container *ngIf="!submitting"><i class="fa-solid fa-paper-plane"></i> शिकायत दर्ज करें</ng-container>
+      <ng-container *ngIf="submitting"><i class="fa-solid fa-circle-notch fa-spin"></i> सबमिट हो रहा है…</ng-container>
+    </button>
+  </div>
+</form>

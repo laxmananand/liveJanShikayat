@@ -1,0 +1,32 @@
+<section class="section section-light" id="faq">
+  <div class="container faq-layout">
+    <div class="section-heading">
+      <span class="section-kicker">08 / FAQ</span>
+      <h2>अक्सर पूछे जाने<br><span class="accent-text">वाले महत्वपूर्ण सवाल</span></h2>
+      <p>पोर्टल की प्रक्रिया, दस्तावेज़ संलग्नक और केस ट्रैकिंग से जुड़े सामान्य प्रश्नों के उत्तर।</p>
+    </div>
+
+    <div class="faq-accordion">
+      <div class="accordion-item" *ngFor="let item of faqs; let i = index">
+        <h3 class="accordion-header">
+          <button
+            class="accordion-button"
+            [class.collapsed]="openIndex !== i"
+            type="button"
+            (click)="toggle(i)"
+            [attr.aria-expanded]="openIndex === i"
+            [attr.aria-controls]="'faq' + i">
+            <span class="faq-number">0{{ i + 1 }}</span>
+            <span class="faq-title">{{ item.q }}</span>
+            <i class="fa-solid fa-chevron-down faq-chevron"></i>
+          </button>
+        </h3>
+        <div [id]="'faq' + i" class="accordion-collapse" [class.show]="openIndex === i">
+          <div class="accordion-body">
+            {{ item.a }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

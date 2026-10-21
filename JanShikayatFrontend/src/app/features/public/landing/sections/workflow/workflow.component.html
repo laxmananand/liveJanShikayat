@@ -1,0 +1,30 @@
+<section class="section workflow-section" id="process">
+  <div class="workflow-bg-glow"></div>
+  
+  <div class="container">
+    <div class="section-heading centered light-heading">
+      <span class="section-kicker">03 / How it works</span>
+      <h2>शिकायत से समाधान तक —<br><span class="accent-text-light">एक व्यवस्थित डिजिटल प्रक्रिया</span></h2>
+      <p>प्रत्येक शिकायत को इन 7 पारदर्शी एवं सुरक्षित चरणों के माध्यम से निस्तारित किया जाता है।</p>
+    </div>
+
+    <div class="timeline-wrapper">
+      <div class="timeline">
+        <div class="timeline-item" *ngFor="let step of steps; let i = index">
+          <div class="timeline-marker-wrap">
+            <div class="timeline-marker">{{ ('0' + (i + 1)).slice(-2) }}</div>
+            <div class="marker-pulse"></div>
+          </div>
+          
+          <div class="timeline-card">
+            <div class="timeline-icon">
+              <i class="fa-solid" [ngClass]="step.icon"></i>
+            </div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,123 @@
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed">
+  <!-- ── Mobile Backdrop ── -->
+  <div class="sidebar-backdrop"
+       [class.visible]="sidebarMobileOpen"
+       (click)="closeMobileSidebar()"></div>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" [class.mobile-open]="sidebarMobileOpen">
+    <!-- Brand -->
+    <a class="sidebar-brand" routerLink="/dashboard" (click)="closeMobileSidebar()">
+      <img src="assets/images/Govt_of_Bihar_Logo.png" alt="बिहार सरकार" class="brand-logo" />
+      <div class="brand-text">
+        <span class="brand-title">जन शिकायत <em>निदान पोर्टल</em></span>
+        <span class="brand-sub">गृह विभाग, बिहार सरकार</span>
+      </div>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <span class="nav-section">मुख्य मेन्यू</span>
+
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="डैशबोर्ड">
+        <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+        <span class="nav-label">डैशबोर्ड</span>
+      </a>
+
+      <a routerLink="/complaints" [class.active]="isComplaintsPage"
+         class="nav-item" (click)="closeMobileSidebar()" title="सभी शिकायतें">
+        <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
+        <span class="nav-label">सभी शिकायतें</span>
+      </a>
+
+      <a *ngIf="canRegisterComplaint" routerLink="/complaints/entry" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="शिकायत प्रविष्टि (Entry Page)">
+        <span class="nav-icon"><i class="fa-solid fa-file-pen"></i></span>
+        <span class="nav-label">शिकायत प्रविष्टि</span>
+      </a>
+
+      <a routerLink="/complaints/finalised" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="अंतिम आवेदन (Finalised Applications)">
+        <span class="nav-icon"><i class="fa-solid fa-list-check"></i></span>
+        <span class="nav-label">अंतिम आवेदन</span>
+      </a>
+
+      <a routerLink="/complaints/tracking" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="शिकायत ट्रैकिंग (Track Grievance)">
+        <span class="nav-icon"><i class="fa-solid fa-route"></i></span>
+        <span class="nav-label">शिकायत ट्रैकिंग</span>
+      </a>
+
+      <ng-container *ngIf="canManageUsers">
+        <span class="nav-section">प्रशासन</span>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="उपयोगकर्ता प्रबंधन">
+          <span class="nav-icon"><i class="fa-solid fa-users-gear"></i></span>
+          <span class="nav-label">उपयोगकर्ता प्रबंधन</span>
+        </a>
+      </ng-container>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a routerLink="/" class="portal-link" title="नागरिक पोर्टल">
+        <span class="nav-icon"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+        <span class="nav-label">नागरिक पोर्टल देखें</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Top Bar ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" (click)="toggleSidebar()" title="मेनू टॉगल करें" aria-label="मेनू टॉगल करें">
+        <i class="fa-solid fa-bars-staggered"></i>
+      </button>
+      <div class="topbar-title">
+        <span class="title-main">विभागीय जन शिकायत निदान पोर्टल</span>
+        <span class="title-sub"><span class="pulse"></span> अधिकृत विभागीय प्रणाली</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="font-resizer" title="अक्षर का आकार बदलें">
+        <button type="button" (click)="fontSize.set('normal')" [class.active]="fontSize.size()==='normal'" aria-label="सामान्य आकार">A</button>
+        <button type="button" (click)="fontSize.set('large')" [class.active]="fontSize.size()==='large'" aria-label="बड़ा आकार">A+</button>
+        <button type="button" (click)="fontSize.set('xlarge')" [class.active]="fontSize.size()==='xlarge'" aria-label="अति बड़ा आकार">A++</button>
+      </div>
+
+      <div class="user-menu" *ngIf="auth.currentUser() as user">
+        <div class="user-profile" (click)="toggleUserMenu()">
+          <div class="user-avatar">{{ getUserInitials() }}</div>
+          <div class="user-info">
+            <span class="user-name">{{ user.fullName }}</span>
+            <span class="user-role">{{ roleLabel(user.role) }}</span>
+          </div>
+          <i class="fa-solid fa-chevron-down chevron" [class.rotated]="userMenuOpen"></i>
+        </div>
+
+        <!-- User Dropdown -->
+        <div class="user-dropdown" [class.open]="userMenuOpen">
+          <div class="dropdown-header">
+            <div class="user-avatar lg">{{ getUserInitials() }}</div>
+            <div>
+              <div class="dropdown-name">{{ user.fullName }}</div>
+              <div class="dropdown-email">{{ user.email }}</div>
+              <span class="dropdown-role">{{ roleLabel(user.role) }}</span>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" routerLink="/" (click)="closeUserMenu()">
+            <i class="fa-solid fa-globe"></i> नागरिक पोर्टल
+          </a>
+          <button class="dropdown-item logout" (click)="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i> लॉग आउट
+          </button>
+        </div>
+
+        <!-- Backdrop for dropdown -->
+        <div class="dropdown-backdrop" *ngIf="userMenuOpen" (click)="closeUserMenu()"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Content ── -->
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

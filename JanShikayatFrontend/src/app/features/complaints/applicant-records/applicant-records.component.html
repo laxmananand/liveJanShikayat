@@ -1,0 +1,103 @@
+<section class="records-page">
+  <header class="records-head">
+    <div>
+      <span class="section-kicker"><i class="fa-solid fa-list-check"></i> अंतिम आवेदन / Finalised Applications</span>
+      <h1>अंतिम रूप से दर्ज आवेदन</h1>
+      <p class="sub">शिकायत प्रविष्टि में अंतिम रूप दिए गए सभी आवेदनों की सूची।</p>
+    </div>
+    <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading">
+      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
+    </button>
+  </header>
+
+  <div class="records-toolbar">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, नाम, मोबाइल या जिला से खोजें" />
+    </div>
+    <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदक</span>
+  </div>
+
+  <div class="alert alert-info" *ngIf="infoMessage">
+    <i class="fa-solid fa-circle-info"></i> {{ infoMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+  </div>
+
+  <div class="loading-row" *ngIf="loading">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…
+  </div>
+
+  <div class="table-wrap" *ngIf="!loading && filtered.length">
+    <table class="records-table">
+      <thead>
+        <tr>
+          <th class="col-sn">क्र.</th>
+          <th class="col-no">आवेदन संख्या / तिथि</th>
+          <th>आवेदक</th>
+          <th>स्थान</th>
+          <th class="col-doc">दस्तावेज़</th>
+          <th class="col-action col-view">विवरण</th>
+          <th class="col-action col-act">कार्रवाई / Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filtered; let i = index">
+          <td class="col-sn" data-label="क्र.">{{ i + 1 }}</td>
+          <td class="col-no" data-label="आवेदन संख्या">
+            <span class="app-no">{{ r.applicationNo || '—' }}</span>
+            <small class="sub">{{ r.applicationDate ? (r.applicationDate | date: 'dd-MM-yyyy') : '—' }}</small>
+          </td>
+          <td data-label="आवेदक">
+            <span class="main">{{ r.applicantName }}</span>
+            <small class="sub" *ngIf="r.fatherHusbandName">पिता/पति: {{ r.fatherHusbandName }}</small>
+            <small class="sub"><i class="fa-solid fa-phone"></i> {{ r.mobileNumber }}</small>
+          </td>
+          <td data-label="स्थान">
+            <span class="main">{{ joinNames(r.villageName, r.panchayatName) }}</span>
+            <small class="sub">{{ joinNames(r.blockName, r.districtName) }}</small>
+          </td>
+          <td class="col-doc" data-label="दस्तावेज़">
+            <button type="button" *ngIf="r.documentBase64" (click)="openDoc(r)" class="doc-link">
+              <i class="fa-solid fa-file-pdf"></i> देखें
+            </button>
+            <span *ngIf="!r.documentBase64" class="no-doc">—</span>
+          </td>
+          <td class="col-action" data-label="विवरण">
+            <button type="button" class="btn-view" (click)="openDetails(r)" title="पूरा विवरण देखें">
+              <i class="fa-solid fa-eye"></i> देखें
+            </button>
+          </td>
+          <td class="col-action col-act" data-label="कार्रवाई">
+            <button *ngIf="isAdmin" type="button" class="btn-forward" (click)="forward(r)" title="आवेदन अग्रेषित करें / Forward application">
+              <i class="fa-solid fa-share-from-square"></i> {{ forwards.has(r.id) ? 'पुनः अग्रेषित / Re-forward' : 'अग्रेषित करें / Forward' }}
+            </button>
+            <button *ngIf="!isAdmin" type="button" class="btn-forward" (click)="openDetails(r)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+              <i class="fa-solid fa-comment-dots"></i> टिप्पणी / Remarks
+            </button>
+            <div class="forwarded-to" *ngIf="forwards.get(r.id) as f"
+                 [title]="f.categoryLabel + ' → ' + f.branchLabel + ' → ' + f.complaintTypeLabel + (f.remarks ? ' — ' + f.remarks : '')">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>{{ f.branchLabel }}</span>
+              <small>{{ f.complaintTypeLabel }} • {{ f.forwardedAt | date: 'dd-MM-yyyy HH:mm' }}</small>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
+    <i class="fa-solid fa-folder-open"></i>
+    <p>अभी तक कोई आवेदन अंतिम रूप से दर्ज नहीं हुआ है।</p>
+    <a *ngIf="isAdmin" routerLink="/complaints/entry" class="btn btn-primary-accent">
+      <i class="fa-solid fa-file-pen"></i> शिकायत प्रविष्टि
+    </a>
+  </div>
+
+  <app-forward-dialog *ngIf="isAdmin" [record]="forwarding" (closed)="forwarding = null" (forwarded)="onForwarded($event)"></app-forward-dialog>
+
+  <app-applicant-details-modal [record]="selected" (closed)="selected = null"></app-applicant-details-modal>
+</section>

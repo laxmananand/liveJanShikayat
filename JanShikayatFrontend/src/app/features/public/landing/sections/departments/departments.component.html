@@ -1,0 +1,22 @@
+<section class="section section-paper" id="departments">
+  <div class="container">
+    <div class="section-heading split-heading">
+      <div>
+        <span class="section-kicker">06 / Coordination</span>
+        <h2>विभागीय एवं क्षेत्रीय<br><span class="accent-text">डिजिटल समन्वय</span></h2>
+      </div>
+      <p>शिकायत को आवश्यकता के अनुसार संबंधित विभाग, नोडल शाखा और क्षेत्रीय कार्यालय तक डिजिटल रूप से अग्रेषित किया जा सकता है।</p>
+    </div>
+
+    <div class="dept-grid">
+      <div class="dept-card" *ngFor="let dept of departments; let i = index">
+        <span class="dept-num">{{ ('0' + (i + 1)).slice(-2) }}</span>
+        <div class="dept-icon">
+          <i class="fa-solid" [ngClass]="dept.icon"></i>
+        </div>
+        <b>{{ dept.name }}</b>
+        <small>संबंधित प्राधिकारी / नोडल शाखा</small>
+      </div>
+    </div>
+  </div>
+</section>

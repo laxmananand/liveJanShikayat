@@ -1,0 +1,139 @@
+<header class="site-header" [class.is-scrolled]="isScrolled">
+  <!-- Main Navbar -->
+  <nav class="main-navbar">
+    <div class="container nav-container">
+      <!-- Official Brand Identity -->
+      <a class="brand-identity" routerLink="/" fragment="home" (click)="setActive('home')">
+        <img src="assets/images/Govt_of_Bihar_Logo.png" alt="बिहार सरकार" class="logo" style="width:40px; height:auto;">
+        <div class="brand-details">
+          <div class="brand-name">
+            विभागीय जन शिकायत <span class="accent-highlight">निदान पोर्टल</span>
+          </div>
+          <div class="brand-subname">
+            गृह विभाग, बिहार सरकार
+          </div>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Menu -->
+      <div class="desktop-menu-wrap">
+        <ul class="nav-links-list">
+          <li class="nav-item" *ngFor="let link of navLinks">
+            <a class="nav-link" [class.active]="activeNav===link.id" (click)="setActive(link.id)" routerLink="/" [fragment]="link.id">
+              <i class="fa-solid" [ngClass]="link.icon"></i>
+              <span>{{ link.label }}</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-actions-group">
+          <!-- Admin Portal Link -->
+          <a class="btn-nav-admin" [routerLink]="adminLink">
+            <i class="fa-solid" [ngClass]="auth.isLoggedIn() ? 'fa-gauge-high' : 'fa-user-shield'"></i>
+            <span>{{ auth.isLoggedIn() ? 'डैशबोर्ड' : 'Login' }}</span>
+          </a>
+
+          <!-- Primary CTA Button -->
+          <a class="btn-nav-cta" routerLink="/" fragment="track" (click)="setActive('track')">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>शिकायत ट्रैक करें</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobile Hamburger Toggle Button -->
+      <button
+        class="mobile-toggle-btn"
+        type="button"
+        (click)="toggleMobileNav()"
+        [class.is-open]="isMobileNavOpen"
+        [attr.aria-expanded]="isMobileNavOpen"
+        aria-label="नेविगेशन मेन्यू खोलें">
+        <span class="hamburger-box">
+          <span class="hamburger-line top-line"></span>
+          <span class="hamburger-line mid-line"></span>
+          <span class="hamburger-line btm-line"></span>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Drawer Backdrop -->
+  <div
+    class="mobile-backdrop"
+    [class.active]="isMobileNavOpen"
+    (click)="closeMobileNav()"
+    aria-hidden="true">
+  </div>
+
+  <!-- Mobile Slide-In Navigation Drawer -->
+  <aside class="mobile-drawer" [class.is-open]="isMobileNavOpen" role="dialog" aria-modal="true" aria-label="मुख्य मेन्यू">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <img src="assets/images/Govt_of_Bihar_Logo.png" alt="बिहार सरकार" class="logo" style="width:34px; height:auto;">
+        <div>
+          <div class="drawer-title">विभागीय जन शिकायत <span>निदान पोर्टल</span></div>
+          <small class="drawer-subtitle">गृह विभाग, बिहार सरकार</small>
+        </div>
+      </div>
+      <button class="drawer-close-btn" type="button" (click)="closeMobileNav()" aria-label="मेन्यू बंद करें">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="drawer-status-pill">
+      <span class="pulse-indicator"></span>
+      <span>24x7 सक्रिय ई-समाधान पोर्टल</span>
+    </div>
+
+    <div class="drawer-body">
+      <ul class="drawer-nav-list">
+        <li *ngFor="let link of navLinks">
+          <a class="drawer-nav-link" [class.active]="activeNav===link.id" (click)="setActive(link.id)" routerLink="/" [fragment]="link.id">
+            <span class="link-icon"><i class="fa-solid" [ngClass]="link.icon"></i></span>
+            <span class="link-title">{{ link.drawerLabel }}</span>
+            <i class="fa-solid fa-chevron-right link-arrow"></i>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Drawer Action Cards -->
+      <div class="drawer-actions">
+        <a class="drawer-btn-cta" routerLink="/" fragment="track" (click)="setActive('track')">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>शिकायत स्थिति ट्रैक करें</span>
+        </a>
+        <a class="drawer-btn-secondary" routerLink="/complaints/entry" (click)="closeMobileNav()">
+          <i class="fa-solid fa-file-pen"></i>
+          <span>शिकायत प्रविष्टि (Entry Page)</span>
+        </a>
+        <a class="drawer-btn-admin" [routerLink]="adminLink" (click)="closeMobileNav()">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>{{ auth.isLoggedIn() ? 'विभागीय डैशबोर्ड' : 'Login' }}</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="drawer-footer">
+      <a [href]="'tel:' + contact.helplineTel" class="drawer-helpline">
+        <div class="helpline-circle">
+          <i class="fa-solid fa-phone-volume"></i>
+        </div>
+        <div>
+          <small>टोल-फ्री नागरिक हेल्पलाइन</small>
+          <strong>{{ contact.helplineDisplay }}</strong>
+        </div>
+      </a>
+
+      <div class="drawer-meta-controls">
+        <div class="drawer-font">
+          <span>आकार:</span>
+          <button type="button" (click)="setFontSize('normal')" [class.active]="fontSize==='normal'">A</button>
+          <button type="button" (click)="setFontSize('large')" [class.active]="fontSize==='large'">A+</button>
+          <button type="button" (click)="setFontSize('xlarge')" [class.active]="fontSize==='xlarge'">A++</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</header>
