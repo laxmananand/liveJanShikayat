@@ -10,7 +10,7 @@ namespace janshikayat.BAL.Interfaces
         ApplicantForwardDto? ForwardApplicant(ApplicantForwardRequest request, string forwardedBy, string? ip);
         IEnumerable<ApplicantForwardDto> GetForwards();
         bool IsForwarded(long applicantId);
-        IEnumerable<ApplicantForwardDto> GetLatestForwards(long? branchId);
+        IEnumerable<ApplicantForwardDto> GetLatestForwards(bool all, long? branchId, int? prashakhaId);
         ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
     }

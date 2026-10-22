@@ -44,6 +44,7 @@ interface BackendLoginEnvelope {
     username: string;
     role: string; // Mst_Role.Role name ("Admin", "Branch", "Saction"); older builds sent the numeric Id
     branchId?: number | null; // Tbl_UserLogin.Branch_Id (Mst_Branch.Complain_id) for branch logins
+    prashakhaId?: number | null; // Tbl_UserLogin.Prashakha_Id (Mst_Prashakha.ID) for Prashakha logins
   };
 }
 
@@ -141,7 +142,8 @@ export class AuthService {
             fullName: d.username,
             role: mapRole(d.role),
             branchId: d.branchId ?? null,
-            departmentId: null
+            departmentId: null,
+            prashakhaId: d.prashakhaId ?? null
           };
           return resp;
         }),
@@ -152,7 +154,8 @@ export class AuthService {
             fullName: res.fullName,
             role: res.role,
             branchId: res.branchId,
-            departmentId: res.departmentId
+            departmentId: res.departmentId,
+            prashakhaId: res.prashakhaId ?? null
           };
           localStorage.setItem(USER_KEY, JSON.stringify(user));
           this.currentUser.set(user);

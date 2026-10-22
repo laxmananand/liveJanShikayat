@@ -16,5 +16,6 @@ namespace janshikayat.BAL.Interfaces
         List<MstCategory> GetCategories();
         List<MstBranch> GetBranchesByCategory(int categoryId);
         List<MstComplainSubType> GetComplainSubTypes(long complainId);
+        List<MstPrashakha> GetPrashakhas();
     }
 }

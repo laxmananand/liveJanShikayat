@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace janshikayat.Models
 {
@@ -21,6 +21,10 @@ namespace janshikayat.Models
         public string ComplaintTypeLabel { get; set; } = string.Empty;
         [StringLength(500)]
         public string? Remarks { get; set; }
+        // Required when the category is Section (Mst_Prashakha.ID)
+        public int? PrashakhaId { get; set; }
+        [StringLength(200)]
+        public string? PrashakhaLabel { get; set; }
     }
     public class ApplicantForwardDto
     {
@@ -34,6 +38,8 @@ namespace janshikayat.Models
         public string? Remarks { get; set; }
         public string ForwardedBy { get; set; }
         public DateTime ForwardedAt { get; set; }
+        public int? PrashakhaId { get; set; }
+        public string? PrashakhaLabel { get; set; }
     }
 
     // Any logged-in user: add / view remarks on an application

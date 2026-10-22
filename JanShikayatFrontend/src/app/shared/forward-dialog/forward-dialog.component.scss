@@ -179,3 +179,24 @@
     .fw-btn { justify-content: center; }
   }
 }
+
+.fw-readonly {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid #e6d3ca;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  background: #f6f1ec;
+  color: #3a2a1d;
+  font-weight: 600;
+  cursor: default;
+}
+
+.fw-note {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: #1f4e79;
+}

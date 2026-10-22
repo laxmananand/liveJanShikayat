@@ -17,6 +17,9 @@ export interface ForwardRecord {
   remarks: string;
   forwardedBy: string;
   forwardedAt: string; // ISO date-time
+  /** Section forwards only: the Mst_Prashakha whose login receives it */
+  prashakhaId?: number | null;
+  prashakhaLabel?: string | null;
 }
 
 /** Fields the client sends; the server fills in who forwarded it and when. */

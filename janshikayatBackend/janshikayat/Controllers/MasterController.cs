@@ -164,6 +164,12 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data = _MasterData.GetComplainSubTypes(ComplainId) });
         }
 
+        [HttpPost("get-prashakha")]
+        public IActionResult GetPrashakha()
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetPrashakhas() });
+        }
+
         [HttpPost("get-forward-sub-master")]
         public IActionResult GetForwardsubmaster(int a)
         {

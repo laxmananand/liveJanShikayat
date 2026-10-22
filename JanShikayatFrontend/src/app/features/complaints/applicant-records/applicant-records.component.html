@@ -69,6 +69,7 @@
           <td data-label="अग्रेषित">
             <ng-container *ngIf="forwards.get(r.id) as f">
               <span [title]="f.categoryLabel + ' → ' + f.branchLabel + ' → ' + f.complaintTypeLabel + (f.remarks ? ' — ' + f.remarks : '')">{{ f.branchLabel }}</span>
+              <small class="sub" *ngIf="f.prashakhaLabel"><i class="fa-solid fa-sitemap"></i> {{ f.prashakhaLabel }}</small>
               <small class="sub">{{ f.complaintTypeLabel }}</small>
             </ng-container>
           </td>

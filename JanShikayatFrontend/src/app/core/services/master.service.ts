@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { BlockMaster, District, MasterApiResponse, Panchayat, Village } from '../models/models';
 import { environment } from '../../../environments/environment';
 import { CachedRequest, CachedRequestMap } from '../utils/cached-request';
-import { MstBranch, MstCategory, MstComplainSubType } from '../config/forward-options';
+import { MstBranch, MstCategory, MstComplainSubType, MstDepartment, MstPrashakha } from '../config/forward-options';
 
 /** Location masters almost never change: keep them for 30 minutes. */
 const MASTER_TTL = 30 * 60_000;
@@ -60,6 +60,26 @@ export class MasterService {
       .post<MasterApiResponse<MstComplainSubType>>(`${this.baseUrl}/get-complain-sub-type`, null, { params })
       .pipe(map(unwrap));
   }, MASTER_TTL);
+
+  private departments = new CachedRequest(
+    () => this.http.post<MasterApiResponse<MstDepartment>>(`${this.baseUrl}/get-department`, null).pipe(map(unwrap)),
+    MASTER_TTL
+  );
+
+  private prashakhas = new CachedRequest(
+    () => this.http.post<MasterApiResponse<MstPrashakha>>(`${this.baseUrl}/get-prashakha`, null).pipe(map(unwrap)),
+    MASTER_TTL
+  );
+
+  /** API: POST /Master/get-prashakha (cached) — chosen first when forwarding under "Section" */
+  getPrashakhas(): Observable<MstPrashakha[]> {
+    return this.prashakhas.get();
+  }
+
+  /** API: POST /Master/get-department (cached) — targets of the "Department" forward category */
+  getDepartments(): Observable<MstDepartment[]> {
+    return this.departments.get();
+  }
 
   /** API: POST /Master/get-category (cached) */
   getForwardCategories(): Observable<MstCategory[]> {

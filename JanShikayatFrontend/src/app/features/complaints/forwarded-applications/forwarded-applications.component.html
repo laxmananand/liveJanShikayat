@@ -64,7 +64,7 @@
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.forward.forwardedAt | date: 'dd/MM/yyyy' }}</td>
           <td data-label="अग्रेषित" [title]="row.forward.categoryLabel + ' → ' + row.forward.branchLabel + ' • ' + row.forward.forwardedBy">
             {{ row.forward.branchLabel }}
-            <small class="sub">{{ row.forward.categoryLabel }}</small>
+            <small class="sub">{{ row.forward.categoryLabel }}<ng-container *ngIf="row.forward.prashakhaLabel"> • {{ row.forward.prashakhaLabel }}</ng-container></small>
           </td>
           <td data-label="शिकायत का प्रकार">
             {{ row.forward.complaintTypeLabel }}

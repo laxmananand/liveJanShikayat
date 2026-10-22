@@ -8,6 +8,7 @@ export interface LoginResponse {
   role: AppRole;
   branchId: number | null;
   departmentId: number | null;
+  prashakhaId?: number | null;
 }
 
 export interface CurrentUser {
@@ -16,6 +17,8 @@ export interface CurrentUser {
   role: AppRole;
   branchId: number | null;
   departmentId: number | null;
+  /** Tbl_UserLogin.Prashakha_Id (Mst_Prashakha.ID) for Prashakha logins */
+  prashakhaId?: number | null;
 }
 
 export interface Branch {

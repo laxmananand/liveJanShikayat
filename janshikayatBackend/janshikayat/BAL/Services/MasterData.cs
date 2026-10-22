@@ -106,7 +106,7 @@ namespace janshikayat.BAL.Services
 
             var sql = @"select Complain_id, Branch_Eng, Branch_Hindi from Mst_Branch
                         where Is_Active = 1
-                          and (Home_Categ = @CategoryId or Section_Categ = @CategoryId or Department_Categ = @CategoryId)
+                          and (Home_Categ = @CategoryId or Section_Categ = @CategoryId or District_Categ = @CategoryId)
                         order by Complain_id";
 
             return conn.Query<MstBranch>(sql, new { CategoryId = categoryId }).ToList();
@@ -119,6 +119,16 @@ namespace janshikayat.BAL.Services
             var sql = "select Sub_Type_id, Complain_Id, Sub_Type from Mst_Complain_Sub_Type where Complain_Id = @ComplainId order by Sub_Type_id";
 
             return conn.Query<MstComplainSubType>(sql, new { ComplainId = complainId }).ToList();
+        }
+
+        // Mst_Prashakha.ID is a float; ordered by ID so Prashakha-1..17 come before A..Y
+        public List<MstPrashakha> GetPrashakhas()
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = "select CAST(ID AS INT) AS ID, Name from Mst_Prashakha where ID is not null order by ID";
+
+            return conn.Query<MstPrashakha>(sql).ToList();
         }
 
         public List<Forwarded_To_sub> GetForwarded_To_sub(int a)

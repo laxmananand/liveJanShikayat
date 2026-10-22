@@ -19,12 +19,18 @@
         public int? Category_Id { get; set; }
         public string? Category { get; set; }
     }
-    // Mst_Branch row offered for a category (Home_Categ / Section_Categ / Department_Categ)
+    // Mst_Branch row offered for a category (Home_Categ / Section_Categ / District_Categ)
     public class MstBranch
     {
         public long Complain_id { get; set; }
         public string? Branch_Eng { get; set; }
         public string? Branch_Hindi { get; set; }
+    }
+    // Section forwards also go to one Prashakha (its login sees the application)
+    public class MstPrashakha
+    {
+        public int ID { get; set; }
+        public string? Name { get; set; }
     }
     public class MstComplainSubType
     {

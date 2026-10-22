@@ -139,7 +139,7 @@ namespace janshikayat.Controllers
             }
             if (saved == null)
             {
-                return NotFound(new { status = "false", message = "Application, branch or complaint type not found." });
+                return NotFound(new { status = "false", message = "Application, branch, complaint type or Prashakha not found." });
             }
             return Ok(new { status = "true", message = "Application forwarded.", data = saved });
         }
@@ -152,19 +152,21 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwards() });
         }
 
-        // Forwarded Applications page: Admin sees every forwarded application,
-        // a branch login only those currently forwarded to its Branch_Id, anyone else none
+        // Forwarded Applications page: Admin sees every forwarded application; any other login
+        // those forwarded to its branch (Branch_Id) or, for Section forwards, to its Prashakha (Prashakha_Id)
         [Authorize]
         [HttpGet("get-my-forwards")]
         public IActionResult GetMyForwards()
         {
             if (User.IsInRole(AdminRole))
-                return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(null) });
+                return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(true, null, null) });
 
-            if (!long.TryParse(User.FindFirstValue("BranchId"), out var branchId))
+            long? branchId = long.TryParse(User.FindFirstValue("BranchId"), out var b) ? b : null;
+            int? prashakhaId = int.TryParse(User.FindFirstValue("PrashakhaId"), out var p) ? p : null;
+            if (branchId == null && prashakhaId == null)
                 return Ok(new { status = "true", message = "Success", data = Array.Empty<ApplicantForwardDto>() });
 
-            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(branchId) });
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(false, branchId, prashakhaId) });
         }
 
         // Every logged-in role (Admin, Saction, Branch) can add remarks

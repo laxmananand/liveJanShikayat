@@ -83,7 +83,11 @@ export class ApplicantRecordsComponent implements OnInit {
 
   onForwarded(f: ForwardRecord): void {
     this.forwards = new Map(this.forwards).set(f.applicantId, f);
-    this.infoMessage = `आवेदन संख्या ${this.forwarding?.applicationNo || f.applicantId} (${this.forwarding?.applicantName}) "${f.branchLabel}" को अग्रेषित किया गया। / Forwarded successfully.`;
+    const appNo = `आवेदन संख्या ${this.forwarding?.applicationNo || f.applicantId} (${this.forwarding?.applicantName})`;
+    this.infoMessage =
+      f.complaintTypeId === 'email'
+        ? `${appNo} "${f.branchLabel}" को ईमेल (${f.complaintTypeLabel}) पर भेजा गया — डेमो, ईमेल सेवा अभी उपलब्ध नहीं; रिफ्रेश पर यह हट जाएगा। / Emailed to the department (demo only, not saved).`
+        : `${appNo} "${f.branchLabel}" को अग्रेषित किया गया। / Forwarded successfully.`;
     this.forwarding = null;
     setTimeout(() => (this.infoMessage = ''), 5000);
   }

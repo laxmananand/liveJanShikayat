@@ -149,7 +149,7 @@ namespace janshikayat.BAL.Services
             var user = conn.QueryFirstOrDefault<UserLoginRow>(
                 @"SELECT TOP 1
                        t.AutoId, t.UserName, t.Password,
-                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId
+                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId, t.Prashakha_Id AS PrashakhaId
                   FROM Tbl_UserLogin t
                   LEFT JOIN Mst_Role r ON t.Role = r.Id
                   WHERE t.UserName = @UserName AND t.Password = @Password",
@@ -162,14 +162,15 @@ namespace janshikayat.BAL.Services
 
             string roleStr = user.RoleName ?? "";
             // 5) Generate JWT
-            var token = GenerateJwtToken(user.UserName, roleStr, user.BranchId);
+            var token = GenerateJwtToken(user.UserName, roleStr, user.BranchId, user.PrashakhaId);
             return new LoginResponse
             {
                 AuthToken = token,
                 userid = user.UserName,
                 username = user.UserName,
                 ROLE = roleStr,
-                branchId = user.BranchId
+                branchId = user.BranchId,
+                prashakhaId = user.PrashakhaId
             };
         }
 
@@ -181,7 +182,7 @@ namespace janshikayat.BAL.Services
         }
 
      
-        private string GenerateJwtToken(string LOGIN_ID, string role = null, long? branchId = null)
+        private string GenerateJwtToken(string LOGIN_ID, string role = null, long? branchId = null, int? prashakhaId = null)
         {
             var claims = new List<Claim>
             {
@@ -196,6 +197,10 @@ namespace janshikayat.BAL.Services
             // Tbl_UserLogin.Branch_Id -> Mst_Branch.Complain_id; decides which forwarded applications the user sees
             if (branchId.HasValue)
                 claims.Add(new Claim("BranchId", branchId.Value.ToString()));
+
+            // Tbl_UserLogin.Prashakha_Id -> Mst_Prashakha.ID; Section forwards to that Prashakha reach this login
+            if (prashakhaId.HasValue)
+                claims.Add(new Claim("PrashakhaId", prashakhaId.Value.ToString()));
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -226,6 +231,7 @@ namespace janshikayat.BAL.Services
             public string? RoleName { get; set; }
             public bool? IsActive { get; set; }
             public long? BranchId { get; set; }
+            public int? PrashakhaId { get; set; }
         }
     }
 }

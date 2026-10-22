@@ -22,23 +22,45 @@
         <span class="fw-error" *ngIf="isInvalid('categoryId')">कृपया श्रेणी चुनें / Please select a category.</span>
       </div>
 
-      <!-- 2. Branch -->
+      <!-- 2. Section only: Prashakha (its login receives the application) -->
+      <div class="fw-field" *ngIf="isSection">
+        <label for="fwPrashakha"><span class="fw-step">2</span> प्रशाखा / Prashakha <span class="req">*</span></label>
+        <select id="fwPrashakha" formControlName="prashakhaId" (change)="onPrashakhaChange()" [class.has-error]="isInvalid('prashakhaId')">
+          <option value="" disabled>{{ loadingPrashakhas ? 'लोड हो रहा है… / Loading…' : '-- प्रशाखा चुनें / Select Prashakha --' }}</option>
+          <option *ngFor="let p of prashakhas" [value]="p.id">{{ p.label }}</option>
+        </select>
+        <span class="fw-error" *ngIf="isInvalid('prashakhaId')">कृपया प्रशाखा चुनें / Please select a Prashakha.</span>
+      </div>
+
+      <!-- Branch -->
       <div class="fw-field">
-        <label for="fwBranch"><span class="fw-step">2</span> शाखा / Branch <span class="req">*</span></label>
+        <label for="fwBranch"><span class="fw-step">{{ 2 + stepOffset }}</span> {{ isDepartment ? 'विभाग / Department' : 'शाखा / Branch' }} <span class="req">*</span></label>
         <select id="fwBranch" formControlName="branchId" (change)="onBranchChange()" [class.has-error]="isInvalid('branchId')">
           <option value="" disabled>{{
             loadingBranches ? 'लोड हो रहा है… / Loading…'
             : !form.controls.categoryId.value ? '-- पहले श्रेणी चुनें / Select category first --'
+            : isSection && !form.controls.prashakhaId.value ? '-- पहले प्रशाखा चुनें / Select Prashakha first --'
+            : isDepartment && branches.length ? '-- विभाग चुनें / Select department --'
             : branches.length ? '-- शाखा चुनें / Select branch --'
             : '-- इस श्रेणी में कोई शाखा नहीं / No branch in this category --' }}</option>
           <option *ngFor="let b of branches" [value]="b.id">{{ b.label }}</option>
         </select>
-        <span class="fw-error" *ngIf="isInvalid('branchId')">कृपया शाखा चुनें / Please select a branch.</span>
+        <span class="fw-error" *ngIf="isInvalid('branchId')">{{ isDepartment ? 'कृपया विभाग चुनें / Please select a department.' : 'कृपया शाखा चुनें / Please select a branch.' }}</span>
+      </div>
+
+      <!-- 3. Department: its email, filled in automatically -->
+      <div class="fw-field" *ngIf="isDepartment">
+        <label for="fwEmail"><span class="fw-step">3</span> ईमेल / Email</label>
+        <input id="fwEmail" type="text" readonly class="fw-readonly"
+               [value]="complaintTypes.length ? complaintTypes[0].label : ''"
+               [placeholder]="form.controls.branchId.value ? 'इस विभाग का ईमेल उपलब्ध नहीं / No email for this department' : '-- पहले विभाग चुनें / Select department first --'" />
+        <span class="fw-error" *ngIf="form.controls.branchId.value && !complaintTypes.length">इस विभाग का ईमेल उपलब्ध नहीं है, अग्रेषित नहीं किया जा सकता। / No email on record — cannot forward.</span>
+        <small class="fw-note" *ngIf="complaintTypes.length"><i class="fa-solid fa-circle-info"></i> आवेदन इस ईमेल पर विभाग को भेजा जाएगा (डेमो — ईमेल सेवा अभी उपलब्ध नहीं)। / Will be emailed to the department (demo).</small>
       </div>
 
       <!-- 3. Complaint type -->
-      <div class="fw-field">
-        <label for="fwType"><span class="fw-step">3</span> शिकायत का प्रकार / Complaint Type <span class="req">*</span></label>
+      <div class="fw-field" *ngIf="!isDepartment">
+        <label for="fwType"><span class="fw-step">{{ 3 + stepOffset }}</span> शिकायत का प्रकार / Complaint Type <span class="req">*</span></label>
         <select id="fwType" formControlName="complaintTypeId" [class.has-error]="isInvalid('complaintTypeId')">
           <option value="" disabled>{{
             loadingTypes ? 'लोड हो रहा है… / Loading…'

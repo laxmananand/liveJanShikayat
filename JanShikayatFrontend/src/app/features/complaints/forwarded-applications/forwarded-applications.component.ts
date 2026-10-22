@@ -40,9 +40,10 @@ export class ForwardedApplicationsComponent implements OnInit {
     return this.auth.hasRole('SuperAdmin');
   }
 
-  /** Non-admin logins without a mapped branch never receive forwards. */
+  /** Non-admin logins mapped to neither a branch nor a Prashakha never receive forwards. */
   get hasBranch(): boolean {
-    return this.isAdmin || this.auth.currentUser()?.branchId != null;
+    const u = this.auth.currentUser();
+    return this.isAdmin || u?.branchId != null || u?.prashakhaId != null;
   }
 
   ngOnInit(): void {

@@ -150,19 +150,28 @@ namespace janshikayat.BAL.Services
             return conn.QueryFirstOrDefault<ApplicantForwardDto>(
                 @"INSERT INTO Tbl_Applicant_Forward
                        (ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
-                        ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedIp)
+                        ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedIp,
+                        PrashakhaId, PrashakhaLabel)
                   OUTPUT inserted.ApplicantId, inserted.CategoryId, inserted.CategoryLabel, inserted.BranchId,
                          inserted.BranchLabel, inserted.ComplaintTypeId, inserted.ComplaintTypeLabel,
-                         inserted.Remarks, inserted.ForwardedBy, inserted.ForwardedDate AS ForwardedAt
+                         inserted.Remarks, inserted.ForwardedBy, inserted.ForwardedDate AS ForwardedAt,
+                         inserted.PrashakhaId, inserted.PrashakhaLabel
                   SELECT @ApplicantId, @CategoryId, @CategoryLabel, @BranchId, @BranchLabel,
-                         @ComplaintTypeId, @ComplaintTypeLabel, @Remarks, @ForwardedBy, @ForwardedIp
+                         @ComplaintTypeId, @ComplaintTypeLabel, @Remarks, @ForwardedBy, @ForwardedIp,
+                         @PrashakhaId, @PrashakhaLabel
                   WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
                     AND EXISTS (SELECT 1 FROM Mst_Branch b
                                 WHERE b.Complain_id = TRY_CAST(@BranchId AS BIGINT) AND b.Is_Active = 1
-                                  AND TRY_CAST(@CategoryId AS INT) IN (b.Home_Categ, b.Section_Categ, b.Department_Categ))
+                                  AND TRY_CAST(@CategoryId AS INT) IN (b.Home_Categ, b.Section_Categ, b.District_Categ))
                     AND EXISTS (SELECT 1 FROM Mst_Complain_Sub_Type s
                                 WHERE s.Sub_Type_id = TRY_CAST(@ComplaintTypeId AS BIGINT)
-                                  AND s.Complain_Id = TRY_CAST(@BranchId AS BIGINT))",
+                                  AND s.Complain_Id = TRY_CAST(@BranchId AS BIGINT))
+                    -- Section needs a valid Prashakha; other categories must not carry one
+                    AND (CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
+                                           WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT) AND c.Category = 'Section')
+                              THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Prashakha p WHERE CAST(p.ID AS INT) = @PrashakhaId) THEN 1 ELSE 0 END
+                              ELSE CASE WHEN @PrashakhaId IS NULL THEN 1 ELSE 0 END
+                         END) = 1",
                 parameters);
         }
 
@@ -183,24 +192,30 @@ namespace janshikayat.BAL.Services
 
             return conn.Query<ApplicantForwardDto>(
                 @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
-                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt
+                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt,
+                         PrashakhaId, PrashakhaLabel
                   FROM Tbl_Applicant_Forward
                   ORDER BY ForwardedDate, ID");
         }
 
-        // Latest forward per application, newest first; branchId limits it to applications currently with that branch
-        public IEnumerable<ApplicantForwardDto> GetLatestForwards(long? branchId)
+        // Latest forward per application, newest first.
+        // all = true: every forward (Admin); otherwise those sent to the user's branch or to the user's Prashakha.
+        public IEnumerable<ApplicantForwardDto> GetLatestForwards(bool all, long? branchId, int? prashakhaId)
         {
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicantForwardDto>(
                 @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
-                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt
+                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt,
+                         PrashakhaId, PrashakhaLabel
                   FROM (SELECT f.*, ROW_NUMBER() OVER (PARTITION BY f.ApplicantId ORDER BY f.ForwardedDate DESC, f.ID DESC) AS rn
                         FROM Tbl_Applicant_Forward f) x
-                  WHERE x.rn = 1 AND (@BranchId IS NULL OR x.BranchId = CAST(@BranchId AS VARCHAR(50)))
+                  WHERE x.rn = 1
+                    AND (@All = 1
+                         OR (@BranchId IS NOT NULL AND x.BranchId = CAST(@BranchId AS VARCHAR(50)))
+                         OR (@PrashakhaId IS NOT NULL AND x.PrashakhaId = @PrashakhaId))
                   ORDER BY x.ForwardedDate DESC, x.ID DESC",
-                new { BranchId = branchId });
+                new { All = all, BranchId = branchId, PrashakhaId = prashakhaId });
         }
 
         // Returns null when the application does not exist (or is inactive)

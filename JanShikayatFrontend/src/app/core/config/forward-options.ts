@@ -22,6 +22,20 @@ export interface MstBranch {
   branch_Hindi: string;
 }
 
+/** POST /Master/get-department (Mst_Departments) */
+export interface MstDepartment {
+  departmentId: number;
+  departmentName: string;
+  email: string | null;
+  email2: string | null;
+}
+
+/** POST /Master/get-prashakha (Mst_Prashakha) */
+export interface MstPrashakha {
+  id: number;
+  name: string;
+}
+
 /** POST /Master/get-complain-sub-type?ComplainId= */
 export interface MstComplainSubType {
   sub_Type_id: number;
