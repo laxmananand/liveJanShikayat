@@ -120,10 +120,26 @@ namespace janshikayat.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            var saved = _IComplain.ForwardApplicant(request, userId, ip);
+            // Forwarding is one-time: a forwarded application is locked
+            const string lockedMessage = "Application is already forwarded and cannot be forwarded again.";
+            if (_IComplain.IsForwarded(request.ApplicantId))
+            {
+                return Conflict(new { status = "false", message = lockedMessage });
+            }
+
+            ApplicantForwardDto? saved;
+            try
+            {
+                saved = _IComplain.ForwardApplicant(request, userId, ip);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number is 2601 or 2627)
+            {
+                // Another forward of the same application won the race (unique index)
+                return Conflict(new { status = "false", message = lockedMessage });
+            }
             if (saved == null)
             {
-                return NotFound(new { status = "false", message = "Application not found." });
+                return NotFound(new { status = "false", message = "Application, branch or complaint type not found." });
             }
             return Ok(new { status = "true", message = "Application forwarded.", data = saved });
         }
@@ -134,6 +150,21 @@ namespace janshikayat.Controllers
         public IActionResult GetForwards()
         {
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwards() });
+        }
+
+        // Forwarded Applications page: Admin sees every forwarded application,
+        // a branch login only those currently forwarded to its Branch_Id, anyone else none
+        [Authorize]
+        [HttpGet("get-my-forwards")]
+        public IActionResult GetMyForwards()
+        {
+            if (User.IsInRole(AdminRole))
+                return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(null) });
+
+            if (!long.TryParse(User.FindFirstValue("BranchId"), out var branchId))
+                return Ok(new { status = "true", message = "Success", data = Array.Empty<ApplicantForwardDto>() });
+
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(branchId) });
         }
 
         // Every logged-in role (Admin, Saction, Branch) can add remarks

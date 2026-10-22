@@ -30,59 +30,74 @@
     <i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…
   </div>
 
-  <div class="table-wrap" *ngIf="!loading && filtered.length">
-    <table class="records-table">
+  <div class="table-wrap sheet-wrap" *ngIf="!loading && filtered.length">
+    <table class="records-table sheet">
       <thead>
         <tr>
-          <th class="col-sn">क्र.</th>
-          <th class="col-no">आवेदन संख्या / तिथि</th>
-          <th>आवेदक</th>
-          <th>स्थान</th>
-          <th class="col-doc">दस्तावेज़</th>
-          <th class="col-action col-view">विवरण</th>
-          <th class="col-action col-act">कार्रवाई / Action</th>
+          <th class="col-sn">क्रम सं.<small>(Sl. No.)</small></th>
+          <th>आवेदन संख्या<small>(Application No.)</small></th>
+          <th>आवेदक का नाम<small>(Applicant)</small></th>
+          <th>पिता/पति का नाम</th>
+          <th>जिला</th>
+          <th>प्रखंड</th>
+          <th>पंचायत</th>
+          <th>गाँव</th>
+          <th>मोबाइल संख्या</th>
+          <th>पिनकोड</th>
+          <th>आवेदन प्राप्ति की तिथि</th>
+          <th>अग्रेषित दिनांक</th>
+          <th>अग्रेषित<small>(Forwarded To)</small></th>
+          <th class="col-center">अग्रेषित स्थिति<small>(Status)</small></th>
+          <th class="col-center">देखें<small>(View)</small></th>
+          <th class="col-center">{{ isAdmin ? 'भेजें' : 'टिप्पणी' }}<small>{{ isAdmin ? '(Forward)' : '(Remarks)' }}</small></th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let r of filtered; let i = index">
-          <td class="col-sn" data-label="क्र.">{{ i + 1 }}</td>
-          <td class="col-no" data-label="आवेदन संख्या">
-            <span class="app-no">{{ r.applicationNo || '—' }}</span>
-            <small class="sub">{{ r.applicationDate ? (r.applicationDate | date: 'dd-MM-yyyy') : '—' }}</small>
+          <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+          <td data-label="आवेदन संख्या"><span class="app-no">{{ r.applicationNo || '—' }}</span></td>
+          <td data-label="आवेदक का नाम">{{ r.applicantName }}</td>
+          <td data-label="पिता/पति का नाम">{{ r.fatherHusbandName || '—' }}</td>
+          <td data-label="जिला">{{ r.districtName || '—' }}</td>
+          <td data-label="प्रखंड">{{ r.blockName || '—' }}</td>
+          <td data-label="पंचायत">{{ r.panchayatName || '—' }}</td>
+          <td data-label="गाँव">{{ r.villageName || '—' }}</td>
+          <td class="nowrap" data-label="मोबाइल संख्या">{{ r.mobileNumber }}</td>
+          <td data-label="पिनकोड">{{ r.pinCode || '' }}</td>
+          <td class="nowrap" data-label="प्राप्ति तिथि">{{ r.applicationDate ? (r.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
+          <td class="nowrap" data-label="अग्रेषित दिनांक">{{ forwards.get(r.id)?.forwardedAt ? (forwards.get(r.id)!.forwardedAt | date: 'dd/MM/yyyy') : '' }}</td>
+          <td data-label="अग्रेषित">
+            <ng-container *ngIf="forwards.get(r.id) as f">
+              <span [title]="f.categoryLabel + ' → ' + f.branchLabel + ' → ' + f.complaintTypeLabel + (f.remarks ? ' — ' + f.remarks : '')">{{ f.branchLabel }}</span>
+              <small class="sub">{{ f.complaintTypeLabel }}</small>
+            </ng-container>
           </td>
-          <td data-label="आवेदक">
-            <span class="main">{{ r.applicantName }}</span>
-            <small class="sub" *ngIf="r.fatherHusbandName">पिता/पति: {{ r.fatherHusbandName }}</small>
-            <small class="sub"><i class="fa-solid fa-phone"></i> {{ r.mobileNumber }}</small>
+          <td class="col-center" data-label="अग्रेषित स्थिति">
+            <span class="status-badge" [class.yes]="forwards.has(r.id)">{{ forwards.has(r.id) ? 'Yes' : 'No' }}</span>
           </td>
-          <td data-label="स्थान">
-            <span class="main">{{ joinNames(r.villageName, r.panchayatName) }}</span>
-            <small class="sub">{{ joinNames(r.blockName, r.districtName) }}</small>
-          </td>
-          <td class="col-doc" data-label="दस्तावेज़">
-            <button type="button" *ngIf="r.documentBase64" (click)="openDoc(r)" class="doc-link">
-              <i class="fa-solid fa-file-pdf"></i> देखें
-            </button>
-            <span *ngIf="!r.documentBase64" class="no-doc">—</span>
-          </td>
-          <td class="col-action" data-label="विवरण">
-            <button type="button" class="btn-view" (click)="openDetails(r)" title="पूरा विवरण देखें">
-              <i class="fa-solid fa-eye"></i> देखें
-            </button>
-          </td>
-          <td class="col-action col-act" data-label="कार्रवाई">
-            <button *ngIf="isAdmin" type="button" class="btn-forward" (click)="forward(r)" title="आवेदन अग्रेषित करें / Forward application">
-              <i class="fa-solid fa-share-from-square"></i> {{ forwards.has(r.id) ? 'पुनः अग्रेषित / Re-forward' : 'अग्रेषित करें / Forward' }}
-            </button>
-            <button *ngIf="!isAdmin" type="button" class="btn-forward" (click)="openDetails(r)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
-              <i class="fa-solid fa-comment-dots"></i> टिप्पणी / Remarks
-            </button>
-            <div class="forwarded-to" *ngIf="forwards.get(r.id) as f"
-                 [title]="f.categoryLabel + ' → ' + f.branchLabel + ' → ' + f.complaintTypeLabel + (f.remarks ? ' — ' + f.remarks : '')">
-              <i class="fa-solid fa-circle-check"></i>
-              <span>{{ f.branchLabel }}</span>
-              <small>{{ f.complaintTypeLabel }} • {{ f.forwardedAt | date: 'dd-MM-yyyy HH:mm' }}</small>
+          <td class="col-center" data-label="देखें">
+            <div class="icon-btns">
+              <button type="button" class="icon-btn view" (click)="openDetails(r)" title="पूरा विवरण देखें / View details">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button type="button" class="icon-btn pdf" *ngIf="r.documentBase64" (click)="openDoc(r)" title="दस्तावेज़ देखें / View document">
+                <i class="fa-solid fa-file-pdf"></i>
+              </button>
             </div>
+          </td>
+          <td class="col-center" data-label="भेजें">
+            <ng-container *ngIf="isAdmin">
+              <button *ngIf="!forwards.has(r.id)" type="button" class="btn-send" (click)="forward(r)" title="आवेदन अग्रेषित करें / Forward application">
+                <i class="fa-solid fa-share"></i> Forward
+              </button>
+              <button *ngIf="forwards.get(r.id) as f" type="button" class="btn-send locked" disabled
+                      [title]="'अग्रेषित — लॉक / Forwarded & locked: ' + f.branchLabel + ' (' + (f.forwardedAt | date: 'dd/MM/yyyy HH:mm') + ')'">
+                <i class="fa-solid fa-lock"></i> Forwarded
+              </button>
+            </ng-container>
+            <button *ngIf="!isAdmin" type="button" class="btn-send" (click)="openDetails(r)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+              <i class="fa-solid fa-comment-dots"></i> Remarks
+            </button>
           </td>
         </tr>
       </tbody>

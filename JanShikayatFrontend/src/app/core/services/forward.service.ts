@@ -36,6 +36,10 @@ export class ForwardService {
   private baseUrl = `${environment.apiUrl}/Applicant`;
 
   private latestCache = new CachedRequest(() => this.fetchLatest(), 60_000);
+  private mineCache = new CachedRequest(
+    () => this.http.get<ApiEnvelope<ForwardRecord[]>>(`${this.baseUrl}/get-my-forwards`).pipe(map((res) => res.data ?? [])),
+    60_000
+  );
 
   constructor() {
     // A different user (or logout) must never see the previous user's cached data
@@ -45,6 +49,7 @@ export class ForwardService {
       if (user !== lastUser) {
         lastUser = user;
         this.latestCache.clear();
+        this.mineCache.clear();
       }
     });
   }
@@ -55,8 +60,19 @@ export class ForwardService {
       .post<ApiEnvelope<ForwardRecord>>(`${this.baseUrl}/forward-applicant`, payload)
       .pipe(
         map((res) => res.data),
-        tap(() => this.latestCache.invalidate())
+        tap(() => {
+          this.latestCache.invalidate();
+          this.mineCache.invalidate();
+        })
       );
+  }
+
+  /**
+   * API: GET /Applicant/get-my-forwards → applications currently forwarded to the logged-in
+   * user's branch, newest first (Admin gets every forwarded application). Cached; `force` refetches.
+   */
+  myForwards(force = false): Observable<ForwardRecord[]> {
+    return this.mineCache.get(force);
   }
 
   /** API: GET /Applicant/get-forwards → latest forward per application id (cached; `force` refetches). */

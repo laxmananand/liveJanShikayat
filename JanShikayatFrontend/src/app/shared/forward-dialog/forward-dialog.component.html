@@ -16,8 +16,8 @@
       <div class="fw-field">
         <label for="fwCategory"><span class="fw-step">1</span> श्रेणी / Category <span class="req">*</span></label>
         <select id="fwCategory" formControlName="categoryId" (change)="onCategoryChange()" [class.has-error]="isInvalid('categoryId')">
-          <option value="" disabled>-- श्रेणी चुनें / Select category --</option>
-          <option *ngFor="let c of categories" [value]="c.id">{{ label(c) }}</option>
+          <option value="" disabled>{{ loadingCategories ? 'लोड हो रहा है… / Loading…' : '-- श्रेणी चुनें / Select category --' }}</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ c.label }}</option>
         </select>
         <span class="fw-error" *ngIf="isInvalid('categoryId')">कृपया श्रेणी चुनें / Please select a category.</span>
       </div>
@@ -26,8 +26,12 @@
       <div class="fw-field">
         <label for="fwBranch"><span class="fw-step">2</span> शाखा / Branch <span class="req">*</span></label>
         <select id="fwBranch" formControlName="branchId" (change)="onBranchChange()" [class.has-error]="isInvalid('branchId')">
-          <option value="" disabled>{{ category ? '-- शाखा चुनें / Select branch --' : '-- पहले श्रेणी चुनें / Select category first --' }}</option>
-          <option *ngFor="let b of branches" [value]="b.id">{{ label(b) }}</option>
+          <option value="" disabled>{{
+            loadingBranches ? 'लोड हो रहा है… / Loading…'
+            : !form.controls.categoryId.value ? '-- पहले श्रेणी चुनें / Select category first --'
+            : branches.length ? '-- शाखा चुनें / Select branch --'
+            : '-- इस श्रेणी में कोई शाखा नहीं / No branch in this category --' }}</option>
+          <option *ngFor="let b of branches" [value]="b.id">{{ b.label }}</option>
         </select>
         <span class="fw-error" *ngIf="isInvalid('branchId')">कृपया शाखा चुनें / Please select a branch.</span>
       </div>
@@ -36,8 +40,12 @@
       <div class="fw-field">
         <label for="fwType"><span class="fw-step">3</span> शिकायत का प्रकार / Complaint Type <span class="req">*</span></label>
         <select id="fwType" formControlName="complaintTypeId" [class.has-error]="isInvalid('complaintTypeId')">
-          <option value="" disabled>{{ form.controls.branchId.value ? '-- प्रकार चुनें / Select type --' : '-- पहले शाखा चुनें / Select branch first --' }}</option>
-          <option *ngFor="let t of complaintTypes" [value]="t.id">{{ label(t) }}</option>
+          <option value="" disabled>{{
+            loadingTypes ? 'लोड हो रहा है… / Loading…'
+            : !form.controls.branchId.value ? '-- पहले शाखा चुनें / Select branch first --'
+            : complaintTypes.length ? '-- प्रकार चुनें / Select type --'
+            : '-- कोई प्रकार उपलब्ध नहीं / No type available --' }}</option>
+          <option *ngFor="let t of complaintTypes" [value]="t.id">{{ t.label }}</option>
         </select>
         <span class="fw-error" *ngIf="isInvalid('complaintTypeId')">कृपया शिकायत का प्रकार चुनें / Please select a complaint type.</span>
       </div>

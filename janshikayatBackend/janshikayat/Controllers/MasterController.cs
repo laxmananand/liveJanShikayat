@@ -145,6 +145,25 @@ namespace janshikayat.Controllers
             return Ok(re);
         }
 
+        // Forward popup cascade: category -> branch -> complaint type
+        [HttpPost("get-category")]
+        public IActionResult GetCategory()
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetCategories() });
+        }
+
+        [HttpPost("get-branch-by-category")]
+        public IActionResult GetBranchByCategory(int CategoryId)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetBranchesByCategory(CategoryId) });
+        }
+
+        [HttpPost("get-complain-sub-type")]
+        public IActionResult GetComplainSubType(long ComplainId)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetComplainSubTypes(ComplainId) });
+        }
+
         [HttpPost("get-forward-sub-master")]
         public IActionResult GetForwardsubmaster(int a)
         {

@@ -24,7 +24,7 @@
         <span class="nav-label">डैशबोर्ड</span>
       </a>
 
-      <a routerLink="/complaints" [class.active]="isComplaintsPage"
+      <a *ngIf="isAdmin" routerLink="/complaints" [class.active]="isComplaintsPage"
          class="nav-item" (click)="closeMobileSidebar()" title="सभी शिकायतें">
         <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
         <span class="nav-label">सभी शिकायतें</span>
@@ -35,9 +35,14 @@
         <span class="nav-label">शिकायत प्रविष्टि</span>
       </a>
 
-      <a routerLink="/complaints/finalised" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="अंतिम आवेदन (Finalised Applications)">
+      <a *ngIf="isAdmin" routerLink="/complaints/finalised" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="अंतिम आवेदन (Finalised Applications)">
         <span class="nav-icon"><i class="fa-solid fa-list-check"></i></span>
         <span class="nav-label">अंतिम आवेदन</span>
+      </a>
+
+      <a routerLink="/complaints/forwarded" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="अग्रेषित आवेदन (Forwarded Applications)">
+        <span class="nav-icon"><i class="fa-solid fa-share-from-square"></i></span>
+        <span class="nav-label">अग्रेषित आवेदन</span>
       </a>
 
       <a routerLink="/complaints/tracking" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="शिकायत ट्रैकिंग (Track Grievance)">

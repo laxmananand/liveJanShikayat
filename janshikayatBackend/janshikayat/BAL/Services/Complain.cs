@@ -137,7 +137,8 @@ namespace janshikayat.BAL.Services
             return applicants;
         }
 
-        // Returns null when the application does not exist (or is inactive)
+        // Returns null when the application does not exist (or is inactive), or the
+        // branch / complaint type does not match the Mst_Category -> Mst_Branch -> Mst_Complain_Sub_Type mapping
         public ApplicantForwardDto? ForwardApplicant(ApplicantForwardRequest request, string forwardedBy, string? ip)
         {
             using var conn = _context.CreateConnection();
@@ -155,8 +156,24 @@ namespace janshikayat.BAL.Services
                          inserted.Remarks, inserted.ForwardedBy, inserted.ForwardedDate AS ForwardedAt
                   SELECT @ApplicantId, @CategoryId, @CategoryLabel, @BranchId, @BranchLabel,
                          @ComplaintTypeId, @ComplaintTypeLabel, @Remarks, @ForwardedBy, @ForwardedIp
-                  WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)",
+                  WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
+                    AND EXISTS (SELECT 1 FROM Mst_Branch b
+                                WHERE b.Complain_id = TRY_CAST(@BranchId AS BIGINT) AND b.Is_Active = 1
+                                  AND TRY_CAST(@CategoryId AS INT) IN (b.Home_Categ, b.Section_Categ, b.Department_Categ))
+                    AND EXISTS (SELECT 1 FROM Mst_Complain_Sub_Type s
+                                WHERE s.Sub_Type_id = TRY_CAST(@ComplaintTypeId AS BIGINT)
+                                  AND s.Complain_Id = TRY_CAST(@BranchId AS BIGINT))",
                 parameters);
+        }
+
+        // An application is forwarded only once (UX_Applicant_Forward_ApplicantId)
+        public bool IsForwarded(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.ExecuteScalar<bool>(
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM Tbl_Applicant_Forward WHERE ApplicantId = @ApplicantId) THEN 1 ELSE 0 END",
+                new { ApplicantId = applicantId });
         }
 
         // Oldest first, so the last row per application is its latest forward
@@ -169,6 +186,21 @@ namespace janshikayat.BAL.Services
                          ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt
                   FROM Tbl_Applicant_Forward
                   ORDER BY ForwardedDate, ID");
+        }
+
+        // Latest forward per application, newest first; branchId limits it to applications currently with that branch
+        public IEnumerable<ApplicantForwardDto> GetLatestForwards(long? branchId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<ApplicantForwardDto>(
+                @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
+                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt
+                  FROM (SELECT f.*, ROW_NUMBER() OVER (PARTITION BY f.ApplicantId ORDER BY f.ForwardedDate DESC, f.ID DESC) AS rn
+                        FROM Tbl_Applicant_Forward f) x
+                  WHERE x.rn = 1 AND (@BranchId IS NULL OR x.BranchId = CAST(@BranchId AS VARCHAR(50)))
+                  ORDER BY x.ForwardedDate DESC, x.ID DESC",
+                new { BranchId = branchId });
         }
 
         // Returns null when the application does not exist (or is inactive)

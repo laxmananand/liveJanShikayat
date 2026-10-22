@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { forkJoin, map, of } from 'rxjs';
 import { ApplicantService } from '../../core/services/applicant.service';
+import { ForwardService } from '../../core/services/forward.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ApplicantRecord, DashboardSummary } from '../../core/models/models';
 import { roleLabel } from '../../core/utils/labels';
@@ -44,6 +46,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private applicantService: ApplicantService,
+    private forwardService: ForwardService,
     public auth: AuthService,
     private router: Router
   ) {}
@@ -54,8 +57,13 @@ export class DashboardComponent implements OnInit {
 
   load(force = false): void {
     this.loading = true;
-    this.applicantService.getApplicants(force).subscribe({
-      next: (list) => {
+    // Admin sees every application; everyone else only those currently forwarded to them
+    forkJoin({
+      list: this.applicantService.getApplicants(force),
+      mine: this.isAdmin ? of(null) : this.forwardService.myForwards(force).pipe(map((f) => new Set(f.map((x) => x.applicantId))))
+    }).subscribe({
+      next: ({ list: all, mine }) => {
+        const list = mine ? all.filter((r) => mine.has(r.id)) : all;
         const s = this.summarise(list);
         this.summary = s;
         this.tiles = [
@@ -110,12 +118,21 @@ export class DashboardComponent implements OnInit {
     };
   }
 
+  get isAdmin(): boolean {
+    return this.auth.hasRole('SuperAdmin');
+  }
+
+  /** Admin's full list, or the user's Forwarded Applications page. */
+  get listLink(): string {
+    return this.isAdmin ? '/complaints' : '/complaints/forwarded';
+  }
+
   get canRegisterComplaint(): boolean {
     return this.auth.hasRole('SuperAdmin');
   }
 
   get canSeeOnlineComplaints(): boolean {
-    return this.auth.hasRole('SuperAdmin', 'DepartmentHead');
+    return this.isAdmin;
   }
 
   share(value: number): number {
@@ -124,6 +141,10 @@ export class DashboardComponent implements OnInit {
   }
 
   navigateToComplaints(status?: string): void {
+    if (!this.isAdmin) {
+      this.router.navigate([this.listLink]);
+      return;
+    }
     this.router.navigate(['/complaints'], status ? { queryParams: { status } } : {});
   }
 

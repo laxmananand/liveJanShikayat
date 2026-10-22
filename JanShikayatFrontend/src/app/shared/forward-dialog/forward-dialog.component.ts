@@ -2,10 +2,14 @@ import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApplicantRecord } from '../../core/models/models';
-import { FORWARD_CATEGORIES, ForwardCategory, ForwardOption } from '../../core/config/forward-options';
+import { ForwardOption } from '../../core/config/forward-options';
 import { ForwardRecord, ForwardService } from '../../core/services/forward.service';
+import { MasterService } from '../../core/services/master.service';
 
-/** Forward popup: category → branch → complaint type (+ optional remark). */
+/**
+ * Forward popup: category → branch → complaint type (+ optional remark).
+ * Options come from Mst_Category → Mst_Branch (Home/Section/Department_Categ) → Mst_Complain_Sub_Type.
+ */
 @Component({
   selector: 'app-forward-dialog',
   standalone: true,
@@ -16,13 +20,19 @@ import { ForwardRecord, ForwardService } from '../../core/services/forward.servi
 export class ForwardDialogComponent implements OnChanges {
   private fb = inject(FormBuilder);
   private forwardService = inject(ForwardService);
+  private masterService = inject(MasterService);
 
   /** The application to forward; null keeps the popup closed. */
   @Input() record: ApplicantRecord | null = null;
   @Output() closed = new EventEmitter<void>();
   @Output() forwarded = new EventEmitter<ForwardRecord>();
 
-  categories = FORWARD_CATEGORIES;
+  categories: ForwardOption[] = [];
+  branches: ForwardOption[] = [];
+  complaintTypes: ForwardOption[] = [];
+  loadingCategories = false;
+  loadingBranches = false;
+  loadingTypes = false;
   submitting = false;
   errorMessage = '';
 
@@ -39,39 +49,76 @@ export class ForwardDialogComponent implements OnChanges {
       this.form.reset({ categoryId: '', branchId: '', complaintTypeId: '', remarks: '' });
       this.form.controls.branchId.disable();
       this.form.controls.complaintTypeId.disable();
+      this.branches = [];
+      this.complaintTypes = [];
       this.submitting = false;
       this.errorMessage = '';
+      this.loadCategories();
     }
   }
 
-  get category(): ForwardCategory | undefined {
-    return this.categories.find((c) => c.id === this.form.controls.categoryId.value);
-  }
-
-  get branches(): ForwardOption[] {
-    return this.category?.branches ?? [];
-  }
-
-  get complaintTypes(): ForwardOption[] {
-    return this.category?.complaintTypes ?? [];
-  }
-
-  label(o: ForwardOption): string {
-    return `${o.hi} / ${o.en}`;
+  private loadCategories(): void {
+    this.loadingCategories = true;
+    this.masterService.getForwardCategories().subscribe({
+      next: (list) => {
+        this.categories = list.map((c) => ({ id: String(c.category_Id), label: c.category }));
+        this.loadingCategories = false;
+      },
+      error: () => {
+        this.loadingCategories = false;
+        this.errorMessage = 'श्रेणियाँ लोड नहीं हो सकीं। / Could not load categories.';
+      }
+    });
   }
 
   onCategoryChange(): void {
-    const { branchId, complaintTypeId } = this.form.controls;
+    const { categoryId, branchId, complaintTypeId } = this.form.controls;
     branchId.reset('');
+    branchId.disable();
     complaintTypeId.reset('');
     complaintTypeId.disable();
-    this.category ? branchId.enable() : branchId.disable();
+    this.branches = [];
+    this.complaintTypes = [];
+    const selected = categoryId.value;
+    if (!selected) return;
+
+    this.loadingBranches = true;
+    this.masterService.getBranchesByCategory(+selected).subscribe({
+      next: (list) => {
+        // Ignore a reply for a category that is no longer selected
+        if (categoryId.value !== selected) return;
+        this.branches = list.map((b) => ({ id: String(b.complain_id), label: `${b.branch_Hindi?.trim()} / ${b.branch_Eng}` }));
+        this.loadingBranches = false;
+        if (this.branches.length) branchId.enable();
+      },
+      error: () => {
+        this.loadingBranches = false;
+        this.errorMessage = 'शाखाएँ लोड नहीं हो सकीं। / Could not load branches.';
+      }
+    });
   }
 
   onBranchChange(): void {
     const { branchId, complaintTypeId } = this.form.controls;
     complaintTypeId.reset('');
-    branchId.value ? complaintTypeId.enable() : complaintTypeId.disable();
+    complaintTypeId.disable();
+    this.complaintTypes = [];
+    const selected = branchId.value;
+    if (!selected) return;
+
+    this.loadingTypes = true;
+    this.masterService.getComplainSubTypes(+selected).subscribe({
+      next: (list) => {
+        if (branchId.value !== selected) return;
+        this.complaintTypes = list.map((t) => ({ id: String(t.sub_Type_id), label: t.sub_Type }));
+        this.loadingTypes = false;
+        if (this.complaintTypes.length) complaintTypeId.enable();
+      },
+      error: () => {
+        this.loadingTypes = false;
+        this.errorMessage = 'शिकायत के प्रकार लोड नहीं हो सके। / Could not load complaint types.';
+      }
+    });
   }
 
   isInvalid(name: 'categoryId' | 'branchId' | 'complaintTypeId' | 'remarks'): boolean {
@@ -86,20 +133,20 @@ export class ForwardDialogComponent implements OnChanges {
     this.form.markAllAsTouched();
     if (!categoryId.value || !branchId.value || !complaintTypeId.value || this.form.invalid) return;
 
-    const category = this.category!;
-    const branch = category.branches.find((b) => b.id === branchId.value)!;
-    const type = category.complaintTypes.find((t) => t.id === complaintTypeId.value)!;
+    const category = this.categories.find((c) => c.id === categoryId.value)!;
+    const branch = this.branches.find((b) => b.id === branchId.value)!;
+    const type = this.complaintTypes.find((t) => t.id === complaintTypeId.value)!;
 
     this.submitting = true;
     this.forwardService
       .forward({
         applicantId: this.record.id,
         categoryId: category.id,
-        categoryLabel: this.label(category),
+        categoryLabel: category.label,
         branchId: branch.id,
-        branchLabel: this.label(branch),
+        branchLabel: branch.label,
         complaintTypeId: type.id,
-        complaintTypeLabel: this.label(type),
+        complaintTypeLabel: type.label,
         remarks: (this.form.controls.remarks.value ?? '').trim()
       })
       .subscribe({
@@ -112,7 +159,11 @@ export class ForwardDialogComponent implements OnChanges {
           this.errorMessage =
             err?.status === 403
               ? 'केवल एडमिन आवेदन अग्रेषित कर सकते हैं। / Only Admin can forward applications.'
-              : 'अग्रेषण सहेजा नहीं जा सका। / Could not save the forward.';
+              : err?.status === 409
+                ? 'यह आवेदन पहले ही अग्रेषित हो चुका है और लॉक है। / Already forwarded — locked.'
+                : err?.status === 404
+                ? 'आवेदन, शाखा या शिकायत का प्रकार मान्य नहीं है। / Application, branch or complaint type not found.'
+                : 'अग्रेषण सहेजा नहीं जा सका। / Could not save the forward.';
         }
       });
   }

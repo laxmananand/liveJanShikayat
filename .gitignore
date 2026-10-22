@@ -25,6 +25,24 @@ desktop.ini
 appsettings.*.local.json
 secrets.json
 
+# ===================== Database dumps / backups =====================
+# SQL Server backup in repo root (no extension)
+/jansikayat
+*.bak
+*.bacpac
+*.dacpac
+*.mdf
+*.ldf
+*.ndf
+*.dump
+*.backup
+*_dump.sql
+*-dump.sql
+dump*.sql
+*.zip
+*.rar
+*.7z
+
 # ===================== Backend (.NET) =====================
 [Bb]in/
 [Oo]bj/

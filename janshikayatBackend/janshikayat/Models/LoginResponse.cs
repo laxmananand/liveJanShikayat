@@ -7,6 +7,8 @@
         public string username { get; set; }
 
         public string ROLE { get; set; }
+        // Mst_Branch.Complain_id for branch logins; null for everyone else
+        public long? branchId { get; set; }
 
     }
 }

@@ -90,6 +90,37 @@ namespace janshikayat.BAL.Services
 
             return result.ToList();
         }
+        public List<MstCategory> GetCategories()
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = "select AutoId, Category_Id, Category from Mst_Category order by Category_Id";
+
+            return conn.Query<MstCategory>(sql).ToList();
+        }
+
+        // A branch can sit under several categories (e.g. Section and Department)
+        public List<MstBranch> GetBranchesByCategory(int categoryId)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = @"select Complain_id, Branch_Eng, Branch_Hindi from Mst_Branch
+                        where Is_Active = 1
+                          and (Home_Categ = @CategoryId or Section_Categ = @CategoryId or Department_Categ = @CategoryId)
+                        order by Complain_id";
+
+            return conn.Query<MstBranch>(sql, new { CategoryId = categoryId }).ToList();
+        }
+
+        public List<MstComplainSubType> GetComplainSubTypes(long complainId)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = "select Sub_Type_id, Complain_Id, Sub_Type from Mst_Complain_Sub_Type where Complain_Id = @ComplainId order by Sub_Type_id";
+
+            return conn.Query<MstComplainSubType>(sql, new { ComplainId = complainId }).ToList();
+        }
+
         public List<Forwarded_To_sub> GetForwarded_To_sub(int a)
         {
             using var conn = _context.CreateConnection();

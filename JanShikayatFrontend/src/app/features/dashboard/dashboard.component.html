@@ -9,8 +9,8 @@
     <a *ngIf="canRegisterComplaint" routerLink="/complaints/entry" class="btn btn-accent">
       <i class="fa-solid fa-file-pen"></i> शिकायत प्रविष्टि
     </a>
-    <a routerLink="/complaints" class="btn btn-ghost">
-      <i class="fa-solid fa-folder-open"></i> सभी शिकायतें
+    <a [routerLink]="listLink" class="btn btn-ghost">
+      <i class="fa-solid" [ngClass]="isAdmin ? 'fa-folder-open' : 'fa-share-from-square'"></i> {{ isAdmin ? 'सभी शिकायतें' : 'अग्रेषित आवेदन' }}
     </a>
     <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading" title="आंकड़े रिफ्रेश करें">
       <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i>
@@ -36,7 +36,7 @@
   <div class="hero-tile" (click)="navigateToComplaints()" role="link" tabindex="0" (keyup.enter)="navigateToComplaints()">
     <div class="hero-icon"><i class="fa-solid fa-layer-group"></i></div>
     <div>
-      <span class="hero-label">कुल शिकायतें</span>
+      <span class="hero-label">{{ isAdmin ? 'कुल शिकायतें' : 'मुझे अग्रेषित शिकायतें' }}</span>
       <span class="hero-value">{{ summary.totalComplaints }}</span>
       <span class="hero-meta">आज: <b>{{ receivedToday }}</b> · इस माह: <b>{{ receivedThisMonth }}</b></span>
     </div>
@@ -67,8 +67,8 @@
   <div class="insight-grid">
     <div class="card insight-card">
       <div class="insight-head">
-        <h2 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> हाल की शिकायतें</h2>
-        <a routerLink="/complaints" class="insight-link">सभी देखें <i class="fa-solid fa-arrow-right"></i></a>
+        <h2 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> {{ isAdmin ? 'हाल की शिकायतें' : 'हाल में अग्रेषित शिकायतें' }}</h2>
+        <a [routerLink]="listLink" class="insight-link">सभी देखें <i class="fa-solid fa-arrow-right"></i></a>
       </div>
       <ul class="recent-list" *ngIf="recent.length; else noRecent">
         <li *ngFor="let r of recent" (click)="selected = r" tabindex="0" (keyup.enter)="selected = r">
@@ -81,7 +81,7 @@
         </li>
       </ul>
       <ng-template #noRecent>
-        <p class="insight-empty">अभी तक कोई शिकायत दर्ज नहीं हुई है।</p>
+        <p class="insight-empty">{{ isAdmin ? 'अभी तक कोई शिकायत दर्ज नहीं हुई है।' : 'अभी तक आपको कोई शिकायत अग्रेषित नहीं हुई है।' }}</p>
       </ng-template>
     </div>
 

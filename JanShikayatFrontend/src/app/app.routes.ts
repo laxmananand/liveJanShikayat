@@ -11,6 +11,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ComplaintListComponent } from './features/complaints/complaint-list/complaint-list.component';
 import { EntryPageComponent } from './features/complaints/entry-page/entry-page.component';
 import { ApplicantRecordsComponent } from './features/complaints/applicant-records/applicant-records.component';
+import { ForwardedApplicationsComponent } from './features/complaints/forwarded-applications/forwarded-applications.component';
 import { TrackingPageComponent } from './features/complaints/tracking-page/tracking-page.component';
 import { ComplaintDetailComponent } from './features/complaints/complaint-detail/complaint-detail.component';
 import { UserManagementComponent } from './features/admin/user-management/user-management.component';
@@ -36,7 +37,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent, title: 'डैशबोर्ड | जन शिकायत निदान पोर्टल' },
-      { path: 'complaints', component: ComplaintListComponent, title: 'शिकायतें | जन शिकायत निदान पोर्टल' },
+      { path: 'complaints', component: ComplaintListComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायतें | जन शिकायत निदान पोर्टल' },
       {
         path: 'complaints/entry',
         component: EntryPageComponent,
@@ -52,7 +53,13 @@ export const routes: Routes = [
       {
         path: 'complaints/finalised',
         component: ApplicantRecordsComponent,
+        canActivate: [roleGuard(['SuperAdmin'])],
         title: 'अंतिम आवेदन | जन शिकायत निदान पोर्टल'
+      },
+      {
+        path: 'complaints/forwarded',
+        component: ForwardedApplicationsComponent,
+        title: 'अग्रेषित आवेदन | जन शिकायत निदान पोर्टल'
       },
       {
         path: 'complaints/records',
@@ -74,7 +81,7 @@ export const routes: Routes = [
         redirectTo: 'complaints/entry',
         pathMatch: 'full'
       },
-      { path: 'complaints/:id', component: ComplaintDetailComponent, title: 'शिकायत विवरण | जन शिकायत निदान पोर्टल' },
+      { path: 'complaints/:id', component: ComplaintDetailComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायत विवरण | जन शिकायत निदान पोर्टल' },
       {
         path: 'admin/users',
         component: UserManagementComponent,

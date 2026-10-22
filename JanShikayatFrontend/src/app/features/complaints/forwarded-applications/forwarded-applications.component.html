@@ -1,0 +1,100 @@
+<section class="records-page">
+  <header class="records-head">
+    <div>
+      <span class="section-kicker"><i class="fa-solid fa-share-from-square"></i> अग्रेषित आवेदन / Forwarded Applications</span>
+      <h1>अग्रेषित आवेदन</h1>
+      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।' : 'आपकी शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
+    </div>
+    <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading">
+      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
+    </button>
+  </header>
+
+  <div class="records-toolbar">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, नाम, मोबाइल, जिला, शाखा या प्रकार से खोजें" />
+    </div>
+    <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदन</span>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+  </div>
+
+  <div class="loading-row" *ngIf="loading">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…
+  </div>
+
+  <div class="table-wrap sheet-wrap" *ngIf="!loading && filtered.length">
+    <table class="records-table sheet">
+      <thead>
+        <tr>
+          <th class="col-sn">क्रम सं.<small>(Sl. No.)</small></th>
+          <th>आवेदन संख्या<small>(Application No.)</small></th>
+          <th>आवेदक का नाम<small>(Applicant)</small></th>
+          <th>पिता/पति का नाम</th>
+          <th>जिला</th>
+          <th>प्रखंड</th>
+          <th>पंचायत</th>
+          <th>गाँव</th>
+          <th>मोबाइल संख्या</th>
+          <th>पिनकोड</th>
+          <th>आवेदन प्राप्ति की तिथि</th>
+          <th>अग्रेषित दिनांक</th>
+          <th>अग्रेषित<small>(Forwarded To)</small></th>
+          <th>शिकायत का प्रकार<small>(Complaint Type)</small></th>
+          <th class="col-center">देखें<small>(View)</small></th>
+          <th class="col-center">टिप्पणी<small>(Remarks)</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filtered; let i = index">
+          <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+          <td data-label="आवेदन संख्या"><span class="app-no">{{ row.record.applicationNo || '—' }}</span></td>
+          <td data-label="आवेदक का नाम">{{ row.record.applicantName }}</td>
+          <td data-label="पिता/पति का नाम">{{ row.record.fatherHusbandName || '—' }}</td>
+          <td data-label="जिला">{{ row.record.districtName || '—' }}</td>
+          <td data-label="प्रखंड">{{ row.record.blockName || '—' }}</td>
+          <td data-label="पंचायत">{{ row.record.panchayatName || '—' }}</td>
+          <td data-label="गाँव">{{ row.record.villageName || '—' }}</td>
+          <td class="nowrap" data-label="मोबाइल संख्या">{{ row.record.mobileNumber }}</td>
+          <td data-label="पिनकोड">{{ row.record.pinCode || '' }}</td>
+          <td class="nowrap" data-label="प्राप्ति तिथि">{{ row.record.applicationDate ? (row.record.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
+          <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.forward.forwardedAt | date: 'dd/MM/yyyy' }}</td>
+          <td data-label="अग्रेषित" [title]="row.forward.categoryLabel + ' → ' + row.forward.branchLabel + ' • ' + row.forward.forwardedBy">
+            {{ row.forward.branchLabel }}
+            <small class="sub">{{ row.forward.categoryLabel }}</small>
+          </td>
+          <td data-label="शिकायत का प्रकार">
+            {{ row.forward.complaintTypeLabel }}
+            <small class="sub" *ngIf="row.forward.remarks" [title]="row.forward.remarks"><i class="fa-solid fa-comment"></i> {{ row.forward.remarks }}</small>
+          </td>
+          <td class="col-center" data-label="देखें">
+            <div class="icon-btns">
+              <button type="button" class="icon-btn view" (click)="openDetails(row.record)" title="पूरा विवरण देखें / View details">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button type="button" class="icon-btn pdf" *ngIf="row.record.documentBase64" (click)="openDoc(row.record)" title="दस्तावेज़ देखें / View document">
+                <i class="fa-solid fa-file-pdf"></i>
+              </button>
+            </div>
+          </td>
+          <td class="col-center" data-label="टिप्पणी">
+            <button type="button" class="btn-send" (click)="openDetails(row.record)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+              <i class="fa-solid fa-comment-dots"></i> Remarks
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
+    <i class="fa-solid fa-folder-open"></i>
+    <p *ngIf="hasBranch">अभी तक कोई आवेदन अग्रेषित नहीं हुआ है।</p>
+    <p *ngIf="!hasBranch">आपका लॉगिन किसी शाखा से जुड़ा नहीं है, इसलिए कोई अग्रेषित आवेदन नहीं है।</p>
+  </div>
+
+  <app-applicant-details-modal [record]="selected" (closed)="selected = null"></app-applicant-details-modal>
+</section>

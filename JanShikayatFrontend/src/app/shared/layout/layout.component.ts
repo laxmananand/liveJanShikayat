@@ -62,6 +62,11 @@ export class LayoutComponent {
     this.router.navigate(['/login']);
   }
 
+  /** All complaints and Finalised Applications are Admin-only; other users work from their forwarded applications. */
+  get isAdmin(): boolean {
+    return this.auth.hasRole('SuperAdmin');
+  }
+
   /** New entries are Admin-only; other roles only view and add remarks. */
   get canRegisterComplaint(): boolean {
     return this.auth.hasRole('SuperAdmin');

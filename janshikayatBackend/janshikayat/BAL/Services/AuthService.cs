@@ -149,7 +149,7 @@ namespace janshikayat.BAL.Services
             var user = conn.QueryFirstOrDefault<UserLoginRow>(
                 @"SELECT TOP 1
                        t.AutoId, t.UserName, t.Password,
-                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive
+                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId
                   FROM Tbl_UserLogin t
                   LEFT JOIN Mst_Role r ON t.Role = r.Id
                   WHERE t.UserName = @UserName AND t.Password = @Password",
@@ -162,13 +162,14 @@ namespace janshikayat.BAL.Services
 
             string roleStr = user.RoleName ?? "";
             // 5) Generate JWT
-            var token = GenerateJwtToken(user.UserName, roleStr);
+            var token = GenerateJwtToken(user.UserName, roleStr, user.BranchId);
             return new LoginResponse
             {
                 AuthToken = token,
                 userid = user.UserName,
                 username = user.UserName,
-                ROLE = roleStr
+                ROLE = roleStr,
+                branchId = user.BranchId
             };
         }
 
@@ -180,7 +181,7 @@ namespace janshikayat.BAL.Services
         }
 
      
-        private string GenerateJwtToken(string LOGIN_ID, string role = null)
+        private string GenerateJwtToken(string LOGIN_ID, string role = null, long? branchId = null)
         {
             var claims = new List<Claim>
             {
@@ -191,6 +192,10 @@ namespace janshikayat.BAL.Services
 
             if (!string.IsNullOrWhiteSpace(role))
                 claims.Add(new Claim(ClaimTypes.Role, role));
+
+            // Tbl_UserLogin.Branch_Id -> Mst_Branch.Complain_id; decides which forwarded applications the user sees
+            if (branchId.HasValue)
+                claims.Add(new Claim("BranchId", branchId.Value.ToString()));
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -220,6 +225,7 @@ namespace janshikayat.BAL.Services
             public int? RoleId { get; set; }
             public string? RoleName { get; set; }
             public bool? IsActive { get; set; }
+            public long? BranchId { get; set; }
         }
     }
 }

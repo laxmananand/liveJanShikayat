@@ -13,5 +13,8 @@ namespace janshikayat.BAL.Interfaces
         List<MstDepartment> GetDepartment();
         List<Forwarded_To_sub> GetForwarded_To_sub(int id);
         List<MstCategory> GetForwarded();
+        List<MstCategory> GetCategories();
+        List<MstBranch> GetBranchesByCategory(int categoryId);
+        List<MstComplainSubType> GetComplainSubTypes(long complainId);
     }
 }

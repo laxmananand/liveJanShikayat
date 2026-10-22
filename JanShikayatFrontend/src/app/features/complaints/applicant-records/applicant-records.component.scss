@@ -1,7 +1,5 @@
 .records-page {
-  padding: 1.5rem;
-  max-width: 1480px;
-  margin: 0 auto;
+  padding: 1.25rem 1rem;
 }
 
 .records-head {
@@ -318,6 +316,197 @@
     .forwarded-to {
       margin: 0.4rem 0 0;
       justify-content: flex-start;
+      text-align: left;
+    }
+  }
+}
+
+// ── Finalised Applications: register-style grid (bordered cells, bilingual headers) ──
+// Fits the screen width (no sideways scroll); below 1100px each application becomes a card.
+.sheet-wrap {
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.records-table.sheet {
+  font-size: 0.8rem;
+  table-layout: auto;
+
+  thead th {
+    background: #fff;
+    color: #3a2a1d;
+    font-weight: 600;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    white-space: normal;
+    vertical-align: middle;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid #d9d9d9;
+    border-bottom: 2px solid #c9c9c9;
+
+    small {
+      display: block;
+      font-weight: 400;
+      font-size: 0.7rem;
+      color: #6b6b6b;
+    }
+  }
+  tbody td {
+    padding: 0.45rem 0.4rem;
+    border: 1px solid #e3e3e3;
+    color: #555;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+  tbody tr:hover {
+    background: #fdf6ee;
+  }
+  .col-sn {
+    width: 2.5rem;
+    text-align: center;
+  }
+  .col-center {
+    text-align: center;
+  }
+  .nowrap {
+    white-space: nowrap;
+  }
+  .app-no {
+    font-family: inherit;
+    color: #333;
+    white-space: nowrap;
+  }
+  .sub {
+    font-size: 0.72rem;
+  }
+
+  .status-badge {
+    display: inline-block;
+    min-width: 2.1rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: #555;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+
+    &.yes {
+      background: #2e9e44;
+    }
+  }
+
+  .icon-btns {
+    display: inline-flex;
+    gap: 0.3rem;
+  }
+  .icon-btn {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+
+    &.view {
+      background: #5b6ee1;
+      border: 1px solid #5b6ee1;
+      color: #fff;
+      &:hover { background: #4456c9; }
+    }
+    &.pdf {
+      background: #fff;
+      border: 1px solid #e05252;
+      color: #e05252;
+      &:hover { background: #fdecec; }
+    }
+  }
+
+  .btn-send {
+    background: #23a6e6;
+    border: none;
+    color: #fff;
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover { background: #158ac4; }
+
+    &.locked,
+    &.locked:hover {
+      background: #eef0f2;
+      color: #6b7280;
+      border: 1px solid #d5d9de;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Too narrow for 16 columns: same card layout as phones
+@media (max-width: 1100px) {
+  .sheet-wrap {
+    border: none;
+    background: transparent;
+    overflow: visible;
+  }
+  .records-table.sheet {
+    font-size: 0.88rem;
+
+    thead {
+      display: none;
+    }
+    tbody tr {
+      display: block;
+      border: 1px solid #ece3d8;
+      border-radius: 12px;
+      margin-bottom: 0.85rem;
+      padding: 0.4rem 0.2rem;
+      background: #fff;
+    }
+    tbody tr:nth-child(even) {
+      background: #fff;
+    }
+    tbody td {
+      display: block;
+      position: relative;
+      width: auto;
+      min-height: 2.2rem;
+      border: none;
+      border-bottom: 1px dashed #eee;
+      padding: 0.5rem 0.8rem 0.5rem 9.5rem;
+      text-align: left;
+
+      &::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.8rem;
+        top: 0.55rem;
+        width: 8.2rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #9e4e2c;
+      }
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+    .col-sn,
+    .col-center {
+      width: auto;
       text-align: left;
     }
   }

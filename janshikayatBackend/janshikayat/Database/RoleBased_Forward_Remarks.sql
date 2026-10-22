@@ -45,3 +45,8 @@ BEGIN
     CREATE INDEX IX_Applicant_Remarks_ApplicantId ON dbo.Tbl_Applicant_Remarks(ApplicantId);
 END
 GO
+
+-- An application can be forwarded only once; after that it is locked.
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_Applicant_Forward_ApplicantId')
+    CREATE UNIQUE INDEX UX_Applicant_Forward_ApplicantId ON dbo.Tbl_Applicant_Forward(ApplicantId);
+GO

@@ -43,6 +43,7 @@ interface BackendLoginEnvelope {
     userid: string;
     username: string;
     role: string; // Mst_Role.Role name ("Admin", "Branch", "Saction"); older builds sent the numeric Id
+    branchId?: number | null; // Tbl_UserLogin.Branch_Id (Mst_Branch.Complain_id) for branch logins
   };
 }
 
@@ -139,7 +140,7 @@ export class AuthService {
             email: d.username,
             fullName: d.username,
             role: mapRole(d.role),
-            branchId: null,
+            branchId: d.branchId ?? null,
             departmentId: null
           };
           return resp;

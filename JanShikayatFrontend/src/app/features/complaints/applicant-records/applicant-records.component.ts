@@ -75,7 +75,9 @@ export class ApplicantRecordsComponent implements OnInit {
     );
   }
 
+  /** Forwarding is one-time: a forwarded application is locked. */
   forward(r: ApplicantRecord): void {
+    if (this.forwards.has(r.id)) return;
     this.forwarding = r;
   }
 
