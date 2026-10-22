@@ -6,6 +6,7 @@ import { filter, map } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { FontSizeService } from '../../core/services/font-size.service';
 import { roleLabel } from '../../core/utils/labels';
+import { FEATURES } from '../../core/config/features';
 
 @Component({
   selector: 'app-layout',
@@ -72,8 +73,9 @@ export class LayoutComponent {
     return this.auth.hasRole('SuperAdmin');
   }
 
+  /** Temporarily off via FEATURES.userManagement. */
   get canManageUsers(): boolean {
-    return this.auth.hasRole('SuperAdmin');
+    return FEATURES.userManagement && this.auth.hasRole('SuperAdmin');
   }
 
   getUserInitials(): string {

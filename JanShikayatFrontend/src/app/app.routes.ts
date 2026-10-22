@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -15,6 +16,7 @@ import { ForwardedApplicationsComponent } from './features/complaints/forwarded-
 import { TrackingPageComponent } from './features/complaints/tracking-page/tracking-page.component';
 import { ComplaintDetailComponent } from './features/complaints/complaint-detail/complaint-detail.component';
 import { UserManagementComponent } from './features/admin/user-management/user-management.component';
+import { FEATURES } from './core/config/features';
 
 export const routes: Routes = [
   // ── Public citizen portal ──
@@ -85,7 +87,8 @@ export const routes: Routes = [
       {
         path: 'admin/users',
         component: UserManagementComponent,
-        canActivate: [roleGuard(['SuperAdmin'])],
+        // Temporarily hidden (FEATURES.userManagement): a direct URL goes to the dashboard
+        canActivate: [() => FEATURES.userManagement || inject(Router).createUrlTree(['/dashboard']), roleGuard(['SuperAdmin'])],
         title: 'उपयोगकर्ता प्रबंधन | जन शिकायत निदान पोर्टल'
       }
     ]

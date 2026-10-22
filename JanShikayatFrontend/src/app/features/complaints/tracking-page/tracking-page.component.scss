@@ -2059,3 +2059,21 @@
     }
   }
 }
+
+.load-error {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #f5c2c0;
+  border-radius: 10px;
+  background: #fdecec;
+  color: #9b1c1c;
+  font-weight: 600;
+
+  span {
+    flex: 1;
+  }
+}

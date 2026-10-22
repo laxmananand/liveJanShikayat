@@ -14,7 +14,7 @@ export class HeroComponent {
   /** Illustrative reference number shown on the showcase card (matches the real JSYYYYNNNN format). */
   sampleRef = `JS${new Date().getFullYear()}0001`;
 
-  activeTab: 'status' | 'guide' | 'helpline' = 'status';
+  activeTab: 'status' | 'guide' | 'helpline' = 'guide';
   copiedId = false;
 
   setTab(tab: 'status' | 'guide' | 'helpline'): void {

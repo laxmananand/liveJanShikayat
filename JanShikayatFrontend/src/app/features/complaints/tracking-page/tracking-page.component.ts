@@ -1,29 +1,32 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ComplaintService } from '../../../core/services/complaint.service';
-import { LookupService } from '../../../core/services/lookup.service';
+import { forkJoin } from 'rxjs';
+import { ApplicantService } from '../../../core/services/applicant.service';
+import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
 import {
-  ComplaintListItem,
+  ApplicantRecord,
+  ApplicantRemark,
   ComplaintDetail,
-  ComplaintDocument,
-  ComplaintStatus,
-  Department
+  ComplaintListItem,
+  ComplaintStatus
 } from '../../../core/models/models';
-import { BIHAR_DISTRICTS } from '../../../core/utils/bihar';
 import { statusLabel, sourceLabel, statusProgress } from '../../../core/utils/labels';
+import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 
+/** One live application (Tbl_Applicant_Details) plus its latest forward (Tbl_Applicant_Forward). */
 export interface TrackedGrievanceItem extends ComplaintListItem {
+  record: ApplicantRecord;
+  forward: ForwardRecord | null;
   guardianName?: string;
   mobileNumber?: string;
   district?: string;
   block?: string;
   area?: string;
   category?: string;
-  documents?: ComplaintDocument[];
   currentCustody: string;
   custodyOfficer: string;
   lifecycleStage: number; // 1 to 5
@@ -32,18 +35,40 @@ export interface TrackedGrievanceItem extends ComplaintListItem {
   pdfFileSize?: string;
 }
 
+/** Detail drawer data: the live record shaped like a ComplaintDetail, plus the tracked row it came from. */
+type TrackedDetail = ComplaintDetail & { tracked: TrackedGrievanceItem };
+
+/** Decode a base64 document (with or without a `data:` prefix) into a Blob; null if it cannot be read. */
+function base64ToBlob(documentBase64: string): Blob | null {
+  const [header, base64] = documentBase64.startsWith('data:')
+    ? documentBase64.split(',')
+    : ['data:application/pdf;base64', documentBase64];
+  const mime = header.match(/data:([^;]+)/)?.[1] ?? 'application/pdf';
+  try {
+    return new Blob([Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))], { type: mime });
+  } catch {
+    return null;
+  }
+}
+
+/** File size of a base64 document without decoding it. */
+function base64Size(documentBase64: string): string {
+  const base64 = documentBase64.includes(',') ? documentBase64.split(',')[1] : documentBase64;
+  const bytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
+  return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(2)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
 @Component({
   selector: 'app-tracking-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent],
   templateUrl: './tracking-page.component.html',
   styleUrl: './tracking-page.component.scss'
 })
-export class TrackingPageComponent implements OnInit {
-  private complaintService = inject(ComplaintService);
-  private lookupService = inject(LookupService);
+export class TrackingPageComponent implements OnInit, OnDestroy {
+  private applicantService = inject(ApplicantService);
+  private forwardService = inject(ForwardService);
   public auth = inject(AuthService);
-  private router = inject(Router);
   private route = inject(ActivatedRoute);
   private sanitizer = inject(DomSanitizer);
 
@@ -55,15 +80,15 @@ export class TrackingPageComponent implements OnInit {
   viewMode: 'table' | 'cards' = 'table';
 
   // Lists & data
-  districts = BIHAR_DISTRICTS;
-  departments: Department[] = [];
-  rawComplaints: ComplaintListItem[] = [];
+  /** Districts that actually have applications (names as stored in the district master) */
+  districts: string[] = [];
   trackedList: TrackedGrievanceItem[] = [];
   filteredList: TrackedGrievanceItem[] = [];
 
   // State flags
   loading = false;
   searching = false;
+  errorMessage = '';
   copiedId = '';
   toastMessage = '';
 
@@ -77,7 +102,6 @@ export class TrackingPageComponent implements OnInit {
   showPdfModal = false;
   loadingPdf = false;
   activePdfComplaint: TrackedGrievanceItem | null = null;
-  activeDocument: ComplaintDocument | null = null;
   safePdfUrl: SafeResourceUrl | null = null;
   rawBlobUrl: string | null = null;
   currentDocName = '';
@@ -87,8 +111,11 @@ export class TrackingPageComponent implements OnInit {
 
   // Detail Slideover Drawer
   showDetailDrawer = false;
-  selectedDetail: ComplaintDetail | null = null;
+  selectedDetail: TrackedDetail | null = null;
   loadingDetail = false;
+
+  /** Full application popup (same one as अंतिम आवेदन), with remarks */
+  detailsRecord: ApplicantRecord | null = null;
 
   // Status mapping options
   statusOptions = [
@@ -106,8 +133,6 @@ export class TrackingPageComponent implements OnInit {
   statusProgress = statusProgress;
 
   ngOnInit(): void {
-    this.lookupService.getDepartments().subscribe((d) => (this.departments = d));
-
     // Listen to query params if tracking specific ID from elsewhere
     this.route.queryParams.subscribe((params) => {
       if (params['search']) {
@@ -120,91 +145,76 @@ export class TrackingPageComponent implements OnInit {
     });
   }
 
-  loadComplaints(): void {
+  ngOnDestroy(): void {
+    this.revokePdfUrl();
+  }
+
+  /** Live data: every finalised application with its latest forward. `force` skips the in-memory cache. */
+  loadComplaints(force = false): void {
     this.loading = true;
-    this.complaintService.list().subscribe({
-      next: (list) => {
-        this.rawComplaints = list;
-        this.buildTrackedList(list);
+    this.errorMessage = '';
+    forkJoin({
+      records: this.applicantService.getApplicants(force),
+      forwards: this.forwardService.latestByApplicant(force)
+    }).subscribe({
+      next: ({ records, forwards }) => {
+        this.trackedList = records.map((r) => this.toTracked(r, forwards.get(r.id) ?? null));
+        this.districts = [...new Set(records.map((r) => r.districtName).filter(Boolean))].sort();
+        this.applyFilters();
+        this.updateMetrics();
         this.loading = false;
       },
-      error: () => {
-        // Build mock demo entries if backend has no records yet
-        this.rawComplaints = this.getMockComplaints();
-        this.buildTrackedList(this.rawComplaints);
+      error: (err) => {
         this.loading = false;
+        this.trackedList = [];
+        this.applyFilters();
+        this.updateMetrics();
+        this.errorMessage =
+          err?.status === 401
+            ? 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।'
+            : err?.status === 0
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर रिफ़्रेश करें।'
+              : `परिवाद लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
       }
     });
   }
 
-  private buildTrackedList(items: ComplaintListItem[]): void {
-    if (!items || items.length === 0) {
-      items = this.getMockComplaints();
-    }
-
-    this.trackedList = items.map((c) => this.enrichComplaintItem(c));
-    this.applyFilters();
-    this.updateMetrics();
-  }
-
-  private enrichComplaintItem(c: ComplaintListItem): TrackedGrievanceItem {
-    // Determine custody, officer, and lifecycle stage based on status & branch
-    let lifecycleStage = 1;
-    let currentCustody = 'जन शिकायत समाधान कोषांग, समाहरणालय';
-    let custodyOfficer = 'प्रभारी पदाधिकारी, जन शिकायत';
-
-    switch (c.status) {
-      case 'Pending':
-        lifecycleStage = 1;
-        currentCustody = c.branchName ? `${c.branchName} (प्रारंभिक समीक्षा)` : 'केंद्रीय शिकायत पंजीकरण कोषांग';
-        custodyOfficer = 'नोडल सहायक / लिपिक';
-        break;
-      case 'UnderReview':
-        lifecycleStage = 2;
-        currentCustody = c.branchName ? `${c.branchName} (समीक्षाधीन)` : 'विभागीय समीक्षा कोषांग';
-        custodyOfficer = 'शाखा पदाधिकारी / प्रशाखा पदाधिकारी';
-        break;
-      case 'ForwardedToDepartment':
-        lifecycleStage = 3;
-        currentCustody = c.departmentName ? `${c.departmentName} (कार्यवाही हेतु अग्रेषित)` : 'संबंधित कार्य प्रभाग';
-        custodyOfficer = 'विभागाध्यक्ष / अनुभाग अधिकारी';
-        break;
-      case 'ForwardedForFieldEnquiry':
-        lifecycleStage = 4;
-        currentCustody = 'सक्षम प्राधिकारी / स्थलीय जांच दल (Field Enquiry)';
-        custodyOfficer = 'अंचलाधिकारी / प्रखंड विकास पदाधिकारी';
-        break;
-      case 'ActionTaken':
-        lifecycleStage = 5;
-        currentCustody = 'कार्रवाई पूर्ण / स्वीकृति आदेश निर्गत (Approved)';
-        custodyOfficer = 'सक्षम प्राधिकारी द्वारा अनुमोदित';
-        break;
-      case 'Disposed':
-        lifecycleStage = 5;
-        currentCustody = 'अंतिम रूप से निस्तारित / निष्पादित (Closed)';
-        custodyOfficer = 'अंतिम निस्तारण प्राधिकारी';
-        break;
-    }
-
-    // Default mock document availability
-    const hasPdf = true;
-    const pdfFileName = `Aavedan_${c.complaintNumber.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-    const pdfFileSize = '1.45 MB';
+  /**
+   * The only workflow data recorded so far is the forward: not forwarded = लंबित at the entry desk,
+   * forwarded = अग्रेषित to the chosen branch / section.
+   */
+  private toTracked(r: ApplicantRecord, forward: ForwardRecord | null): TrackedGrievanceItem {
+    const status: ComplaintStatus = forward ? 'ForwardedToDepartment' : 'Pending';
+    const place = [r.villageName, r.panchayatName].filter((n) => !!n?.trim()).join(', ');
 
     return {
-      ...c,
-      guardianName: 'सुरेश प्रसाद',
-      mobileNumber: '98' + Math.floor(10000000 + Math.random() * 89999999),
-      district: 'पटना',
-      block: 'पटना सदर',
-      area: 'वार्ड संख्या 04',
-      category: 'भूमि विवाद / राजस्व',
-      currentCustody,
-      custodyOfficer,
-      lifecycleStage,
-      hasPdf,
-      pdfFileName,
-      pdfFileSize
+      id: r.id,
+      complaintNumber: r.applicationNo || String(r.id),
+      applicantName: r.applicantName,
+      subject: forward?.complaintTypeLabel || `${sourceLabel(r.applicationSource)} के माध्यम से प्राप्त परिवाद`,
+      complaintDate: r.applicationDate ?? '',
+      status,
+      source: r.applicationSource || 'Offline',
+      branchName: forward?.branchLabel ?? '',
+      departmentName: forward?.categoryLabel ?? null,
+      record: r,
+      forward,
+      guardianName: r.fatherHusbandName,
+      mobileNumber: r.mobileNumber,
+      district: r.districtName,
+      block: r.blockName,
+      area: place,
+      category: forward?.categoryLabel || 'अग्रेषण हेतु लंबित',
+      currentCustody: forward
+        ? forward.branchLabel + (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '')
+        : 'प्रविष्टि कोषांग (अग्रेषण हेतु लंबित)',
+      custodyOfficer: forward
+        ? `अग्रेषित: ${new Date(forward.forwardedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
+        : 'एडमिन / प्रविष्टि सहायक',
+      lifecycleStage: forward ? 3 : 1,
+      hasPdf: !!r.documentBase64,
+      pdfFileName: `Aavedan_${(r.applicationNo || String(r.id)).replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      pdfFileSize: r.documentBase64 ? base64Size(r.documentBase64) : 'दस्तावेज़ नहीं'
     };
   }
 
@@ -223,7 +233,8 @@ export class TrackingPageComponent implements OnInit {
     this.selectedStatus = '';
     this.selectedDistrict = '';
     this.selectedSource = '';
-    this.applyFilters();
+    // Reset also pulls fresh data from the server
+    this.loadComplaints(true);
     this.showToast('सभी फ़िल्टर रीसेट कर दिए गए हैं।');
   }
 
@@ -235,7 +246,7 @@ export class TrackingPageComponent implements OnInit {
   applyFilters(): void {
     let result = [...this.trackedList];
 
-    // Search query: matches tracking number, applicant name, mobile, subject
+    // Search query: matches application number, applicant name, mobile, subject, district
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.trim().toLowerCase();
       const normQ = q.replace(/[^a-zA-Z0-9]/g, '');
@@ -250,7 +261,7 @@ export class TrackingPageComponent implements OnInit {
 
         return (
           itemNumber.includes(q) ||
-          normItemNumber.includes(normQ) ||
+          (!!normQ && normItemNumber.includes(normQ)) ||
           name.includes(q) ||
           subject.includes(q) ||
           mobile.includes(q) ||
@@ -290,62 +301,36 @@ export class TrackingPageComponent implements OnInit {
     this.approvedCount = this.trackedList.filter((c) => c.status === 'ActionTaken' || c.status === 'Disposed').length;
   }
 
-  // ── PDF Popup Modal Feature ──
-  openPdfModal(complaint: TrackedGrievanceItem | ComplaintDetail): void {
-    const tracked: TrackedGrievanceItem = (complaint as any).currentCustody
-      ? (complaint as TrackedGrievanceItem)
-      : this.enrichComplaintItem(complaint);
-
-    this.activePdfComplaint = tracked;
+  // ── PDF Popup Modal (the document saved with the application) ──
+  openPdfModal(item: TrackedGrievanceItem): void {
+    this.revokePdfUrl();
+    this.activePdfComplaint = item;
     this.showPdfModal = true;
-    this.loadingPdf = true;
-    this.isFallbackDoc = false;
-    this.currentDocName = tracked.pdfFileName || `आवेदन_${tracked.complaintNumber}.pdf`;
-    this.currentDocSize = tracked.pdfFileSize || '1.8 MB';
-    this.currentDocType = 'आवेदन पत्र (PDF)';
+    this.currentDocName = item.pdfFileName || `आवेदन_${item.complaintNumber}.pdf`;
+    this.currentDocSize = item.pdfFileSize || '';
+    this.currentDocType = 'मूल आवेदन पत्र (PDF)';
 
-    // Attempt to fetch actual documents from backend
-    this.complaintService.getById(complaint.id).subscribe({
-      next: (detail) => {
-        if (detail.documents && detail.documents.length > 0) {
-          const doc = detail.documents[0];
-          this.activeDocument = doc;
-          this.currentDocName = doc.fileName;
-          this.currentDocType = doc.documentType === 'EnquiryReport' ? 'जांच रिपोर्ट (PDF)' : 'मूल आवेदन पत्र (PDF)';
-
-          // Download blob for safe iframe preview
-          this.complaintService.downloadDocumentBlob(complaint.id, doc.id).subscribe({
-            next: (blob) => {
-              this.loadingPdf = false;
-              this.rawBlobUrl = window.URL.createObjectURL(blob);
-              this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.rawBlobUrl);
-            },
-            error: () => {
-              this.loadingPdf = false;
-              this.isFallbackDoc = true;
-            }
-          });
-        } else {
-          this.loadingPdf = false;
-          this.isFallbackDoc = true;
-        }
-      },
-      error: () => {
-        this.loadingPdf = false;
-        this.isFallbackDoc = true;
-      }
-    });
+    const blob = item.record.documentBase64 ? base64ToBlob(item.record.documentBase64) : null;
+    this.isFallbackDoc = !blob;
+    if (blob) {
+      this.rawBlobUrl = URL.createObjectURL(blob);
+      this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.rawBlobUrl);
+    }
+    this.loadingPdf = false;
   }
 
   closePdfModal(): void {
     this.showPdfModal = false;
+    this.revokePdfUrl();
+    this.activePdfComplaint = null;
+  }
+
+  private revokePdfUrl(): void {
     if (this.rawBlobUrl) {
-      window.URL.revokeObjectURL(this.rawBlobUrl);
+      URL.revokeObjectURL(this.rawBlobUrl);
       this.rawBlobUrl = null;
     }
     this.safePdfUrl = null;
-    this.activePdfComplaint = null;
-    this.activeDocument = null;
   }
 
   downloadCurrentPdf(): void {
@@ -374,54 +359,85 @@ export class TrackingPageComponent implements OnInit {
     window.print();
   }
 
-  // ── Detail Drawer / Modal ──
-  openDetailDrawer(complaint: TrackedGrievanceItem): void {
-    this.loadingDetail = true;
+  // ── Detail Drawer: live record, forward and remarks ──
+  openDetailDrawer(item: TrackedGrievanceItem): void {
     this.showDetailDrawer = true;
-    this.complaintService.getById(complaint.id).subscribe({
-      next: (detail) => {
-        this.selectedDetail = detail;
+    this.loadingDetail = true;
+    this.selectedDetail = this.toDetail(item, []);
+    this.applicantService.getRemarks(item.id).subscribe({
+      next: (remarks) => {
+        if (this.selectedDetail?.id === item.id) this.selectedDetail = this.toDetail(item, remarks);
         this.loadingDetail = false;
       },
-      error: () => {
-        // Construct fallback detailed view
-        this.selectedDetail = {
-          ...complaint,
-          guardianName: complaint.guardianName || 'सुरेश प्रसाद',
-          mobileNumber: complaint.mobileNumber || '9876543210',
-          address: 'वार्ड 04, मुख्य मार्ग, पटना',
-          district: complaint.district || 'पटना',
-          block: complaint.block || 'पटना सदर',
-          category: complaint.category || 'भूमि विवाद',
-          description: complaint.subject,
-          documents: complaint.documents || [],
-          remarks: [
+      error: () => (this.loadingDetail = false)
+    });
+  }
+
+  private toDetail(item: TrackedGrievanceItem, remarks: ApplicantRemark[]): TrackedDetail {
+    const r = item.record;
+    const f = item.forward;
+    const history = [
+      {
+        fromStatus: '',
+        toStatus: 'Pending',
+        reason: 'आवेदन पंजीकृत एवं अंतिम रूप से दर्ज किया गया।',
+        actionByName: 'प्रविष्टि कोषांग',
+        actionAt: r.applicationDate ?? ''
+      },
+      ...(f
+        ? [
             {
-              id: 1,
-              remarkType: 'Official',
-              text: 'परिवाद पंजीकृत कर संबंधित शाखा को आवश्यक संज्ञान एवं जांच हेतु प्रेषित किया गया।',
-              createdByName: 'नोडल पदाधिकारी, जन शिकायत',
-              createdAt: new Date().toISOString()
-            }
-          ],
-          history: [
-            {
-              fromStatus: 'पंजीकरण',
-              toStatus: complaint.status,
-              reason: 'प्राथमिक जांच एवं अग्रेषण प्रक्रियाधीन',
-              actionByName: 'शाखा पदाधिकारी',
-              actionAt: new Date().toISOString()
+              fromStatus: 'Pending',
+              toStatus: 'ForwardedToDepartment',
+              reason:
+                [f.categoryLabel, f.branchLabel, f.prashakhaLabel, f.complaintTypeLabel].filter(Boolean).join(' → ') +
+                (f.remarks ? ` — ${f.remarks}` : ''),
+              actionByName: f.forwardedBy,
+              actionAt: f.forwardedAt
             }
           ]
-        };
-        this.loadingDetail = false;
-      }
-    });
+        : []),
+      ...remarks.map((m) => ({
+        fromStatus: '',
+        toStatus: 'टिप्पणी',
+        reason: m.remark,
+        actionByName: m.remarkBy + (m.remarkByRole ? ` (${m.remarkByRole})` : ''),
+        actionAt: m.createdDate
+      }))
+    ].sort((a, b) => new Date(a.actionAt).getTime() - new Date(b.actionAt).getTime());
+
+    return {
+      ...item,
+      tracked: item,
+      guardianName: r.fatherHusbandName,
+      mobileNumber: r.mobileNumber,
+      address: r.address,
+      district: r.districtName,
+      block: r.blockName,
+      area: item.area,
+      email: r.emailId,
+      category: item.category ?? '',
+      description: [r.address, item.area, r.pinCode && `पिन: ${r.pinCode}`].filter(Boolean).join(' • '),
+      documents: [],
+      remarks: remarks.map((m) => ({
+        id: m.id,
+        remarkType: m.remarkByRole ?? '',
+        text: m.remark,
+        createdByName: m.remarkBy,
+        createdAt: m.createdDate
+      })),
+      history
+    };
   }
 
   closeDetailDrawer(): void {
     this.showDetailDrawer = false;
     this.selectedDetail = null;
+  }
+
+  /** Full application popup (all fields + remarks), shared with अंतिम आवेदन */
+  openDetailsModal(item: TrackedGrievanceItem): void {
+    this.detailsRecord = item.record;
   }
 
   // ── Clipboard & Utilities ──
@@ -440,77 +456,5 @@ export class TrackingPageComponent implements OnInit {
     setTimeout(() => {
       this.toastMessage = '';
     }, 3200);
-  }
-
-  // ── Mock Generator for Demo / Testing ──
-  private getMockComplaints(): ComplaintListItem[] {
-    return [
-      {
-        id: 101,
-        complaintNumber: 'JS2026/04/8921',
-        applicantName: 'रमेश कुमार',
-        subject: 'भूमि दाखिल-खारिज एवं रास्ता अतिक्रमण के संबंध में आवेदन',
-        complaintDate: new Date(Date.now() - 2 * 86400000).toISOString(),
-        status: 'ForwardedForFieldEnquiry',
-        source: 'CPGRAMS',
-        branchName: 'राजस्व एवं भूमि सुधार शाखा',
-        departmentName: 'राजस्व एवं भूमि सुधार विभाग'
-      },
-      {
-        id: 102,
-        complaintNumber: 'JS2026/04/7415',
-        applicantName: 'सुनीता देवी',
-        subject: 'राष्ट्रीय वृद्धावस्था पेंशन स्वीकृति एवं बैंक खाता लिंकिंग समस्या',
-        complaintDate: new Date(Date.now() - 5 * 86400000).toISOString(),
-        status: 'ActionTaken',
-        source: 'CM Dashboard',
-        branchName: 'सामाजिक सुरक्षा कोषांग',
-        departmentName: 'समाज कल्याण विभाग'
-      },
-      {
-        id: 103,
-        complaintNumber: 'JS2026/04/6304',
-        applicantName: 'मोहम्मद इरफ़ान',
-        subject: 'ग्रामीण पेयजल योजना के तहत नल-जल पाइपलाइन की मरम्मत',
-        complaintDate: new Date(Date.now() - 1 * 86400000).toISOString(),
-        status: 'UnderReview',
-        source: 'Offline',
-        branchName: 'लोक स्वास्थ्य अभियंत्रण शाखा',
-        departmentName: 'लोक स्वास्थ्य अभियंत्रण विभाग'
-      },
-      {
-        id: 104,
-        complaintNumber: 'JS2026/04/5198',
-        applicantName: 'राकेश रंजन सिंह',
-        subject: 'पंचायत भवन निर्माण में घटिया सामग्री एवं जांच हेतु आवेदन',
-        complaintDate: new Date(Date.now() - 8 * 86400000).toISOString(),
-        status: 'ForwardedToDepartment',
-        source: 'PMO Grievance Portal',
-        branchName: 'पंचायती राज कोषांग',
-        departmentName: 'पंचायती राज विभाग'
-      },
-      {
-        id: 105,
-        complaintNumber: 'JS2026/04/4082',
-        applicantName: 'प्रमोद कुमार यादव',
-        subject: 'राशन कार्ड में छूटे हुए सदस्यों के नाम जोड़ने के संबंध में',
-        complaintDate: new Date(Date.now() - 12 * 86400000).toISOString(),
-        status: 'Disposed',
-        source: 'Sahyog Portal',
-        branchName: 'खाद्य एवं उपभोक्ता संरक्षण शाखा',
-        departmentName: 'खाद्य एवं उपभोक्ता संरक्षण विभाग'
-      },
-      {
-        id: 106,
-        complaintNumber: 'JS2026/04/3971',
-        applicantName: 'अमृता कुमारी',
-        subject: 'कस्तूरबा विद्यालय में छात्रवृत्ति भुगतान के विलंब की जांच',
-        complaintDate: new Date(Date.now() - 15 * 86400000).toISOString(),
-        status: 'Pending',
-        source: 'Offline',
-        branchName: 'शिक्षा शाखा, समाहरणालय',
-        departmentName: 'शिक्षा विभाग'
-      }
-    ];
   }
 }

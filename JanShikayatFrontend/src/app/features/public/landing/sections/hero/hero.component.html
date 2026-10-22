@@ -35,14 +35,6 @@
               <button 
                 type="button" 
                 class="card-tab" 
-                [class.active]="activeTab==='status'" 
-                (click)="setTab('status')">
-                <i class="fa-solid fa-layer-group"></i>
-                <span>लाइव केस</span>
-              </button>
-              <button 
-                type="button" 
-                class="card-tab" 
                 [class.active]="activeTab==='guide'" 
                 (click)="setTab('guide')">
                 <i class="fa-solid fa-list-check"></i>
@@ -55,6 +47,14 @@
                 (click)="setTab('helpline')">
                 <i class="fa-solid fa-headset"></i>
                 <span>सहायता</span>
+              </button>
+              <button 
+                type="button" 
+                class="card-tab" 
+                [class.active]="activeTab==='status'" 
+                (click)="setTab('status')">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>लाइव केस</span>
               </button>
             </div>
 

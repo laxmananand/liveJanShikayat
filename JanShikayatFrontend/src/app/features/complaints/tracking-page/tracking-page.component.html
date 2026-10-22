@@ -118,7 +118,7 @@
               type="text"
               [(ngModel)]="searchQuery"
               (keyup.enter)="onSearch()"
-              placeholder="शिकायत संख्या (उदा. JS2026/04/8921), आवेदक का नाम या मोबाइल नंबर..."
+              placeholder="शिकायत संख्या (उदा. JS23014140001), आवेदक का नाम या मोबाइल नंबर..."
             />
             <button
               type="button"
@@ -154,7 +154,7 @@
           <div class="input-icon-wrap select-wrap">
             <i class="fa-solid fa-location-dot field-icon"></i>
             <select id="districtSelect" [(ngModel)]="selectedDistrict" (change)="applyFilters()">
-              <option value="">-- सभी 38 जिले --</option>
+              <option value="">-- सभी जिले --</option>
               <option *ngFor="let dist of districts" [value]="dist">{{ dist }}</option>
             </select>
             <i class="fa-solid fa-chevron-down select-arrow"></i>
@@ -263,6 +263,15 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- ── Load error ── -->
+  <div class="load-error" *ngIf="!loading && errorMessage">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+    <button type="button" class="btn btn-outline" (click)="loadComplaints(true)">
+      <i class="fa-solid fa-rotate-right"></i> पुनः प्रयास करें
+    </button>
   </div>
 
   <!-- ── Loading State ── -->
@@ -422,13 +431,14 @@
                 >
                   <i class="fa-solid fa-circle-info"></i>
                 </button>
-                <a
-                  [routerLink]="['/complaints', item.id]"
+                <button
+                  type="button"
                   class="btn btn-action-icon btn-link-action"
-                  title="शिकायत पृष्ठ पर जाएं"
+                  (click)="openDetailsModal(item)"
+                  title="पूरा आवेदन एवं टिप्पणियाँ देखें"
                 >
                   <i class="fa-solid fa-arrow-right"></i>
-                </a>
+                </button>
               </div>
             </td>
           </tr>
@@ -742,18 +752,18 @@
         </div>
 
         <!-- Documents Attached -->
-        <div class="drawer-section">
+        <div class="drawer-section" *ngIf="selectedDetail.tracked.hasPdf">
           <h4><i class="fa-solid fa-folder-open"></i> संलग्न दस्तावेज़</h4>
           <div class="drawer-doc-box">
             <i class="fa-solid fa-file-pdf"></i>
             <div class="doc-meta">
-              <strong>Aavedan_{{ selectedDetail.complaintNumber }}.pdf</strong>
-              <small>आवेदन पत्र (PDF) • 1.45 MB</small>
+              <strong>{{ selectedDetail.tracked.pdfFileName }}</strong>
+              <small>आवेदन पत्र (PDF) • {{ selectedDetail.tracked.pdfFileSize }}</small>
             </div>
             <button
               type="button"
               class="btn btn-sm btn-outline"
-              (click)="openPdfModal(selectedDetail); closeDetailDrawer()"
+              (click)="openPdfModal(selectedDetail.tracked); closeDetailDrawer()"
             >
               <i class="fa-solid fa-eye"></i> देखें
             </button>
@@ -777,13 +787,16 @@
       </div>
 
       <div class="drawer-footer">
-        <a [routerLink]="['/complaints', selectedDetail?.id]" class="btn btn-primary-accent" (click)="closeDetailDrawer()">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> पूर्ण शिकायत पृष्ठ पर जाएं
-        </a>
+        <button type="button" class="btn btn-primary-accent"
+                (click)="selectedDetail && openDetailsModal(selectedDetail.tracked); closeDetailDrawer()">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> पूरा आवेदन एवं टिप्पणियाँ
+        </button>
         <button type="button" class="btn btn-outline" (click)="closeDetailDrawer()">
           बंद करें
         </button>
       </div>
     </div>
   </div>
+
+  <app-applicant-details-modal [record]="detailsRecord" (closed)="detailsRecord = null"></app-applicant-details-modal>
 </div>
