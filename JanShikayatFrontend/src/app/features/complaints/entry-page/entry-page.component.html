@@ -113,7 +113,7 @@
         </div>
 
         <div class="card-body-content">
-          <div class="two-column-grid">
+          <div class="two-column-grid complainant-grid">
             <!-- ── LEFT COLUMN ── -->
             <div class="grid-column left-col">
               <!-- 1. आवेदक का नाम -->
@@ -155,7 +155,27 @@
                 </span>
               </div>
 
-              <!-- 3. मोबाइल नंबर -->
+              <!-- 3. ईमेल आईडी (यदि उपलब्ध हो) — left column, so both columns hold 7 fields -->
+              <div class="form-group">
+                <label for="email" class="form-label">
+                  ईमेल आईडी (यदि उपलब्ध हो)
+                </label>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
+                  <i class="fa-solid fa-envelope field-icon"></i>
+                  <input
+                    id="email"
+                    type="email"
+                    formControlName="email"
+                    placeholder="ईमेल आईडी दर्ज करें"
+                    autocomplete="email"
+                  />
+                </div>
+                <span class="field-error" *ngIf="isInvalid('email')">
+                  कृपया मान्य ईमेल पता दर्ज करें।
+                </span>
+              </div>
+
+              <!-- 4. मोबाइल नंबर -->
               <div class="form-group">
                 <label for="mobileNumber" class="form-label">
                   मोबाइल नंबर <span class="req">*</span>
@@ -311,26 +331,6 @@
                 </span>
               </div>
 
-              <!-- 8. ईमेल आईडी (यदि उपलब्ध हो) -->
-              <div class="form-group">
-                <label for="email" class="form-label">
-                  ईमेल आईडी (यदि उपलब्ध हो)
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
-                  <i class="fa-solid fa-envelope field-icon"></i>
-                  <input
-                    id="email"
-                    type="email"
-                    formControlName="email"
-                    placeholder="ईमेल आईडी दर्ज करें"
-                    autocomplete="email"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('email')">
-                  कृपया मान्य ईमेल पता दर्ज करें।
-                </span>
-              </div>
-
               <!-- 9. आवेदन की तिथि -->
               <div class="form-group">
                 <label for="applicationDate" class="form-label">
@@ -413,6 +413,21 @@
                   <select id="village" formControlName="village">
                     <option [ngValue]="null">{{ loadingVillages ? 'लोड हो रहा है...' : (availableVillages.length ? '-- गाँव चुनें --' : '-- पहले पंचायत चुनें --') }}</option>
                     <option *ngFor="let vil of availableVillages" [ngValue]="vil.villcode">{{ vil.villname }}</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+
+              <!-- 14. थाना (जिला चुनने के बाद) -->
+              <div class="form-group">
+                <label for="thana" class="form-label">
+                  थाना
+                </label>
+                <div class="input-icon-wrap select-wrap">
+                  <i class="fa-solid fa-building-shield field-icon"></i>
+                  <select id="thana" formControlName="thana">
+                    <option [ngValue]="null">{{ loadingThanas ? 'लोड हो रहा है...' : (availableThanas.length ? '-- थाना चुनें --' : '-- पहले जिला चुनें --') }}</option>
+                    <option *ngFor="let th of availableThanas" [ngValue]="th.psCode">{{ th.policeStation }}</option>
                   </select>
                   <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
@@ -532,6 +547,10 @@
             <div class="preview-item">
               <span class="lbl">गाँव</span>
               <strong class="val">{{ draft.locationNames.village }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">थाना</span>
+              <strong class="val">{{ draft.locationNames.thana || '—' }}</strong>
             </div>
             <div class="preview-item">
               <span class="lbl">आवेदन स्रोत</span>
@@ -788,6 +807,10 @@
             <span class="lbl"><i class="fa-solid fa-location-dot"></i> क्षेत्र व स्थान:</span>
             <strong class="val">{{ savedData.village }}, {{ savedData.panchayat }}, {{ savedData.block }}, {{ savedData.district }} ({{ savedData.pinCode }})</strong>
           </div>
+          <div class="summary-row" *ngIf="savedData.thana">
+            <span class="lbl"><i class="fa-solid fa-building-shield"></i> थाना:</span>
+            <strong class="val">{{ savedData.thana }}</strong>
+          </div>
           <div class="summary-row">
             <span class="lbl"><i class="fa-solid fa-route"></i> आवेदन स्रोत:</span>
             <strong class="val tag-val">{{ savedData.applicationSource }}</strong>
@@ -879,6 +902,10 @@
             <td>{{ savedData.block }}</td>
             <th>जिला (District)</th>
             <td><strong>{{ savedData.district }}</strong></td>
+          </tr>
+          <tr>
+            <th>थाना (Police Station)</th>
+            <td colspan="3">{{ savedData.thana || '—' }}</td>
           </tr>
           <tr>
             <th>पिन कोड (PIN Code)</th>

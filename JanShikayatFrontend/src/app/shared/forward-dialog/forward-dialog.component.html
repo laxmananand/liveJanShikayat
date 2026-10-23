@@ -4,7 +4,7 @@
       <div>
         <span class="fw-kicker"><i class="fa-solid fa-share-from-square"></i> अग्रेषित करें / Forward</span>
         <h2 id="forwardTitle">{{ r.applicantName }}</h2>
-        <small class="fw-sub">आवेदन संख्या {{ r.applicationNo || r.id }} • {{ r.villageName }}, {{ r.blockName }}, {{ r.districtName }}</small>
+        <small class="fw-sub">आवेदन संख्या {{ r.applicationNo || r.id }} • {{ r.villageName }}, {{ r.blockName }}, {{ r.districtName }}<span *ngIf="r.policeStation"> • थाना {{ r.policeStation }}</span></small>
       </div>
       <button type="button" class="fw-close" (click)="close()" aria-label="बंद करें">
         <i class="fa-solid fa-xmark"></i>

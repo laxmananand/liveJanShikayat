@@ -38,6 +38,7 @@
           <th>प्रखंड</th>
           <th>पंचायत</th>
           <th>गाँव</th>
+          <th>थाना</th>
           <th>मोबाइल संख्या</th>
           <th>पिनकोड</th>
           <th>आवेदन प्राप्ति की तिथि</th>
@@ -58,6 +59,7 @@
           <td data-label="प्रखंड">{{ row.record.blockName || '—' }}</td>
           <td data-label="पंचायत">{{ row.record.panchayatName || '—' }}</td>
           <td data-label="गाँव">{{ row.record.villageName || '—' }}</td>
+          <td data-label="थाना">{{ row.record.policeStation || '—' }}</td>
           <td class="nowrap" data-label="मोबाइल संख्या">{{ row.record.mobileNumber }}</td>
           <td data-label="पिनकोड">{{ row.record.pinCode || '' }}</td>
           <td class="nowrap" data-label="प्राप्ति तिथि">{{ row.record.applicationDate ? (row.record.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>

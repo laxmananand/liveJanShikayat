@@ -41,6 +41,7 @@ namespace janshikayat.BAL.Services
             parameters.Add("@Panchayat", applicant.Panchayat);
             parameters.Add("@Block", applicant.Block);
             parameters.Add("@District", applicant.District);
+            parameters.Add("@Thana", applicant.Thana);
             parameters.Add("@DocumentPath", DocumentPath);
             parameters.Add("@Application_Source", applicant.Application_Source);
             parameters.Add("@CreatedBy", applicant.CreatedBy);

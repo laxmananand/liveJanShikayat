@@ -40,6 +40,7 @@ namespace janshikayat.BAL.Services
            ).ToList();
             return result.ToList();
         }
+
         public List<MstPanchayat> GetPanchayat(int district_code, int block_code)
         {
             using var conn = _context.CreateConnection();
@@ -67,6 +68,20 @@ namespace janshikayat.BAL.Services
                 sql,
                 parameters
             ).ToList();
+        }
+
+        public List<Thana> GetThana(int district_code)
+        {
+            using var conn = _context.CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@DistCode", district_code);
+            var sql = "select* from mst_thana where District_Code = @DistCode order by Police_Station";
+            var result = conn.Query<Thana>(
+              sql,
+               parameters
+           ).ToList();
+            return result.ToList();
         }
 
         public List<MstDepartment> GetDepartment()

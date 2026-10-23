@@ -51,6 +51,7 @@ export class ApplicantService {
     fd.append('Panchayat', String(p.panchayat));
     fd.append('Block', String(p.block));
     fd.append('District', String(p.district));
+    fd.append('Thana', String(p.thana || 0));
     fd.append('Application_Source', p.applicationSource);
     if (p.createdBy) fd.append('CreatedBy', p.createdBy);
     fd.append('Applicants_Photograph', p.photograph, p.photograph.name);
@@ -85,6 +86,8 @@ export class ApplicantService {
           panchayatName: pick(r, 'panchayatName', 'PanchayatName') ?? '',
           blockName: pick(r, 'blockName', 'BlockName') ?? '',
           districtName: pick(r, 'districtname', 'dISTRICTNAME', 'DISTRICTNAME') ?? '',
+          thanaCode: Number(pick(r, 'thana', 'Thana') ?? 0),
+          policeStation: pick(r, 'police_Station', 'Police_Station', 'policeStation') ?? '',
           documentBase64: pick(r, 'documentPath', 'DocumentPath') ?? null,
           applicationSource: pick(r, 'application_Source', 'Application_Source') ?? 'Offline'
         }))

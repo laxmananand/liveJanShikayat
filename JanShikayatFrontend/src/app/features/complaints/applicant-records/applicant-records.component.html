@@ -42,8 +42,8 @@
           <th>प्रखंड</th>
           <th>पंचायत</th>
           <th>गाँव</th>
+          <th class="col-thana">थाना</th>
           <th>मोबाइल संख्या</th>
-          <th>पिनकोड</th>
           <th>आवेदन प्राप्ति की तिथि</th>
           <th>अग्रेषित दिनांक</th>
           <th>अग्रेषित<small>(Forwarded To)</small></th>
@@ -62,8 +62,8 @@
           <td data-label="प्रखंड">{{ r.blockName || '—' }}</td>
           <td data-label="पंचायत">{{ r.panchayatName || '—' }}</td>
           <td data-label="गाँव">{{ r.villageName || '—' }}</td>
+          <td class="col-thana" data-label="थाना">{{ r.policeStation || '—' }}</td>
           <td class="nowrap" data-label="मोबाइल संख्या">{{ r.mobileNumber }}</td>
-          <td data-label="पिनकोड">{{ r.pinCode || '' }}</td>
           <td class="nowrap" data-label="प्राप्ति तिथि">{{ r.applicationDate ? (r.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ forwards.get(r.id)?.forwardedAt ? (forwards.get(r.id)!.forwardedAt | date: 'dd/MM/yyyy') : '' }}</td>
           <td data-label="अग्रेषित">

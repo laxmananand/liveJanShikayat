@@ -62,6 +62,7 @@ namespace janshikayat.Controllers
             };
             return Ok(re);
         }
+
         //[Authorize] // TEMP: disabled for testing
         [HttpPost("get-panchayat")]
         public IActionResult GetPanchayat(int District_Code, int Block_code)
@@ -102,6 +103,29 @@ namespace janshikayat.Controllers
                 message = "Success",
                 data = data
             });
+        }
+
+        //[Authorize] // TEMP: disabled for testing
+        [HttpPost("get-thana")]
+        public IActionResult GetThana(int District_Code)
+        {
+            var response = new Dictionary<string, string>();
+
+            var data = _MasterData.GetThana(District_Code);
+
+            if (data == null || !data.Any())
+            {
+                response["status"] = "false";
+                response["message"] = "No data found";
+                return Ok(response);
+            }
+            var re = new
+            {
+                status = "true",
+                message = "Success",
+                data = data
+            };
+            return Ok(re);
         }
 
         [HttpPost("get-department")]

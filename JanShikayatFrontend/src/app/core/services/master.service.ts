@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { BlockMaster, District, MasterApiResponse, Panchayat, Village } from '../models/models';
+import { BlockMaster, District, MasterApiResponse, Panchayat, Thana, Village } from '../models/models';
 import { environment } from '../../../environments/environment';
 import { CachedRequest, CachedRequestMap } from '../utils/cached-request';
 import { MstBranch, MstCategory, MstComplainSubType, MstDepartment, MstPrashakha } from '../config/forward-options';
@@ -41,6 +41,25 @@ export class MasterService {
     return this.http
       .post<MasterApiResponse<Village>>(`${this.baseUrl}/get-village`, null, { params })
       .pipe(map(unwrap));
+  }, MASTER_TTL);
+
+  // mst_thana columns (PS_Code, Police_Station, ...) are serialised with backend casing: map them once here
+  private thanas = new CachedRequestMap((dist: number) => {
+    const params = new HttpParams().set('District_Code', dist);
+    return this.http.post<MasterApiResponse<any>>(`${this.baseUrl}/get-thana`, null, { params }).pipe(
+      map(unwrap),
+      map((rows) =>
+        rows.map(
+          (r): Thana => ({
+            psCode: Number(r.pS_Code ?? r.ps_Code ?? r.PS_Code ?? r.psCode ?? 0),
+            policeStation: r.police_Station ?? r.Police_Station ?? r.policeStation ?? '',
+            districtCode: Number(r.district_code ?? r.District_code ?? r.districtCode ?? dist),
+            subdivisionName: r.subdivision_Name ?? r.Subdivision_Name ?? '',
+            circleName: r.circle_Name ?? r.Circle_Name ?? ''
+          })
+        )
+      )
+    );
   }, MASTER_TTL);
 
   // Forward popup cascade: Mst_Category → Mst_Branch → Mst_Complain_Sub_Type
@@ -114,5 +133,10 @@ export class MasterService {
   /** API: POST /Master/get-village?District_Code=&Block_code=&PanchayatCode= (cached per panchayat) */
   getVillages(districtCode: number, blockCode: number, panchayatCode: number): Observable<Village[]> {
     return this.villages.get(`${districtCode}|${blockCode}|${panchayatCode}`);
+  }
+
+  /** API: POST /Master/get-thana?District_Code= (cached per district) — police stations of a district */
+  getThanas(districtCode: number): Observable<Thana[]> {
+    return this.thanas.get(districtCode);
   }
 }

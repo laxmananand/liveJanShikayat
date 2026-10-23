@@ -75,7 +75,7 @@
           <span class="recent-id">{{ r.id }}</span>
           <div class="recent-main">
             <b>{{ r.applicantName }}</b>
-            <small><span *ngIf="r.applicationNo">{{ r.applicationNo }} • </span>{{ r.villageName }}, {{ r.blockName }} • {{ r.districtName }}</small>
+            <small><span *ngIf="r.applicationNo">{{ r.applicationNo }} • </span>{{ r.villageName }}, {{ r.blockName }} • {{ r.districtName }}<span *ngIf="r.policeStation"> • थाना {{ r.policeStation }}</span></small>
           </div>
           <span class="recent-date">{{ r.applicationDate ? (r.applicationDate | date: 'dd-MM-yyyy') : '—' }}</span>
         </li>

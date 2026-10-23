@@ -17,6 +17,8 @@ namespace janshikayat.Models
         public int Panchayat { get; set; }
         public int Block { get; set; }
         public int District { get; set; }
+        // mst_thana.PS_Code; optional (0 = not selected), like Village
+        public long Thana { get; set; }
         // CPGRAMS / CM Dashboard / Sahyog Portal / PMO Grievance Portal / Offline / Other (stored for source-wise reports)
         [Required]
         [RegularExpression("^(CPGRAMS|CM Dashboard|Sahyog Portal|PMO Grievance Portal|Offline|Other)$",
@@ -47,6 +49,8 @@ namespace janshikayat.Models
         public string DISTRICTNAME { get; set; }
         public string DocumentPath { get; set; }
         public string? Application_Source { get; set; }
+        public long Thana { get; set; }
+        public string? Police_Station { get; set; }
     }
     public class ApplicantDetailsDtoRequestParam
     {

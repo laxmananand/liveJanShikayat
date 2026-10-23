@@ -120,7 +120,8 @@ export class ComplaintListComponent implements OnInit {
           r.mobileNumber.includes(q) ||
           r.districtName.toLowerCase().includes(q) ||
           r.blockName.toLowerCase().includes(q) ||
-          r.villageName.toLowerCase().includes(q))
+          r.villageName.toLowerCase().includes(q) ||
+          r.policeStation.toLowerCase().includes(q))
     );
   }
 

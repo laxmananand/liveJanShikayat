@@ -26,6 +26,7 @@ export interface TrackedGrievanceItem extends ComplaintListItem {
   district?: string;
   block?: string;
   area?: string;
+  policeStation?: string;
   category?: string;
   currentCustody: string;
   custodyOfficer: string;
@@ -214,6 +215,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       district: r.districtName,
       block: r.blockName,
       area: place,
+      policeStation: r.policeStation,
       category: forward?.categoryLabel || 'अग्रेषण हेतु लंबित',
       currentCustody: forward
         ? forward.branchLabel + (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '')

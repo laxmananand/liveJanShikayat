@@ -27,7 +27,7 @@
     <label for="search">खोजें</label>
     <div class="search-wrap">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input id="search" type="text" [(ngModel)]="searchTerm" placeholder="क्रमांक, आवेदक, मोबाइल, जिला, गाँव…" (input)="applyLocalFilters()" />
+      <input id="search" type="text" [(ngModel)]="searchTerm" placeholder="क्रमांक, आवेदक, मोबाइल, जिला, गाँव, थाना…" (input)="applyLocalFilters()" />
     </div>
   </div>
   <button class="btn btn-outline" *ngIf="hasFilters" (click)="resetFilters()"><i class="fa-solid fa-rotate-left"></i> रीसेट</button>
@@ -68,7 +68,7 @@
           <td class="nowrap">{{ c.mobileNumber }}</td>
           <td>
             <div>{{ c.villageName }}, {{ c.panchayatName }}</div>
-            <small class="sub-line">{{ c.blockName }} • {{ c.districtName }}</small>
+            <small class="sub-line">{{ c.blockName }} • {{ c.districtName }}<span *ngIf="c.policeStation"> • थाना: {{ c.policeStation }}</span></small>
           </td>
           <td class="nowrap">{{ c.applicationDate ? (c.applicationDate | date: 'dd-MM-yyyy') : '—' }}</td>
           <td><span class="status-badge" [ngClass]="'status-' + defaultStatus">{{ statusLabel(defaultStatus) }}</span></td>

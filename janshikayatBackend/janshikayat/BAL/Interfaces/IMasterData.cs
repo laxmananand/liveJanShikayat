@@ -17,5 +17,6 @@ namespace janshikayat.BAL.Interfaces
         List<MstBranch> GetBranchesByCategory(int categoryId);
         List<MstComplainSubType> GetComplainSubTypes(long complainId);
         List<MstPrashakha> GetPrashakhas();
+        List<Thana> GetThana(int district_code);
     }
 }

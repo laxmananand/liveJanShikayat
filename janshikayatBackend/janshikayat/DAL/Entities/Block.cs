@@ -48,4 +48,23 @@ public class MstPanchayat
         public int? DTC2001 { get; set; }
         public int? Status { get; set; }
     }
+
+    public class Thana
+    {
+        public string District { get; set; }
+        public long? District_code { get; set; }
+        public string Subdivision_Name { get; set; }
+        public long? Subdivision_Code { get; set; }
+        public string Police_Station { get; set; }
+        public long PS_Code { get; set; } // Not nullable in your image
+        public long? Circle_Code { get; set; }
+        public string Circle_Name { get; set; }
+        public long? Range_id { get; set; }
+        public string Range_Name { get; set; }
+        public string Remarks { get; set; }
+        public DateTime? UpdateDate { get; set; }
+        public string Updatelp { get; set; }
+        public string UpdateUserld { get; set; }
+    }
+
 }

@@ -187,6 +187,26 @@
   align-items: start;
 }
 
+/* Complainant card: 7 fields per column. Columns share one height and the address box
+   takes up the slack, so both columns end on the same line. */
+.complainant-grid {
+  align-items: stretch;
+
+  .left-col .address-group {
+    flex: 1 1 auto;
+
+    .textarea-wrap {
+      flex: 1 1 auto;
+      display: flex;
+    }
+
+    textarea {
+      flex: 1 1 auto;
+      height: 100%;
+    }
+  }
+}
+
 .grid-column {
   display: flex;
   flex-direction: column;

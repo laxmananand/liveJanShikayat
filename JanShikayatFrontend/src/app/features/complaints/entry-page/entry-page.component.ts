@@ -8,7 +8,7 @@ import { LookupService } from '../../../core/services/lookup.service';
 import { MasterService } from '../../../core/services/master.service';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { BlockMaster, Branch, Department, District, Panchayat, Village } from '../../../core/models/models';
+import { BlockMaster, Branch, Department, District, Panchayat, Thana, Village } from '../../../core/models/models';
 import { COMPLAINT_CATEGORY_SUGGESTIONS } from '../../../core/utils/bihar';
 
 /** Fields the entry form requires before it can be saved as a draft. */
@@ -28,7 +28,7 @@ const REQUIRED_FIELDS = [
 /** A temporarily saved (not yet finalised) entry, kept in sessionStorage until finalised. */
 interface EntryDraft {
   values: any;
-  locationNames: { district: string; block: string; panchayat: string; village: string };
+  locationNames: { district: string; block: string; panchayat: string; village: string; thana?: string };
   pdf: { name: string; size: string; dataUrl: string } | null;
   savedAt: string;
 }
@@ -59,10 +59,12 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   availableBlocks: BlockMaster[] = [];
   availablePanchayats: Panchayat[] = [];
   availableVillages: Village[] = [];
+  availableThanas: Thana[] = [];
   loadingDistricts = false;
   loadingBlocks = false;
   loadingPanchayats = false;
   loadingVillages = false;
+  loadingThanas = false;
 
   // Application sources from the image
   applicationSources = [
@@ -109,6 +111,8 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     applicationDate: [new Date().toISOString().substring(0, 10), Validators.required],
     // district/block/panchayat/village hold the master codes; names are resolved via locationNames()
     village: [null as number | null],
+    // police station (mst_thana.PS_Code) of the district; optional like village
+    thana: [null as number | null],
     panchayat: [null as number | null, Validators.required],
     block: [null as number | null, Validators.required],
     district: [null as number | null, Validators.required],
@@ -166,12 +170,14 @@ export class EntryPageComponent implements OnInit, OnDestroy {
 
   onDistrictChange(): void {
     const dist = this.form.get('district')?.value;
-    this.form.patchValue({ block: null, panchayat: null, village: null });
+    this.form.patchValue({ block: null, panchayat: null, village: null, thana: null });
     this.availableBlocks = [];
     this.availablePanchayats = [];
     this.availableVillages = [];
+    this.availableThanas = [];
     if (dist == null) return;
 
+    this.loadThanas(dist);
     this.loadingBlocks = true;
     this.masterService.getBlocks(dist).subscribe({
       next: (list) => {
@@ -228,18 +234,35 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Police stations depend only on the district (not on block / panchayat). */
+  private loadThanas(dist: number): void {
+    this.loadingThanas = true;
+    this.masterService.getThanas(dist).subscribe({
+      next: (list) => {
+        if (this.form.get('district')?.value === dist) this.availableThanas = list;
+        this.loadingThanas = false;
+      },
+      error: () => {
+        this.loadingThanas = false;
+        this.showToast('थाना सूची लोड नहीं हो सकी।');
+      }
+    });
+  }
+
   /** English display names (from the master APIs) for the selected location codes. */
-  locationNames(): { district: string; block: string; panchayat: string; village: string } {
+  locationNames(): { district: string; block: string; panchayat: string; village: string; thana: string } {
     const v = this.form.value;
     const dist = this.districts.find((d) => d.districtcode === v.district);
     const blk = this.availableBlocks.find((b) => b.blockCode === v.block);
     const pan = this.availablePanchayats.find((p) => p.panchayatCode === v.panchayat);
     const vil = this.availableVillages.find((x) => x.villcode === v.village);
+    const thn = this.availableThanas.find((t) => t.psCode === v.thana);
     return {
       district: dist?.districtname ?? '',
       block: blk ? this.blockLabel(blk) : '',
       panchayat: pan ? this.panchayatLabel(pan) : '',
-      village: vil?.villname ?? ''
+      village: vil?.villname ?? '',
+      thana: thn?.policeStation ?? ''
     };
   }
 
@@ -304,7 +327,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       this.form.patchValue({
         subject: `${source} के माध्यम से प्राप्त परिवाद - ${this.form.get('applicantName')?.value}`,
         category: 'भूमि विवाद',
-        description: `आवेदक ${this.form.get('applicantName')?.value} (पिता/पति: ${this.form.get('guardianName')?.value}, ग्राम: ${loc.village}, पंचायत: ${loc.panchayat}, प्रखंड: ${loc.block}, जिला: ${loc.district}, पिन कोड: ${this.form.get('pinCode')?.value}) द्वारा ${source} स्रोत से प्रस्तुत आवेदन पत्र।`
+        description: `आवेदक ${this.form.get('applicantName')?.value} (पिता/पति: ${this.form.get('guardianName')?.value}, ग्राम: ${loc.village}, पंचायत: ${loc.panchayat}, प्रखंड: ${loc.block}, थाना: ${loc.thana || '—'}, जिला: ${loc.district}, पिन कोड: ${this.form.get('pinCode')?.value}) द्वारा ${source} स्रोत से प्रस्तुत आवेदन पत्र।`
       });
     }
 
@@ -332,6 +355,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       block: null,
       panchayat: null,
       village: null,
+      thana: null,
       branchId: this.branches.length > 0 ? this.branches[0].id : null
     });
     this.currentStep = 1;
@@ -343,6 +367,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     this.availableBlocks = [];
     this.availablePanchayats = [];
     this.availableVillages = [];
+    this.availableThanas = [];
   }
 
   // ── PDF Attachment & Validation (Max 200KB, PDF only) ──
@@ -562,6 +587,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
         panchayat: v.panchayat,
         block: v.block,
         district: v.district,
+        thana: v.thana ?? 0, // optional; 0 = not selected
         applicationSource: v.applicationSource || 'Offline',
         createdBy: this.auth.currentUser()?.email,
         photograph: this.pdfFile
@@ -605,6 +631,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       panchayat: draft.locationNames.panchayat,
       block: draft.locationNames.block,
       district: draft.locationNames.district,
+      thana: draft.locationNames.thana ?? '',
       applicationSource: v.applicationSource || 'Offline',
       pdfName: draft.pdf?.name,
       pdfSize: draft.pdf?.size
@@ -661,6 +688,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       this.pdfSizeDisplay = draft.pdf.size;
     }
     this.loadLocationLists(draft.values.district, draft.values.block, draft.values.panchayat);
+    if (draft.values.district != null) this.loadThanas(draft.values.district);
     this.showPreview = true;
   }
 

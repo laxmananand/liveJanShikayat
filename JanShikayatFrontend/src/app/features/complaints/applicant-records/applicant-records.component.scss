@@ -131,6 +131,11 @@
   .col-sn {
     width: 3rem;
   }
+  // Police station names run to 2–3 words ("SC/ST Thana", "Araria RS"): keep the column from collapsing
+  .col-thana {
+    width: 7.5rem;
+    min-width: 7.5rem;
+  }
   .col-doc {
     width: 6.5rem;
   }

@@ -69,6 +69,15 @@ export interface Village {
   blockcode: number;
 }
 
+/** One police station from POST /Master/get-thana (mst_thana); psCode is unique. */
+export interface Thana {
+  psCode: number;
+  policeStation: string;
+  districtCode: number;
+  subdivisionName: string;
+  circleName: string;
+}
+
 // ── Applicant (POST /Applicant/save-janshikayat_applicant-details, multipart/form-data) ──
 export interface SaveApplicantPayload {
   applicantName: string;
@@ -83,6 +92,7 @@ export interface SaveApplicantPayload {
   panchayat: number;
   block: number;
   district: number;
+  thana: number; // mst_thana.PS_Code, 0 = not selected
   applicationSource: string; // CPGRAMS | CM Dashboard | Sahyog Portal | PMO Grievance Portal | Offline | Other
   createdBy?: string;
   photograph: File;
@@ -110,6 +120,8 @@ export interface ApplicantRecord {
   panchayatName: string;
   blockName: string;
   districtName: string;
+  thanaCode: number; // mst_thana.PS_Code, 0 = not selected
+  policeStation: string; // thana name, '' when not selected
   documentBase64: string | null; // base64 of the stored file, or null
   applicationSource: string;
 }
