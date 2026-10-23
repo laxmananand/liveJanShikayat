@@ -117,6 +117,13 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   /** Full application popup (same one as अंतिम आवेदन), with remarks */
   detailsRecord: ApplicantRecord | null = null;
 
+  /** Card / chip filters that cover several statuses — each matches what its KPI card counts */
+  private readonly statusGroups: Record<string, string[]> = {
+    PendingOrReview: ['Pending', 'UnderReview'],
+    ForwardedOrEnquiry: ['ForwardedToDepartment', 'ForwardedForFieldEnquiry'],
+    ActionTakenOrDisposed: ['ActionTaken', 'Disposed']
+  };
+
   // Status mapping options
   statusOptions = [
     { value: '', label: 'सभी स्थितियां (All Statuses)' },
@@ -125,7 +132,10 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
     { value: 'ForwardedToDepartment', label: 'विभाग को अग्रेषित (Forwarded)' },
     { value: 'ForwardedForFieldEnquiry', label: 'स्थलीय जांच (Field Enquiry)' },
     { value: 'ActionTaken', label: 'कार्रवाई संपन्न / स्वीकृत (Approved)' },
-    { value: 'Disposed', label: 'निस्तारित (Disposed)' }
+    { value: 'Disposed', label: 'निस्तारित (Disposed)' },
+    { value: 'PendingOrReview', label: 'लंबित + समीक्षाधीन' },
+    { value: 'ForwardedOrEnquiry', label: 'अग्रेषित + स्थलीय जांच' },
+    { value: 'ActionTakenOrDisposed', label: 'स्वीकृत + निस्तारित' }
   ];
 
   statusLabel = statusLabel;
@@ -272,11 +282,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
     // Status filter
     if (this.selectedStatus) {
-      if (this.selectedStatus === 'ActionTakenOrDisposed') {
-        result = result.filter((item) => item.status === 'ActionTaken' || item.status === 'Disposed');
-      } else {
-        result = result.filter((item) => item.status === this.selectedStatus);
-      }
+      const statuses = this.statusGroups[this.selectedStatus] ?? [this.selectedStatus];
+      result = result.filter((item) => statuses.includes(item.status));
     }
 
     // District filter
@@ -294,11 +301,10 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
   private updateMetrics(): void {
     this.totalCount = this.trackedList.length;
-    this.pendingCount = this.trackedList.filter((c) => c.status === 'Pending' || c.status === 'UnderReview').length;
-    this.underEnquiryCount = this.trackedList.filter(
-      (c) => c.status === 'ForwardedToDepartment' || c.status === 'ForwardedForFieldEnquiry'
-    ).length;
-    this.approvedCount = this.trackedList.filter((c) => c.status === 'ActionTaken' || c.status === 'Disposed').length;
+    const count = (group: string) => this.trackedList.filter((c) => this.statusGroups[group].includes(c.status)).length;
+    this.pendingCount = count('PendingOrReview');
+    this.underEnquiryCount = count('ForwardedOrEnquiry');
+    this.approvedCount = count('ActionTakenOrDisposed');
   }
 
   // ── PDF Popup Modal (the document saved with the application) ──

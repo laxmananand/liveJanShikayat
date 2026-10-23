@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <div class="kpi-card card-pending" (click)="quickFilter('Pending')" title="लंबित शिकायतें देखें">
+    <div class="kpi-card card-pending" (click)="quickFilter('PendingOrReview')" title="लंबित / समीक्षाधीन शिकायतें देखें">
       <div class="kpi-icon-wrap">
         <i class="fa-solid fa-clock-rotate-left"></i>
       </div>
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <div class="kpi-card card-enquiry" (click)="quickFilter('ForwardedForFieldEnquiry')" title="स्थलीय जांच देखें">
+    <div class="kpi-card card-enquiry" (click)="quickFilter('ForwardedOrEnquiry')" title="अग्रेषित / स्थलीय जांच शिकायतें देखें">
       <div class="kpi-icon-wrap">
         <i class="fa-solid fa-person-military-pointing"></i>
       </div>
@@ -204,10 +204,10 @@
         <button
           type="button"
           class="filter-chip chip-enquiry"
-          [class.active]="selectedStatus === 'ForwardedForFieldEnquiry'"
-          (click)="quickFilter('ForwardedForFieldEnquiry')"
+          [class.active]="selectedStatus === 'ForwardedOrEnquiry'"
+          (click)="quickFilter('ForwardedOrEnquiry')"
         >
-          <i class="fa-solid fa-person-military-pointing"></i> स्थलीय जांच (Field Enquiry)
+          <i class="fa-solid fa-person-military-pointing"></i> अग्रेषित / स्थलीय जांच (Forwarded)
         </button>
         <button
           type="button"
