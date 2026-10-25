@@ -27,7 +27,7 @@
   </div>
 
   <div class="table-wrap sheet-wrap" *ngIf="!loading && filtered.length">
-    <table class="records-table sheet">
+    <table class="records-table sheet sheet-compact">
       <thead>
         <tr>
           <th class="col-sn">क्रम सं.<small>(Sl. No.)</small></th>
@@ -40,13 +40,12 @@
           <th>गाँव</th>
           <th>थाना</th>
           <th>मोबाइल संख्या</th>
-          <th>पिनकोड</th>
           <th>आवेदन प्राप्ति की तिथि</th>
           <th>अग्रेषित दिनांक</th>
           <th>अग्रेषित<small>(Forwarded To)</small></th>
           <th>शिकायत का प्रकार<small>(Complaint Type)</small></th>
           <th class="col-center">देखें<small>(View)</small></th>
-          <th class="col-center">टिप्पणी<small>(Remarks)</small></th>
+          <th class="col-center col-remarks">टिप्पणी<small>(Remarks)</small></th>
         </tr>
       </thead>
       <tbody>
@@ -61,12 +60,11 @@
           <td data-label="गाँव">{{ row.record.villageName || '—' }}</td>
           <td data-label="थाना">{{ row.record.policeStation || '—' }}</td>
           <td class="nowrap" data-label="मोबाइल संख्या">{{ row.record.mobileNumber }}</td>
-          <td data-label="पिनकोड">{{ row.record.pinCode || '' }}</td>
           <td class="nowrap" data-label="प्राप्ति तिथि">{{ row.record.applicationDate ? (row.record.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.forward.forwardedAt | date: 'dd/MM/yyyy' }}</td>
           <td data-label="अग्रेषित" [title]="row.forward.categoryLabel + ' → ' + row.forward.branchLabel + ' • ' + row.forward.forwardedBy">
             {{ row.forward.branchLabel }}
-            <small class="sub">{{ row.forward.categoryLabel }}<ng-container *ngIf="row.forward.prashakhaLabel"> • {{ row.forward.prashakhaLabel }}</ng-container><ng-container *ngIf="row.forward.officeUnitLabel"> • {{ row.forward.officeUnitLabel }}</ng-container></small>
+            <small class="sub">{{ row.forward.categoryLabel }}<ng-container *ngIf="row.forward.prashakhaLabel"> • {{ row.forward.prashakhaLabel }}</ng-container><ng-container *ngIf="row.forward.officeUnitLabel || row.forward.officeLabel"> • {{ row.forward.officeUnitLabel || row.forward.officeLabel }}</ng-container></small>
           </td>
           <td data-label="शिकायत का प्रकार">
             {{ row.forward.complaintTypeLabel }}
@@ -82,7 +80,7 @@
               </button>
             </div>
           </td>
-          <td class="col-center" data-label="टिप्पणी">
+          <td class="col-center col-remarks" data-label="टिप्पणी">
             <button type="button" class="btn-send" (click)="openDetails(row.record, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
               <i class="fa-solid fa-comment-dots"></i> Remarks
             </button>

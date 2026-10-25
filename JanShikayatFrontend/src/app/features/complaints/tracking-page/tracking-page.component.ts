@@ -220,7 +220,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       currentCustody: forward
         ? forward.branchLabel +
           (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '') +
-          (forward.officeUnitLabel ? ` → ${forward.officeUnitLabel}` : '')
+          (forward.officeUnitLabel || forward.officeLabel ? ` → ${forward.officeUnitLabel || forward.officeLabel}` : '')
         : 'प्रविष्टि कोषांग (अग्रेषण हेतु लंबित)',
       custodyOfficer: forward
         ? `अग्रेषित: ${new Date(forward.forwardedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
@@ -400,7 +400,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
               fromStatus: 'Pending',
               toStatus: 'ForwardedToDepartment',
               reason:
-                [f.categoryLabel, f.officeUnitLabel, f.branchLabel, f.prashakhaLabel, f.complaintTypeLabel].filter(Boolean).join(' → ') +
+                [f.categoryLabel, f.officeUnitLabel || f.officeLabel, f.branchLabel, f.prashakhaLabel, f.complaintTypeLabel].filter(Boolean).join(' → ') +
                 (f.remarks ? ` — ${f.remarks}` : ''),
               actionByName: f.forwardedBy,
               actionAt: f.forwardedAt

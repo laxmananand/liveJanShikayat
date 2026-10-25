@@ -174,15 +174,19 @@ namespace janshikayat.BAL.Services
                               THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Prashakha p WHERE CAST(p.ID AS INT) = @PrashakhaId) THEN 1 ELSE 0 END
                               ELSE CASE WHEN @PrashakhaId IS NULL THEN 1 ELSE 0 END
                          END) = 1
-                    -- District Administration needs a regional office of that category and one of its offices;
-                    -- other categories must not carry either
+                    -- District Administration needs a regional office of that category, plus one of its offices
+                    -- when it has a list (IG / DIG / SP have none yet); other categories must not carry either
                     AND (CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
                                            WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT) AND c.Category = 'District Administration')
                               THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Regional_Office o
-                                                     JOIN vw_Office_Unit u ON u.Office_Id = o.Office_Id
                                                      WHERE o.Office_Id = @OfficeId AND o.Is_Active = 1
                                                        AND o.Category_Id = TRY_CAST(@CategoryId AS INT)
-                                                       AND u.Unit_Code = @OfficeUnitCode) THEN 1 ELSE 0 END
+                                                       AND (CASE WHEN EXISTS (SELECT 1 FROM vw_Office_Unit u WHERE u.Office_Id = o.Office_Id)
+                                                                 THEN CASE WHEN EXISTS (SELECT 1 FROM vw_Office_Unit u
+                                                                                        WHERE u.Office_Id = o.Office_Id AND u.Unit_Code = @OfficeUnitCode)
+                                                                           THEN 1 ELSE 0 END
+                                                                 ELSE CASE WHEN @OfficeUnitCode IS NULL THEN 1 ELSE 0 END
+                                                            END) = 1) THEN 1 ELSE 0 END
                               ELSE CASE WHEN @OfficeId IS NULL AND @OfficeUnitCode IS NULL THEN 1 ELSE 0 END
                          END) = 1",
                 parameters);

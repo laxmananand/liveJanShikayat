@@ -4,7 +4,8 @@
 -- Mst_Commissioner     : 9 divisional commissioners             (Office_Id 1)
 -- Mst_DM_Office        : 38 district DM offices                 (Office_Id 2; Division_Code -> Mst_Commissioner)
 -- Tbl_Applicant_Forward.OfficeId / OfficeLabel / OfficeUnitCode / OfficeUnitLabel -> what was chosen when forwarding
--- IG / DIG / SP have no office list yet; add a table for each and UNION it into vw_Office_Unit.
+-- IG / DIG / SP have no office list yet, so they go straight to the branch; to give one a list,
+-- add a table for it and UNION it into vw_Office_Unit (the popup and the save check then require an officer).
 -- Safe to re-run: tables/columns are created only if missing; rows are upserted.
 
 USE Jansikayat_DB;

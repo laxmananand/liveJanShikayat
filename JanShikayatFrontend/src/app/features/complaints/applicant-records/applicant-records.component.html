@@ -70,7 +70,7 @@
             <ng-container *ngIf="forwards.get(r.id) as f">
               <span [title]="f.categoryLabel + ' → ' + f.branchLabel + ' → ' + f.complaintTypeLabel + (f.remarks ? ' — ' + f.remarks : '')">{{ f.branchLabel }}</span>
               <small class="sub" *ngIf="f.prashakhaLabel"><i class="fa-solid fa-sitemap"></i> {{ f.prashakhaLabel }}</small>
-              <small class="sub" *ngIf="f.officeUnitLabel"><i class="fa-solid fa-building-columns"></i> {{ f.officeUnitLabel }}</small>
+              <small class="sub" *ngIf="f.officeUnitLabel || f.officeLabel"><i class="fa-solid fa-building-columns"></i> {{ f.officeUnitLabel || f.officeLabel }}</small>
               <small class="sub">{{ f.complaintTypeLabel }}</small>
             </ng-container>
           </td>

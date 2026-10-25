@@ -434,6 +434,24 @@
     }
   }
 
+  // Forwarded Applications: 16 columns, so slightly tighter cells to fit the width without scrolling
+  // (wide screens only: below 1100px the card layout sets its own padding)
+  @media (min-width: 1101px) {
+    &.sheet-compact {
+      thead th,
+      tbody td {
+        padding-left: 0.3rem;
+        padding-right: 0.3rem;
+      }
+    }
+  }
+
+  // Remarks button keeps its full width, so the long text columns wrap instead of pushing it off the edge
+  .col-remarks {
+    width: 1%;
+    white-space: nowrap;
+  }
+
   .btn-send {
     background: #23a6e6;
     border: none;
