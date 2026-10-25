@@ -35,6 +35,7 @@ export class ForwardedApplicationsComponent implements OnInit {
   errorMessage = '';
   searchTerm = '';
   selected: ApplicantRecord | null = null;
+  allowRemark = false;
 
   get isAdmin(): boolean {
     return this.auth.hasRole('SuperAdmin');
@@ -95,7 +96,9 @@ export class ForwardedApplicationsComponent implements OnInit {
     return names.filter((n) => !!n?.trim()).join(', ') || '—';
   }
 
-  openDetails(r: ApplicantRecord): void {
+  /** View (eye) opens the details read-only; the Remarks button also lets the user add a remark. */
+  openDetails(r: ApplicantRecord, allowRemark: boolean): void {
+    this.allowRemark = allowRemark;
     this.selected = r;
   }
 

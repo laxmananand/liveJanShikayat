@@ -51,14 +51,16 @@
           </li>
         </ul>
 
-        <textarea rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
-                  placeholder="अपनी टिप्पणी लिखें / Write your remark" aria-label="टिप्पणी"></textarea>
+        <ng-container *ngIf="allowRemark">
+          <textarea rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
+                    placeholder="अपनी टिप्पणी लिखें / Write your remark" aria-label="टिप्पणी"></textarea>
+          <div class="remark-actions">
+            <button type="button" class="btn btn-primary-accent" (click)="addRemark()" [disabled]="savingRemark || !remarkText.trim()">
+              <i class="fa-solid" [ngClass]="savingRemark ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> टिप्पणी जोड़ें / Add remark
+            </button>
+          </div>
+        </ng-container>
         <span class="remark-error" *ngIf="remarkError">{{ remarkError }}</span>
-        <div class="remark-actions">
-          <button type="button" class="btn btn-primary-accent" (click)="addRemark()" [disabled]="savingRemark || !remarkText.trim()">
-            <i class="fa-solid" [ngClass]="savingRemark ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> टिप्पणी जोड़ें / Add remark
-          </button>
-        </div>
       </div>
     </div>
 

@@ -18,6 +18,8 @@ export class ApplicantDetailsModalComponent implements OnChanges {
 
   /** The application to show; null keeps the popup closed. */
   @Input() record: ApplicantRecord | null = null;
+  /** false: remarks are shown read-only (no box to add one). */
+  @Input() allowRemark = true;
   @Output() closed = new EventEmitter<void>();
 
   remarks: ApplicantRemark[] = [];

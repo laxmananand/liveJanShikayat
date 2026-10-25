@@ -74,7 +74,7 @@
           </td>
           <td class="col-center" data-label="देखें">
             <div class="icon-btns">
-              <button type="button" class="icon-btn view" (click)="openDetails(row.record)" title="पूरा विवरण देखें / View details">
+              <button type="button" class="icon-btn view" (click)="openDetails(row.record, false)" title="पूरा विवरण देखें / View details">
                 <i class="fa-solid fa-eye"></i>
               </button>
               <button type="button" class="icon-btn pdf" *ngIf="row.record.documentBase64" (click)="openDoc(row.record)" title="दस्तावेज़ देखें / View document">
@@ -83,7 +83,7 @@
             </div>
           </td>
           <td class="col-center" data-label="टिप्पणी">
-            <button type="button" class="btn-send" (click)="openDetails(row.record)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+            <button type="button" class="btn-send" (click)="openDetails(row.record, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
               <i class="fa-solid fa-comment-dots"></i> Remarks
             </button>
           </td>
@@ -98,5 +98,5 @@
     <p *ngIf="!hasBranch">आपका लॉगिन किसी शाखा से जुड़ा नहीं है, इसलिए कोई अग्रेषित आवेदन नहीं है।</p>
   </div>
 
-  <app-applicant-details-modal [record]="selected" (closed)="selected = null"></app-applicant-details-modal>
+  <app-applicant-details-modal [record]="selected" [allowRemark]="allowRemark" (closed)="selected = null"></app-applicant-details-modal>
 </section>
