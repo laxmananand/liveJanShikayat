@@ -4,7 +4,15 @@ import { Observable, map } from 'rxjs';
 import { BlockMaster, District, MasterApiResponse, Panchayat, Thana, Village } from '../models/models';
 import { environment } from '../../../environments/environment';
 import { CachedRequest, CachedRequestMap } from '../utils/cached-request';
-import { MstBranch, MstCategory, MstComplainSubType, MstDepartment, MstPrashakha } from '../config/forward-options';
+import {
+  MstBranch,
+  MstCategory,
+  MstComplainSubType,
+  MstDepartment,
+  MstOfficeUnit,
+  MstPrashakha,
+  MstRegionalOffice
+} from '../config/forward-options';
 
 /** Location masters almost never change: keep them for 30 minutes. */
 const MASTER_TTL = 30 * 60_000;
@@ -89,6 +97,30 @@ export class MasterService {
     () => this.http.post<MasterApiResponse<MstPrashakha>>(`${this.baseUrl}/get-prashakha`, null).pipe(map(unwrap)),
     MASTER_TTL
   );
+
+  // District Administration: Mst_Regional_Office → vw_Office_Unit
+  private regionalOffices = new CachedRequestMap((categoryId: number) => {
+    const params = new HttpParams().set('CategoryId', categoryId);
+    return this.http
+      .post<MasterApiResponse<MstRegionalOffice>>(`${this.baseUrl}/get-regional-office`, null, { params })
+      .pipe(map(unwrap));
+  }, MASTER_TTL);
+  private officeUnits = new CachedRequestMap((officeId: number) => {
+    const params = new HttpParams().set('OfficeId', officeId);
+    return this.http
+      .post<MasterApiResponse<MstOfficeUnit>>(`${this.baseUrl}/get-office-unit`, null, { params })
+      .pipe(map(unwrap));
+  }, MASTER_TTL);
+
+  /** API: POST /Master/get-regional-office?CategoryId= (cached per category) — Commissioner, DM, IG, DIG, SP */
+  getRegionalOffices(categoryId: number): Observable<MstRegionalOffice[]> {
+    return this.regionalOffices.get(categoryId);
+  }
+
+  /** API: POST /Master/get-office-unit?OfficeId= (cached per office) — empty while an office has no list yet */
+  getOfficeUnits(officeId: number): Observable<MstOfficeUnit[]> {
+    return this.officeUnits.get(officeId);
+  }
 
   /** API: POST /Master/get-prashakha (cached) — chosen first when forwarding under "Section" */
   getPrashakhas(): Observable<MstPrashakha[]> {

@@ -36,6 +36,20 @@ export interface MstPrashakha {
   name: string;
 }
 
+/** POST /Master/get-regional-office?CategoryId= (Mst_Regional_Office — District Administration) */
+export interface MstRegionalOffice {
+  office_Id: number;
+  category_Id: number;
+  regional_Office: string;
+  unique_Code: string;
+}
+
+/** POST /Master/get-office-unit?OfficeId= (vw_Office_Unit — Commissioner divisions / DM districts) */
+export interface MstOfficeUnit {
+  unit_Code: number;
+  unit_Name: string;
+}
+
 /** POST /Master/get-complain-sub-type?ComplainId= */
 export interface MstComplainSubType {
   sub_Type_id: number;

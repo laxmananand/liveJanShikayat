@@ -32,6 +32,34 @@
         <span class="fw-error" *ngIf="isInvalid('prashakhaId')">कृपया प्रशाखा चुनें / Please select a Prashakha.</span>
       </div>
 
+      <!-- 2–3. District Administration only: regional office, then one office of it -->
+      <ng-container *ngIf="isDistrictAdmin">
+        <div class="fw-field">
+          <label for="fwOffice"><span class="fw-step">2</span> कार्यालय / Office <span class="req">*</span></label>
+          <select id="fwOffice" formControlName="officeId" (change)="onOfficeChange()" [class.has-error]="isInvalid('officeId')">
+            <option value="" disabled>{{
+              loadingOffices ? 'लोड हो रहा है… / Loading…'
+              : offices.length ? '-- कार्यालय चुनें / Select office --'
+              : '-- कोई कार्यालय उपलब्ध नहीं / No office available --' }}</option>
+            <option *ngFor="let o of offices" [value]="o.id">{{ o.label }}</option>
+          </select>
+          <span class="fw-error" *ngIf="isInvalid('officeId')">कृपया कार्यालय चुनें / Please select an office.</span>
+        </div>
+
+        <div class="fw-field">
+          <label for="fwOfficeUnit"><span class="fw-step">3</span> अधिकारी / Officer <span class="req">*</span></label>
+          <select id="fwOfficeUnit" formControlName="officeUnitId" (change)="onOfficeUnitChange()" [class.has-error]="isInvalid('officeUnitId')">
+            <option value="" disabled>{{
+              loadingOfficeUnits ? 'लोड हो रहा है… / Loading…'
+              : !form.controls.officeId.value ? '-- पहले कार्यालय चुनें / Select office first --'
+              : officeUnits.length ? '-- अधिकारी चुनें / Select officer --'
+              : '-- इस कार्यालय की सूची अभी उपलब्ध नहीं / No list for this office yet --' }}</option>
+            <option *ngFor="let u of officeUnits" [value]="u.id">{{ u.label }}</option>
+          </select>
+          <span class="fw-error" *ngIf="isInvalid('officeUnitId')">कृपया अधिकारी चुनें / Please select an officer.</span>
+        </div>
+      </ng-container>
+
       <!-- Branch -->
       <div class="fw-field">
         <label for="fwBranch"><span class="fw-step">{{ 2 + stepOffset }}</span> {{ isDepartment ? 'विभाग / Department' : 'शाखा / Branch' }} <span class="req">*</span></label>
@@ -40,6 +68,7 @@
             loadingBranches ? 'लोड हो रहा है… / Loading…'
             : !form.controls.categoryId.value ? '-- पहले श्रेणी चुनें / Select category first --'
             : isSection && !form.controls.prashakhaId.value ? '-- पहले प्रशाखा चुनें / Select Prashakha first --'
+            : isDistrictAdmin && !form.controls.officeUnitId.value ? '-- पहले अधिकारी चुनें / Select officer first --'
             : isDepartment && branches.length ? '-- विभाग चुनें / Select department --'
             : branches.length ? '-- शाखा चुनें / Select branch --'
             : '-- इस श्रेणी में कोई शाखा नहीं / No branch in this category --' }}</option>

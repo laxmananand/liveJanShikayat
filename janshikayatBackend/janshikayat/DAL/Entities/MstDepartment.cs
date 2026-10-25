@@ -32,6 +32,20 @@
         public int ID { get; set; }
         public string? Name { get; set; }
     }
+    // District Administration forwards first pick a regional office (Commissioner, DM, IG, DIG, SP)
+    public class MstRegionalOffice
+    {
+        public int Office_Id { get; set; }
+        public int Category_Id { get; set; }
+        public string? Regional_Office { get; set; }
+        public string? Unique_Code { get; set; }
+    }
+    // One office under a regional office (vw_Office_Unit: a Commissioner division or a DM district)
+    public class MstOfficeUnit
+    {
+        public int Unit_Code { get; set; }
+        public string? Unit_Name { get; set; }
+    }
     public class MstComplainSubType
     {
         public long Sub_Type_id { get; set; }

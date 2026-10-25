@@ -25,6 +25,13 @@ namespace janshikayat.Models
         public int? PrashakhaId { get; set; }
         [StringLength(200)]
         public string? PrashakhaLabel { get; set; }
+        // Required when the category is District Administration (Mst_Regional_Office / vw_Office_Unit)
+        public int? OfficeId { get; set; }
+        [StringLength(200)]
+        public string? OfficeLabel { get; set; }
+        public int? OfficeUnitCode { get; set; }
+        [StringLength(300)]
+        public string? OfficeUnitLabel { get; set; }
     }
     public class ApplicantForwardDto
     {
@@ -40,6 +47,10 @@ namespace janshikayat.Models
         public DateTime ForwardedAt { get; set; }
         public int? PrashakhaId { get; set; }
         public string? PrashakhaLabel { get; set; }
+        public int? OfficeId { get; set; }
+        public string? OfficeLabel { get; set; }
+        public int? OfficeUnitCode { get; set; }
+        public string? OfficeUnitLabel { get; set; }
     }
 
     // Any logged-in user: add / view remarks on an application

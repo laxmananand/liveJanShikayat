@@ -10,6 +10,8 @@ import { AuthService } from '../../core/services/auth.service';
 /**
  * Forward popup: category → branch → complaint type (+ optional remark).
  * "Section" first asks for a Prashakha (Mst_Prashakha); that Prashakha's login receives the application.
+ * "District Administration" first asks for a regional office (Mst_Regional_Office: Commissioner, DM, IG, DIG, SP)
+ * and then one office of it (vw_Office_Unit: 9 Commissioners / 38 DM offices).
  * Options come from Mst_Category → Mst_Branch (Home/Section/District_Categ) → Mst_Complain_Sub_Type.
  * The "Department" category instead lists Mst_Departments and shows that department's email in step 3;
  * sending it by email is not built yet, so that forward is a frontend-only demo (nothing is saved).
@@ -37,6 +39,10 @@ export class ForwardDialogComponent implements OnChanges {
   complaintTypes: ForwardOption[] = [];
   prashakhas: ForwardOption[] = [];
   loadingPrashakhas = false;
+  offices: ForwardOption[] = [];
+  officeUnits: ForwardOption[] = [];
+  loadingOffices = false;
+  loadingOfficeUnits = false;
   loadingCategories = false;
   loadingBranches = false;
   loadingTypes = false;
@@ -48,6 +54,8 @@ export class ForwardDialogComponent implements OnChanges {
   form = this.fb.group({
     categoryId: ['', Validators.required],
     prashakhaId: [{ value: '', disabled: true }, Validators.required],
+    officeId: [{ value: '', disabled: true }, Validators.required],
+    officeUnitId: [{ value: '', disabled: true }, Validators.required],
     branchId: [{ value: '', disabled: true }, Validators.required],
     complaintTypeId: [{ value: '', disabled: true }, Validators.required],
     remarks: ['', Validators.maxLength(500)]
@@ -65,20 +73,30 @@ export class ForwardDialogComponent implements OnChanges {
     return c?.label.trim().toLowerCase() === 'section';
   }
 
-  /** Section adds the Prashakha step, so later steps shift by one. */
+  /** District Administration goes to a regional office and one of its offices first (matched by name, like Department). */
+  get isDistrictAdmin(): boolean {
+    const c = this.categories.find((x) => x.id === this.form.controls.categoryId.value);
+    return c?.label.trim().toLowerCase() === 'district administration';
+  }
+
+  /** Section adds the Prashakha step and District Administration the office steps, so later steps shift. */
   get stepOffset(): number {
-    return this.isSection ? 1 : 0;
+    return this.isSection ? 1 : this.isDistrictAdmin ? 2 : 0;
   }
 
   ngOnChanges(): void {
     // Every time the popup opens it starts empty
     if (this.record) {
-      this.form.reset({ categoryId: '', prashakhaId: '', branchId: '', complaintTypeId: '', remarks: '' });
+      this.form.reset({ categoryId: '', prashakhaId: '', officeId: '', officeUnitId: '', branchId: '', complaintTypeId: '', remarks: '' });
       this.form.controls.prashakhaId.disable();
+      this.form.controls.officeId.disable();
+      this.form.controls.officeUnitId.disable();
       this.form.controls.branchId.disable();
       this.form.controls.complaintTypeId.disable();
       this.branches = [];
       this.complaintTypes = [];
+      this.offices = [];
+      this.officeUnits = [];
       this.submitting = false;
       this.errorMessage = '';
       this.loadCategories();
@@ -100,9 +118,15 @@ export class ForwardDialogComponent implements OnChanges {
   }
 
   onCategoryChange(): void {
-    const { categoryId, prashakhaId, branchId, complaintTypeId } = this.form.controls;
+    const { categoryId, prashakhaId, officeId, officeUnitId, branchId, complaintTypeId } = this.form.controls;
     prashakhaId.reset('');
     prashakhaId.disable();
+    officeId.reset('');
+    officeId.disable();
+    officeUnitId.reset('');
+    officeUnitId.disable();
+    this.offices = [];
+    this.officeUnits = [];
     branchId.reset('');
     branchId.disable();
     complaintTypeId.reset('');
@@ -113,6 +137,7 @@ export class ForwardDialogComponent implements OnChanges {
     if (!selected) return;
 
     if (this.isSection) this.loadPrashakhas();
+    if (this.isDistrictAdmin) this.loadOffices(+selected);
 
     this.loadingBranches = true;
     if (this.isDepartment) {
@@ -139,8 +164,9 @@ export class ForwardDialogComponent implements OnChanges {
         if (categoryId.value !== selected) return;
         this.branches = list.map((b) => ({ id: String(b.complain_id), label: `${b.branch_Hindi?.trim()} / ${b.branch_Eng}` }));
         this.loadingBranches = false;
-        // Section: the branch is picked only after the Prashakha
-        if (this.branches.length && (!this.isSection || prashakhaId.value)) branchId.enable();
+        // Section / District Administration: the branch is picked only after the Prashakha / office
+        if (this.branches.length && (!this.isSection || prashakhaId.value) && (!this.isDistrictAdmin || officeUnitId.value))
+          branchId.enable();
       },
       error: () => {
         this.loadingBranches = false;
@@ -168,6 +194,53 @@ export class ForwardDialogComponent implements OnChanges {
   onPrashakhaChange(): void {
     const { prashakhaId, branchId } = this.form.controls;
     prashakhaId.value && this.branches.length ? branchId.enable() : branchId.disable();
+  }
+
+  private loadOffices(categoryId: number): void {
+    const { categoryId: category, officeId } = this.form.controls;
+    const selected = category.value;
+    this.loadingOffices = true;
+    this.masterService.getRegionalOffices(categoryId).subscribe({
+      next: (list) => {
+        if (category.value !== selected) return;
+        this.offices = list.map((o) => ({ id: String(o.office_Id), label: o.regional_Office }));
+        this.loadingOffices = false;
+        if (this.offices.length) officeId.enable();
+      },
+      error: () => {
+        this.loadingOffices = false;
+        this.errorMessage = 'कार्यालय लोड नहीं हो सके। / Could not load offices.';
+      }
+    });
+  }
+
+  onOfficeChange(): void {
+    const { officeId, officeUnitId, branchId } = this.form.controls;
+    officeUnitId.reset('');
+    officeUnitId.disable();
+    branchId.disable();
+    this.officeUnits = [];
+    const selected = officeId.value;
+    if (!selected) return;
+
+    this.loadingOfficeUnits = true;
+    this.masterService.getOfficeUnits(+selected).subscribe({
+      next: (list) => {
+        if (officeId.value !== selected) return;
+        this.officeUnits = list.map((u) => ({ id: String(u.unit_Code), label: u.unit_Name }));
+        this.loadingOfficeUnits = false;
+        if (this.officeUnits.length) officeUnitId.enable();
+      },
+      error: () => {
+        this.loadingOfficeUnits = false;
+        this.errorMessage = 'कार्यालय सूची लोड नहीं हो सकी। / Could not load the office list.';
+      }
+    });
+  }
+
+  onOfficeUnitChange(): void {
+    const { officeUnitId, branchId } = this.form.controls;
+    officeUnitId.value && this.branches.length ? branchId.enable() : branchId.disable();
   }
 
   onBranchChange(): void {
@@ -211,11 +284,14 @@ export class ForwardDialogComponent implements OnChanges {
   submit(): void {
     if (!this.record) return;
     // Disabled controls are skipped by form.valid, so check the cascade explicitly
-    const { categoryId, prashakhaId, branchId, complaintTypeId } = this.form.controls;
+    const { categoryId, prashakhaId, officeId, officeUnitId, branchId, complaintTypeId } = this.form.controls;
     this.form.markAllAsTouched();
     if (!categoryId.value || !branchId.value || !complaintTypeId.value || this.form.invalid) return;
     if (this.isSection && !prashakhaId.value) return;
+    if (this.isDistrictAdmin && (!officeId.value || !officeUnitId.value)) return;
     const prashakha = this.isSection ? this.prashakhas.find((p) => p.id === prashakhaId.value) : undefined;
+    const office = this.isDistrictAdmin ? this.offices.find((o) => o.id === officeId.value) : undefined;
+    const officeUnit = this.isDistrictAdmin ? this.officeUnits.find((u) => u.id === officeUnitId.value) : undefined;
 
     const category = this.categories.find((c) => c.id === categoryId.value)!;
     const branch = this.branches.find((b) => b.id === branchId.value)!;
@@ -257,7 +333,11 @@ export class ForwardDialogComponent implements OnChanges {
         complaintTypeLabel: type.label,
         remarks,
         prashakhaId: prashakha ? +prashakha.id : null,
-        prashakhaLabel: prashakha?.label ?? null
+        prashakhaLabel: prashakha?.label ?? null,
+        officeId: office ? +office.id : null,
+        officeLabel: office?.label ?? null,
+        officeUnitCode: officeUnit ? +officeUnit.id : null,
+        officeUnitLabel: officeUnit?.label ?? null
       })
       .subscribe({
         next: (saved) => {
@@ -272,7 +352,7 @@ export class ForwardDialogComponent implements OnChanges {
               : err?.status === 409
                 ? 'यह आवेदन पहले ही अग्रेषित हो चुका है और लॉक है। / Already forwarded — locked.'
                 : err?.status === 404
-                ? 'आवेदन, प्रशाखा, शाखा या शिकायत का प्रकार मान्य नहीं है। / Application, Prashakha, branch or complaint type not found.'
+                ? 'आवेदन, प्रशाखा, कार्यालय, शाखा या शिकायत का प्रकार मान्य नहीं है। / Application, Prashakha, office, branch or complaint type not found.'
                 : 'अग्रेषण सहेजा नहीं जा सका। / Could not save the forward.';
         }
       });

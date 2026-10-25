@@ -20,6 +20,11 @@ export interface ForwardRecord {
   /** Section forwards only: the Mst_Prashakha whose login receives it */
   prashakhaId?: number | null;
   prashakhaLabel?: string | null;
+  /** District Administration forwards only: Mst_Regional_Office and one of its offices (vw_Office_Unit) */
+  officeId?: number | null;
+  officeLabel?: string | null;
+  officeUnitCode?: number | null;
+  officeUnitLabel?: string | null;
 }
 
 /** Fields the client sends; the server fills in who forwarded it and when. */

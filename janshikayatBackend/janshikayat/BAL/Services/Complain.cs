@@ -152,14 +152,15 @@ namespace janshikayat.BAL.Services
                 @"INSERT INTO Tbl_Applicant_Forward
                        (ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedIp,
-                        PrashakhaId, PrashakhaLabel)
+                        PrashakhaId, PrashakhaLabel, OfficeId, OfficeLabel, OfficeUnitCode, OfficeUnitLabel)
                   OUTPUT inserted.ApplicantId, inserted.CategoryId, inserted.CategoryLabel, inserted.BranchId,
                          inserted.BranchLabel, inserted.ComplaintTypeId, inserted.ComplaintTypeLabel,
                          inserted.Remarks, inserted.ForwardedBy, inserted.ForwardedDate AS ForwardedAt,
-                         inserted.PrashakhaId, inserted.PrashakhaLabel
+                         inserted.PrashakhaId, inserted.PrashakhaLabel,
+                         inserted.OfficeId, inserted.OfficeLabel, inserted.OfficeUnitCode, inserted.OfficeUnitLabel
                   SELECT @ApplicantId, @CategoryId, @CategoryLabel, @BranchId, @BranchLabel,
                          @ComplaintTypeId, @ComplaintTypeLabel, @Remarks, @ForwardedBy, @ForwardedIp,
-                         @PrashakhaId, @PrashakhaLabel
+                         @PrashakhaId, @PrashakhaLabel, @OfficeId, @OfficeLabel, @OfficeUnitCode, @OfficeUnitLabel
                   WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
                     AND EXISTS (SELECT 1 FROM Mst_Branch b
                                 WHERE b.Complain_id = TRY_CAST(@BranchId AS BIGINT) AND b.Is_Active = 1
@@ -172,6 +173,17 @@ namespace janshikayat.BAL.Services
                                            WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT) AND c.Category = 'Section')
                               THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Prashakha p WHERE CAST(p.ID AS INT) = @PrashakhaId) THEN 1 ELSE 0 END
                               ELSE CASE WHEN @PrashakhaId IS NULL THEN 1 ELSE 0 END
+                         END) = 1
+                    -- District Administration needs a regional office of that category and one of its offices;
+                    -- other categories must not carry either
+                    AND (CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
+                                           WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT) AND c.Category = 'District Administration')
+                              THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Regional_Office o
+                                                     JOIN vw_Office_Unit u ON u.Office_Id = o.Office_Id
+                                                     WHERE o.Office_Id = @OfficeId AND o.Is_Active = 1
+                                                       AND o.Category_Id = TRY_CAST(@CategoryId AS INT)
+                                                       AND u.Unit_Code = @OfficeUnitCode) THEN 1 ELSE 0 END
+                              ELSE CASE WHEN @OfficeId IS NULL AND @OfficeUnitCode IS NULL THEN 1 ELSE 0 END
                          END) = 1",
                 parameters);
         }
@@ -194,7 +206,7 @@ namespace janshikayat.BAL.Services
             return conn.Query<ApplicantForwardDto>(
                 @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
                          ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt,
-                         PrashakhaId, PrashakhaLabel
+                         PrashakhaId, PrashakhaLabel, OfficeId, OfficeLabel, OfficeUnitCode, OfficeUnitLabel
                   FROM Tbl_Applicant_Forward
                   ORDER BY ForwardedDate, ID");
         }
@@ -208,7 +220,7 @@ namespace janshikayat.BAL.Services
             return conn.Query<ApplicantForwardDto>(
                 @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
                          ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt,
-                         PrashakhaId, PrashakhaLabel
+                         PrashakhaId, PrashakhaLabel, OfficeId, OfficeLabel, OfficeUnitCode, OfficeUnitLabel
                   FROM (SELECT f.*, ROW_NUMBER() OVER (PARTITION BY f.ApplicantId ORDER BY f.ForwardedDate DESC, f.ID DESC) AS rn
                         FROM Tbl_Applicant_Forward f) x
                   WHERE x.rn = 1

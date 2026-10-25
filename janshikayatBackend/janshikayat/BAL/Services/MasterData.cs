@@ -146,6 +146,27 @@ namespace janshikayat.BAL.Services
             return conn.Query<MstPrashakha>(sql).ToList();
         }
 
+        public List<MstRegionalOffice> GetRegionalOffices(int categoryId)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = @"select Office_Id, Category_Id, Regional_Office, Unique_Code from Mst_Regional_Office
+                        where Category_Id = @CategoryId and Is_Active = 1
+                        order by Office_Id";
+
+            return conn.Query<MstRegionalOffice>(sql, new { CategoryId = categoryId }).ToList();
+        }
+
+        // Empty for an office whose list is not loaded yet (IG / DIG / SP)
+        public List<MstOfficeUnit> GetOfficeUnits(int officeId)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = "select Unit_Code, Unit_Name from vw_Office_Unit where Office_Id = @OfficeId order by Unit_Code";
+
+            return conn.Query<MstOfficeUnit>(sql, new { OfficeId = officeId }).ToList();
+        }
+
         public List<Forwarded_To_sub> GetForwarded_To_sub(int a)
         {
             using var conn = _context.CreateConnection();

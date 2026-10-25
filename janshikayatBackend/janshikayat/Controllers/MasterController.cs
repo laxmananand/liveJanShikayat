@@ -194,6 +194,19 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data = _MasterData.GetPrashakhas() });
         }
 
+        // District Administration: regional office -> its offices (Commissioner divisions / DM districts)
+        [HttpPost("get-regional-office")]
+        public IActionResult GetRegionalOffice(int CategoryId)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetRegionalOffices(CategoryId) });
+        }
+
+        [HttpPost("get-office-unit")]
+        public IActionResult GetOfficeUnit(int OfficeId)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetOfficeUnits(OfficeId) });
+        }
+
         [HttpPost("get-forward-sub-master")]
         public IActionResult GetForwardsubmaster(int a)
         {

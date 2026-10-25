@@ -218,7 +218,9 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       policeStation: r.policeStation,
       category: forward?.categoryLabel || 'अग्रेषण हेतु लंबित',
       currentCustody: forward
-        ? forward.branchLabel + (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '')
+        ? forward.branchLabel +
+          (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '') +
+          (forward.officeUnitLabel ? ` → ${forward.officeUnitLabel}` : '')
         : 'प्रविष्टि कोषांग (अग्रेषण हेतु लंबित)',
       custodyOfficer: forward
         ? `अग्रेषित: ${new Date(forward.forwardedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
@@ -398,7 +400,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
               fromStatus: 'Pending',
               toStatus: 'ForwardedToDepartment',
               reason:
-                [f.categoryLabel, f.branchLabel, f.prashakhaLabel, f.complaintTypeLabel].filter(Boolean).join(' → ') +
+                [f.categoryLabel, f.officeUnitLabel, f.branchLabel, f.prashakhaLabel, f.complaintTypeLabel].filter(Boolean).join(' → ') +
                 (f.remarks ? ` — ${f.remarks}` : ''),
               actionByName: f.forwardedBy,
               actionAt: f.forwardedAt
