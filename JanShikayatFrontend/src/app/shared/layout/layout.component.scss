@@ -473,6 +473,55 @@
 }
 
 /* ───────────────────────────────────────────────
+   Watermark — faint Gautam Buddha over the content area.
+   Sits above content but is click-through (image has a transparent background).
+   ─────────────────────────────────────────────── */
+.watermark {
+  position: fixed;
+  top: var(--topbar-height);
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 50;
+  transition: left var(--transition-smooth);
+
+  img {
+    height: min(60vh, 528px); /* never upscale past the source size, keeps it crisp */
+    width: auto;
+    opacity: 0.1;
+    user-select: none;
+  }
+}
+
+.watermark-text {
+  font-size: clamp(1.8rem, 5vh, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: #8a3a17;
+  opacity: 0.12;
+  user-select: none;
+  white-space: nowrap;
+  text-align: center;
+  margin-top: calc(min(60vh, 528px) * -0.06); /* tuck under the lotus base */
+}
+
+.sidebar-collapsed .watermark {
+  left: var(--sidebar-collapsed-width);
+}
+
+@media print {
+  .watermark {
+    display: none;
+  }
+}
+
+/* ───────────────────────────────────────────────
    Mobile
    ─────────────────────────────────────────────── */
 .sidebar-backdrop {
@@ -518,6 +567,10 @@
   .topbar {
     left: 0 !important;
     padding: 0 14px;
+  }
+
+  .watermark {
+    left: 0 !important;
   }
 
   .content {
