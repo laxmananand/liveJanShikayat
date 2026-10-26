@@ -12,12 +12,21 @@ export function openBase64Document(documentBase64: string): boolean {
   const mime = header.match(/data:([^;]+)/)?.[1] ?? 'application/pdf';
   try {
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    // Only the most recently opened document is kept alive
-    if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
-    lastObjectUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
-    window.open(lastObjectUrl, '_blank', 'noopener');
+    openBlobDocument(new Blob([bytes], { type: mime }));
     return true;
   } catch {
     return false;
   }
+}
+
+/**
+ * Open a Blob (e.g. a PDF downloaded from the API) in a new tab. After an async download, pass a
+ * tab opened during the click (`window.open('', '_blank')`) so popup blockers let it through.
+ */
+export function openBlobDocument(blob: Blob, tab?: Window | null): void {
+  // Only the most recently opened document is kept alive
+  if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
+  lastObjectUrl = URL.createObjectURL(blob);
+  if (tab) tab.location.href = lastObjectUrl;
+  else window.open(lastObjectUrl, '_blank', 'noopener');
 }

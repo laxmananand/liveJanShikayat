@@ -66,6 +66,7 @@ publish/
 # User-uploaded complaint documents (runtime data, not source)
 janshikayatBackend/janshikayat/wwwroot/janshikayatDocument/*
 !janshikayatBackend/janshikayat/wwwroot/janshikayatDocument/.gitkeep
+janshikayatBackend/janshikayat/RemarkDocuments/
 
 # ===================== Frontend (Angular / Node) =====================
 node_modules/

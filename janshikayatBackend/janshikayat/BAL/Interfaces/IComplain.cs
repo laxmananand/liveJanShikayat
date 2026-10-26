@@ -11,7 +11,8 @@ namespace janshikayat.BAL.Interfaces
         IEnumerable<ApplicantForwardDto> GetForwards();
         bool IsForwarded(long applicantId);
         IEnumerable<ApplicantForwardDto> GetLatestForwards(bool all, long? branchId, int? prashakhaId);
-        ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip);
+        ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
+        string? GetRemarkDocumentPath(long remarkId);
     }
 }

@@ -172,19 +172,43 @@ namespace janshikayat.Controllers
         // Every logged-in role (Admin, Saction, Branch) can add remarks
         [Authorize]
         [HttpPost("add-remark")]
-        public IActionResult AddRemark([FromBody] ApplicantRemarkRequest request)
+        public IActionResult AddRemark([FromForm] ApplicantRemarkRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Remark))
             {
                 return BadRequest(new { status = "false", message = "Remark is required." });
             }
+
+            string? documentPath = null;
+            if (request.Document != null)
+            {
+                if (request.Document.Length > MaxRemarkDocumentSize)
+                {
+                    return BadRequest(new { status = "false", message = "PDF size should be less than 5 MB." });
+                }
+                if (!IsPdf(request.Document))
+                {
+                    return BadRequest(new { status = "false", message = "Only PDF files can be attached." });
+                }
+                if (!Directory.Exists(RemarkDocumentFolder))
+                    Directory.CreateDirectory(RemarkDocumentFolder);
+                documentPath = Guid.NewGuid() + ".pdf";
+                using (var stream = new FileStream(Path.Combine(RemarkDocumentFolder, documentPath), FileMode.Create))
+                {
+                    request.Document.CopyTo(stream);
+                }
+            }
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var role = User.FindFirstValue(ClaimTypes.Role);
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            var saved = _IComplain.AddRemark(request, userId, role, ip);
+            var saved = _IComplain.AddRemark(request, userId, role, ip, documentPath);
             if (saved == null)
             {
+                // Nothing references the uploaded file, so it is removed again
+                if (documentPath != null)
+                    System.IO.File.Delete(Path.Combine(RemarkDocumentFolder, documentPath));
                 return NotFound(new { status = "false", message = "Application not found." });
             }
             return Ok(new { status = "true", message = "Remark added.", data = saved });
@@ -195,6 +219,33 @@ namespace janshikayat.Controllers
         public IActionResult GetRemarks(long applicantId)
         {
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetRemarks(applicantId) });
+        }
+
+        // PDF attached to a remark; served only to logged-in users (the folder is outside wwwroot)
+        [Authorize]
+        [HttpGet("get-remark-document/{remarkId:long}")]
+        public IActionResult GetRemarkDocument(long remarkId)
+        {
+            var documentPath = _IComplain.GetRemarkDocumentPath(remarkId);
+            var fullPath = documentPath == null ? null : Path.Combine(RemarkDocumentFolder, Path.GetFileName(documentPath));
+            if (fullPath == null || !System.IO.File.Exists(fullPath))
+            {
+                return NotFound(new { status = "false", message = "Document not found." });
+            }
+            return PhysicalFile(fullPath, "application/pdf");
+        }
+
+        private const long MaxRemarkDocumentSize = 5 * 1024 * 1024;
+        private static readonly string RemarkDocumentFolder = Path.Combine(Directory.GetCurrentDirectory(), "RemarkDocuments");
+
+        // Checks the extension and the "%PDF" signature, so a renamed file is rejected
+        private static bool IsPdf(IFormFile file)
+        {
+            if (!string.Equals(Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+                return false;
+            var header = new byte[4];
+            using var stream = file.OpenReadStream();
+            return stream.Read(header, 0, 4) == 4 && header.SequenceEqual("%PDF"u8.ToArray());
         }
 
     }

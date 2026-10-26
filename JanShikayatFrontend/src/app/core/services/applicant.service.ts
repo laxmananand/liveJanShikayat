@@ -102,10 +102,19 @@ export class ApplicantService {
       .pipe(map((res) => res.data ?? []));
   }
 
-  /** API: POST /Applicant/add-remark { ApplicantId, Remark } (any logged-in role). */
-  addRemark(applicantId: number, remark: string): Observable<ApplicantRemark> {
+  /** API: POST /Applicant/add-remark (multipart: ApplicantId, Remark, optional PDF Document) (any logged-in role). */
+  addRemark(applicantId: number, remark: string, document?: File | null): Observable<ApplicantRemark> {
+    const fd = new FormData();
+    fd.append('ApplicantId', String(applicantId));
+    fd.append('Remark', remark);
+    if (document) fd.append('Document', document, document.name);
     return this.http
-      .post<{ data: ApplicantRemark }>(`${this.baseUrl}/add-remark`, { ApplicantId: applicantId, Remark: remark })
+      .post<{ data: ApplicantRemark }>(`${this.baseUrl}/add-remark`, fd)
       .pipe(map((res) => res.data));
+  }
+
+  /** API: GET /Applicant/get-remark-document/{remarkId} → the PDF attached to a remark (any logged-in role). */
+  getRemarkDocument(remarkId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/get-remark-document/${remarkId}`, { responseType: 'blob' });
   }
 }

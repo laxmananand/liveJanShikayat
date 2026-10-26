@@ -236,7 +236,7 @@ namespace janshikayat.BAL.Services
         }
 
         // Returns null when the application does not exist (or is inactive)
-        public ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip)
+        public ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath)
         {
             using var conn = _context.CreateConnection();
 
@@ -246,12 +246,14 @@ namespace janshikayat.BAL.Services
             parameters.Add("@RemarkBy", remarkBy);
             parameters.Add("@RemarkByRole", role);
             parameters.Add("@CreatedIp", ip);
+            parameters.Add("@DocumentPath", documentPath);
 
             return conn.QueryFirstOrDefault<ApplicantRemarkDto>(
-                @"INSERT INTO Tbl_Applicant_Remarks (ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedIp)
+                @"INSERT INTO Tbl_Applicant_Remarks (ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedIp, DocumentPath)
                   OUTPUT inserted.ID, inserted.ApplicantId, inserted.Remark, inserted.RemarkBy,
-                         inserted.RemarkByRole, inserted.CreatedDate
-                  SELECT @ApplicantId, @Remark, @RemarkBy, @RemarkByRole, @CreatedIp
+                         inserted.RemarkByRole, inserted.CreatedDate,
+                         CAST(CASE WHEN inserted.DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument
+                  SELECT @ApplicantId, @Remark, @RemarkBy, @RemarkByRole, @CreatedIp, @DocumentPath
                   WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)",
                 parameters);
         }
@@ -261,11 +263,22 @@ namespace janshikayat.BAL.Services
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicantRemarkDto>(
-                @"SELECT ID, ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedDate
+                @"SELECT ID, ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedDate,
+                         CAST(CASE WHEN DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument
                   FROM Tbl_Applicant_Remarks
                   WHERE ApplicantId = @ApplicantId
                   ORDER BY CreatedDate, ID",
                 new { ApplicantId = applicantId });
+        }
+
+        // Stored file name of the PDF attached to a remark, or null when there is none
+        public string? GetRemarkDocumentPath(long remarkId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.QueryFirstOrDefault<string?>(
+                "SELECT DocumentPath FROM Tbl_Applicant_Remarks WHERE ID = @ID",
+                new { ID = remarkId });
         }
     }
 }

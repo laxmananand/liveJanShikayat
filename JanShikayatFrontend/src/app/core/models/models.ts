@@ -134,6 +134,7 @@ export interface ApplicantRemark {
   remarkBy: string;
   remarkByRole: string | null; // Mst_Role name: Admin / Saction / Branch
   createdDate: string;
+  hasDocument: boolean; // a PDF is attached; fetch it with getRemarkDocument(id)
 }
 
 export interface CompetentAuthorityDesignation {

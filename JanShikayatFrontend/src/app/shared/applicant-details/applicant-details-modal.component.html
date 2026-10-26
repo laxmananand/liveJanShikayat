@@ -46,8 +46,15 @@
         <p class="no-doc" *ngIf="!remarksLoading && !remarks.length">अभी कोई टिप्पणी नहीं है।</p>
         <ul class="remark-list" *ngIf="remarks.length">
           <li *ngFor="let m of remarks">
-            <p>{{ m.remark }}</p>
-            <small>{{ m.remarkBy }}<ng-container *ngIf="m.remarkByRole"> ({{ m.remarkByRole }})</ng-container> • {{ m.createdDate | date: 'dd-MM-yyyy HH:mm' }}</small>
+            <div class="remark-text">
+              <p>{{ m.remark }}</p>
+              <small>{{ m.remarkBy }}<ng-container *ngIf="m.remarkByRole"> ({{ m.remarkByRole }})</ng-container> • {{ m.createdDate | date: 'dd-MM-yyyy HH:mm' }}</small>
+            </div>
+            <button *ngIf="m.hasDocument" type="button" class="btn-view-doc" (click)="viewRemarkDoc(m)"
+                    [disabled]="openingDocId === m.id" title="संलग्न PDF देखें / View attached PDF" aria-label="संलग्न PDF देखें">
+              <i class="fa-solid" [ngClass]="openingDocId === m.id ? 'fa-circle-notch fa-spin' : 'fa-eye'"></i>
+              <span>PDF</span>
+            </button>
           </li>
         </ul>
 
@@ -55,6 +62,16 @@
           <textarea rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
                     placeholder="अपनी टिप्पणी लिखें / Write your remark" aria-label="टिप्पणी"></textarea>
           <div class="remark-actions">
+            <input #remarkFileInput type="file" accept="application/pdf,.pdf" hidden (change)="onRemarkFile(remarkFileInput)">
+            <button *ngIf="!remarkFile" type="button" class="btn btn-ghost" (click)="remarkFileInput.click()" [disabled]="savingRemark">
+              <i class="fa-solid fa-paperclip"></i> PDF संलग्न करें / Attach PDF
+            </button>
+            <span *ngIf="remarkFile" class="remark-file">
+              <i class="fa-solid fa-file-pdf"></i> {{ remarkFile.name }}
+              <button type="button" (click)="remarkFile = null" [disabled]="savingRemark" aria-label="PDF हटाएँ / Remove PDF">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </span>
             <button type="button" class="btn btn-primary-accent" (click)="addRemark()" [disabled]="savingRemark || !remarkText.trim()">
               <i class="fa-solid" [ngClass]="savingRemark ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> टिप्पणी जोड़ें / Add remark
             </button>

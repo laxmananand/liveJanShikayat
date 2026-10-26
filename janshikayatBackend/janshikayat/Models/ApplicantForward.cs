@@ -60,6 +60,8 @@ namespace janshikayat.Models
         public long ApplicantId { get; set; }
         [Required, StringLength(1000)]
         public string Remark { get; set; } = string.Empty;
+        // Optional PDF attached to the remark
+        public IFormFile? Document { get; set; }
     }
     public class ApplicantRemarkDto
     {
@@ -69,5 +71,7 @@ namespace janshikayat.Models
         public string RemarkBy { get; set; }
         public string? RemarkByRole { get; set; }
         public DateTime CreatedDate { get; set; }
+        // True when a PDF is attached; fetch it from get-remark-document/{ID}
+        public bool HasDocument { get; set; }
     }
 }
