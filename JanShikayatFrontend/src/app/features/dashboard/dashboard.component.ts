@@ -69,8 +69,13 @@ export class DashboardComponent implements OnInit {
         this.tiles = [
           { status: 'Pending', label: 'लंबित', icon: 'fa-hourglass-half', tone: 'amber', value: s.pending },
           { status: 'UnderReview', label: 'समीक्षाधीन', icon: 'fa-magnifying-glass', tone: 'navy', value: s.underReview },
-          { status: 'ForwardedToDepartment', label: 'विभाग को अग्रेषित', icon: 'fa-share-nodes', tone: 'violet', value: s.forwarded },
-          { status: 'ForwardedForFieldEnquiry', label: 'क्षेत्रीय जांच / कार्रवाई में', icon: 'fa-magnifying-glass-location', tone: 'red', value: s.underFieldEnquiry },
+          // Forwarding is Admin-only, so only Admin sees these two stages
+          ...(this.isAdmin
+            ? [
+                { status: 'ForwardedToDepartment', label: 'विभाग को अग्रेषित', icon: 'fa-share-nodes', tone: 'violet', value: s.forwarded },
+                { status: 'ForwardedForFieldEnquiry', label: 'क्षेत्रीय जांच / कार्रवाई में', icon: 'fa-magnifying-glass-location', tone: 'red', value: s.underFieldEnquiry }
+              ]
+            : []),
           { status: 'Disposed', label: 'निष्पादित', icon: 'fa-circle-check', tone: 'green', value: s.disposed }
         ];
         this.loading = false;
