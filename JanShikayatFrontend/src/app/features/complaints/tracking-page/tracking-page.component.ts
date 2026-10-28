@@ -92,6 +92,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   errorMessage = '';
   copiedId = '';
   toastMessage = '';
+  // Progress tracker (stepper) hidden for now — set to true to restore
+  showProgressTracker = false;
 
   // KPI Metrics
   totalCount = 0;

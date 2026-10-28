@@ -297,7 +297,7 @@
             <th class="th-subject">विषय एवं श्रेणी</th>
             <th class="th-custody">कहाँ लंबित है (वर्तमान स्थान)</th>
             <th class="th-status">वर्तमान स्थिति</th>
-            <th class="th-stepper">प्रगति ट्रैकर</th>
+            <th class="th-stepper" *ngIf="showProgressTracker">प्रगति ट्रैकर</th>
             <th class="th-pdf">संलग्न दस्तावेज़ (PDF)</th>
             <th class="th-actions text-right">कार्यवाही</th>
           </tr>
@@ -376,7 +376,7 @@
             </td>
 
             <!-- 7. Progress Stepper -->
-            <td class="td-stepper">
+            <td class="td-stepper" *ngIf="showProgressTracker">
               <div class="mini-stepper-wrap" [title]="'प्रगति स्तर ' + item.lifecycleStage + '/5'">
                 <div class="stepper-dots">
                   <span class="dot done" title="1. पंजीकरण"><i class="fa-solid fa-check"></i></span>
@@ -485,7 +485,7 @@
         </div>
 
         <!-- Mini Stepper in Card -->
-        <div class="card-stepper-bar">
+        <div class="card-stepper-bar" *ngIf="showProgressTracker">
           <div class="stepper-dots">
             <span class="dot done"><i class="fa-solid fa-check"></i></span>
             <span class="line" [class.done]="item.lifecycleStage >= 2"></span>
