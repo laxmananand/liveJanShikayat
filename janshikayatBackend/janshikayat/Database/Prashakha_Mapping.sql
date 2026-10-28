@@ -1,5 +1,6 @@
 -- Section forwards go to a Prashakha (Mst_Prashakha) as well as a branch.
--- Tbl_UserLogin.Prashakha_Id    -> Mst_Prashakha.ID (matched by name: login "Prashakha-1" = Mst_Prashakha "Prashakha-1")
+-- Tbl_UserLogin.Prashakha_Id    -> Mst_Prashakha.ID (matched by name: login "Prashakha-1" = Mst_Prashakha "Prashakha-1",
+--                                   or "Police(Prashakha-1)" / "Special(Prashakha-A)" after Prashakha_Rename.sql)
 -- Tbl_Applicant_Forward.PrashakhaId / PrashakhaLabel -> the Prashakha chosen when forwarding under Section
 -- Mst_Prashakha.ID is a nullable float without a primary key, so no FK; the backend checks the id exists.
 -- Safe to re-run: columns are added only if missing; updates are idempotent.
@@ -14,12 +15,12 @@ GO
 UPDATE u
 SET Prashakha_Id = CAST(p.ID AS INT)
 FROM dbo.Tbl_UserLogin u
-JOIN dbo.Mst_Prashakha p ON p.Name = u.UserName;
+JOIN dbo.Mst_Prashakha p ON p.Name = u.UserName OR p.Name LIKE '%(' + u.UserName + ')';
 
 UPDATE u
 SET Prashakha_Id = NULL
 FROM dbo.Tbl_UserLogin u
-WHERE NOT EXISTS (SELECT 1 FROM dbo.Mst_Prashakha p WHERE p.Name = u.UserName);
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Mst_Prashakha p WHERE p.Name = u.UserName OR p.Name LIKE '%(' + u.UserName + ')');
 GO
 
 IF COL_LENGTH('dbo.Tbl_Applicant_Forward', 'PrashakhaId') IS NULL

@@ -330,7 +330,7 @@
                   <i class="fa-solid fa-user-group"></i> {{ item.guardianName }}
                 </span>
                 <span class="app-mobile" *ngIf="item.mobileNumber">
-                  <i class="fa-solid fa-phone"></i> {{ item.mobileNumber }}
+                  <i class="fa-solid fa-phone"></i> {{ item.mobileNumber || '—' }}
                 </span>
               </div>
             </td>
@@ -474,7 +474,7 @@
           </div>
           <div class="applicant-names">
             <strong>{{ item.applicantName }}</strong>
-            <small>{{ item.guardianName || 'अभिभावक' }} • <i class="fa-solid fa-phone"></i> {{ item.mobileNumber }}</small>
+            <small>{{ item.guardianName || 'अभिभावक' }} • <i class="fa-solid fa-phone"></i> {{ item.mobileNumber || '—' }}</small>
           </div>
         </div>
 
@@ -733,7 +733,7 @@
             </div>
             <div class="drawer-item">
               <span class="lbl">मोबाइल:</span>
-              <strong class="val">{{ selectedDetail.mobileNumber }}</strong>
+              <strong class="val">{{ selectedDetail.mobileNumber || '—' }}</strong>
             </div>
             <div class="drawer-item">
               <span class="lbl">स्थान:</span>

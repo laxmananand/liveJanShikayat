@@ -82,17 +82,17 @@ export interface Thana {
 export interface SaveApplicantPayload {
   applicantName: string;
   fatherHusbandName: string;
-  mobileNumber: string;
+  mobileNumber?: string;
   mobileNumber2?: string;
   address: string;
   pinCode: string;
   emailId?: string;
   applicationDate: string; // yyyy-MM-dd
-  village: number;
+  village?: number; // optional; left out (saved as NULL) when not selected
   panchayat: number;
   block: number;
   district: number;
-  thana: number; // mst_thana.PS_Code, 0 = not selected
+  thana?: number; // mst_thana.PS_Code; optional, left out (saved as NULL) when not selected
   applicationSource: string; // CPGRAMS | CM Dashboard | Sahyog Portal | PMO Grievance Portal | Offline | Other
   createdBy?: string;
   photograph: File;

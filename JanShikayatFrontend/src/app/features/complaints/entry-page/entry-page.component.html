@@ -60,7 +60,7 @@
       </div>
       <div class="summary-item">
         <span class="lbl"><i class="fa-solid fa-phone"></i> मोबाइल नंबर:</span>
-        <strong class="val">{{ form.get('mobileNumber')?.value }}</strong>
+        <strong class="val">{{ form.get('mobileNumber')?.value || '—' }}</strong>
       </div>
       <div class="summary-item">
         <span class="lbl"><i class="fa-solid fa-location-dot"></i> जिला व ब्लॉक:</span>
@@ -155,30 +155,10 @@
                 </span>
               </div>
 
-              <!-- 3. ईमेल आईडी (यदि उपलब्ध हो) — left column, so both columns hold 7 fields -->
-              <div class="form-group">
-                <label for="email" class="form-label">
-                  ईमेल आईडी (यदि उपलब्ध हो)
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
-                  <i class="fa-solid fa-envelope field-icon"></i>
-                  <input
-                    id="email"
-                    type="email"
-                    formControlName="email"
-                    placeholder="ईमेल आईडी दर्ज करें"
-                    autocomplete="email"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('email')">
-                  कृपया मान्य ईमेल पता दर्ज करें।
-                </span>
-              </div>
-
-              <!-- 4. मोबाइल नंबर -->
+              <!-- 3. मोबाइल नंबर -->
               <div class="form-group">
                 <label for="mobileNumber" class="form-label">
-                  मोबाइल नंबर <span class="req">*</span>
+                  मोबाइल नंबर
                 </label>
                 <div class="input-icon-wrap" [class.has-error]="isInvalid('mobileNumber')">
                   <i class="fa-solid fa-phone field-icon"></i>
@@ -197,24 +177,23 @@
                 </span>
               </div>
 
-              <!-- 4. मोबाइल नंबर 2 -->
+              <!-- 4. ईमेल आईडी (यदि उपलब्ध हो) -->
               <div class="form-group">
-                <label for="mobileNumber2" class="form-label">
-                  मोबाइल नंबर 2
+                <label for="email" class="form-label">
+                  ईमेल आईडी (यदि उपलब्ध हो)
                 </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('mobileNumber2')">
-                  <i class="fa-solid fa-phone field-icon"></i>
+                <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
+                  <i class="fa-solid fa-envelope field-icon"></i>
                   <input
-                    id="mobileNumber2"
-                    type="tel"
-                    inputmode="numeric"
-                    maxlength="10"
-                    formControlName="mobileNumber2"
-                    placeholder="वैकल्पिक मोबाइल नंबर दर्ज करें"
+                    id="email"
+                    type="email"
+                    formControlName="email"
+                    placeholder="ईमेल आईडी दर्ज करें"
+                    autocomplete="email"
                   />
                 </div>
-                <span class="field-error" *ngIf="isInvalid('mobileNumber2')">
-                  कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें।
+                <span class="field-error" *ngIf="isInvalid('email')">
+                  कृपया मान्य ईमेल पता दर्ज करें।
                 </span>
               </div>
 
@@ -510,11 +489,7 @@
             </div>
             <div class="preview-item">
               <span class="lbl">मोबाइल नंबर</span>
-              <strong class="val">{{ draft.values.mobileNumber }}</strong>
-            </div>
-            <div class="preview-item">
-              <span class="lbl">मोबाइल नंबर 2</span>
-              <strong class="val">{{ draft.values.mobileNumber2 || '—' }}</strong>
+              <strong class="val">{{ draft.values.mobileNumber || '—' }}</strong>
             </div>
             <div class="preview-item">
               <span class="lbl">ईमेल आईडी</span>
@@ -601,7 +576,7 @@
             <i class="fa-solid fa-circle-check"></i>
             <span>
               <strong>{{ form.get('applicantName')?.value }}</strong> •
-              {{ form.get('mobileNumber')?.value }} •
+              <ng-container *ngIf="form.get('mobileNumber')?.value">{{ form.get('mobileNumber')?.value }} •</ng-container>
               {{ locationNames().district }} ({{ locationNames().block }}) •
               स्रोत: <strong>{{ form.get('applicationSource')?.value }}</strong>
             </span>
@@ -797,7 +772,7 @@
           </div>
           <div class="summary-row">
             <span class="lbl"><i class="fa-solid fa-phone"></i> मोबाइल नंबर:</span>
-            <strong class="val">{{ savedData.mobileNumber }} <span *ngIf="savedData.mobileNumber2">/ {{ savedData.mobileNumber2 }}</span></strong>
+            <strong class="val">{{ savedData.mobileNumber || '—' }}</strong>
           </div>
           <div class="summary-row">
             <span class="lbl"><i class="fa-solid fa-calendar-days"></i> आवेदन की तिथि:</span>
@@ -883,7 +858,7 @@
           </tr>
           <tr>
             <th>मोबाइल नंबर</th>
-            <td>{{ savedData.mobileNumber }} <span *ngIf="savedData.mobileNumber2">/ {{ savedData.mobileNumber2 }}</span></td>
+            <td>{{ savedData.mobileNumber || '—' }}</td>
             <th>ईमेल आईडी</th>
             <td>{{ savedData.email || 'उपलब्ध नहीं' }}</td>
           </tr>

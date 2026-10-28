@@ -12,7 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { BlockMaster, Branch, Department, District, Panchayat, Thana, Village } from '../../../core/models/models';
 import { COMPLAINT_CATEGORY_SUGGESTIONS } from '../../../core/utils/bihar';
 
-/** Fields the entry form requires before it can be saved as a draft. */
+/** Fields checked before the entry can be saved as a draft (mobile number is optional, but must be valid when entered). */
 const REQUIRED_FIELDS = [
   'applicantName',
   'guardianName',
@@ -105,8 +105,8 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     // ── Fields from image (Complainant info) ──
     applicantName: ['', [Validators.required, Validators.minLength(2)]],
     guardianName: ['', [Validators.required, Validators.minLength(2)]],
-    mobileNumber: ['', [Validators.required, Validators.pattern(/^[6-9][0-9]{9}$/)]],
-    mobileNumber2: ['', [Validators.pattern(/^[6-9][0-9]{9}$/)]],
+    // Optional; validated only when entered
+    mobileNumber: ['', [Validators.pattern(/^[6-9][0-9]{9}$/)]],
     address: ['', [Validators.required, Validators.minLength(5)]],
     pinCode: ['', [Validators.required, Validators.pattern(/^[1-9][0-9]{5}$/)]],
     email: ['', [Validators.email]],
@@ -454,7 +454,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       .create({
         applicantName: v.applicantName!,
         guardianName: v.guardianName!,
-        mobileNumber: v.mobileNumber!,
+        mobileNumber: v.mobileNumber || '',
         address: fullAddress,
         district: loc.district,
         block: loc.block,
@@ -580,17 +580,16 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       .saveApplicant({
         applicantName: v.applicantName,
         fatherHusbandName: v.guardianName,
-        mobileNumber: v.mobileNumber,
-        mobileNumber2: v.mobileNumber2 || undefined,
+        mobileNumber: v.mobileNumber || undefined,
         address: v.address,
         pinCode: v.pinCode,
         emailId: v.email || undefined,
         applicationDate: v.applicationDate,
-        village: v.village ?? 0, // optional; backend expects a code, 0 = not selected
+        village: v.village || undefined, // optional; saved as NULL when not selected
         panchayat: v.panchayat,
         block: v.block,
         district: v.district,
-        thana: v.thana ?? 0, // optional; 0 = not selected
+        thana: v.thana || undefined, // optional; saved as NULL when not selected
         applicationSource: v.applicationSource || 'Offline',
         createdBy: this.auth.currentUser()?.email,
         photograph: this.pdfFile
@@ -625,7 +624,6 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       applicantName: v.applicantName || '',
       guardianName: v.guardianName || '',
       mobileNumber: v.mobileNumber || '',
-      mobileNumber2: v.mobileNumber2 || '',
       address: v.address || '',
       pinCode: v.pinCode || '',
       email: v.email || '',

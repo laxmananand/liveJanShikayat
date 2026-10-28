@@ -63,7 +63,7 @@
           <td data-label="पंचायत">{{ r.panchayatName || '—' }}</td>
           <td data-label="गाँव">{{ r.villageName || '—' }}</td>
           <td class="col-thana" data-label="थाना">{{ r.policeStation || '—' }}</td>
-          <td class="nowrap" data-label="मोबाइल संख्या">{{ r.mobileNumber }}</td>
+          <td class="nowrap" data-label="मोबाइल संख्या">{{ r.mobileNumber || '—' }}</td>
           <td class="nowrap" data-label="प्राप्ति तिथि">{{ r.applicationDate ? (r.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ forwards.get(r.id)?.forwardedAt ? (forwards.get(r.id)!.forwardedAt | date: 'dd/MM/yyyy') : '' }}</td>
           <td data-label="अग्रेषित">

@@ -65,7 +65,7 @@
             <div class="strong-cell">{{ c.applicantName }}</div>
             <small class="sub-line" *ngIf="c.fatherHusbandName">पिता/पति: {{ c.fatherHusbandName }}</small>
           </td>
-          <td class="nowrap">{{ c.mobileNumber }}</td>
+          <td class="nowrap">{{ c.mobileNumber || '—' }}</td>
           <td>
             <div>{{ c.villageName }}, {{ c.panchayatName }}</div>
             <small class="sub-line">{{ c.blockName }} • {{ c.districtName }}<span *ngIf="c.policeStation"> • थाना: {{ c.policeStation }}</span></small>

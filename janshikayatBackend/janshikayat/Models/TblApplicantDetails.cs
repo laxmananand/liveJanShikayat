@@ -6,19 +6,20 @@ namespace janshikayat.Models
     {      
         public string Applicant_Name { get; set; }
         public string Father_Husband_Name { get; set; }
-        public string Mobile_Number { get; set; }
-        // Optional on the form: nullable so model validation does not reject an empty value
+        // Both mobile numbers are optional on the form: nullable so model validation does not reject an empty value
+        public string? Mobile_Number { get; set; }
         public string? Mobile_Number2 { get; set; }
         public string Address { get; set; }
         public string Pin_Code { get; set; }
         public string? Email_Id { get; set; }
         public DateTime? Application_Date { get; set; }
-        public long Village { get; set; }
+        // Optional: null (not 0) when not selected
+        public long? Village { get; set; }
         public int Panchayat { get; set; }
         public int Block { get; set; }
         public int District { get; set; }
-        // mst_thana.PS_Code; optional (0 = not selected), like Village
-        public long Thana { get; set; }
+        // mst_thana.PS_Code; optional, null when not selected, like Village
+        public long? Thana { get; set; }
         // CPGRAMS / CM Dashboard / Sahyog Portal / PMO Grievance Portal / Offline / Other (stored for source-wise reports)
         [Required]
         [RegularExpression("^(CPGRAMS|CM Dashboard|Sahyog Portal|PMO Grievance Portal|Offline|Other)$",
@@ -37,7 +38,7 @@ namespace janshikayat.Models
         public string? Application_No { get; set; }
         public string Applicant_Name { get; set; }
         public string Father_Husband_Name { get; set; }
-        public string Mobile_Number { get; set; }
+        public string? Mobile_Number { get; set; }
         public string? Mobile_Number2 { get; set; }
         public string Address { get; set; }
         public string Pin_Code { get; set; }
