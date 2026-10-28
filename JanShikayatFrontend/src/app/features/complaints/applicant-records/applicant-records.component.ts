@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -17,7 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './applicant-records.component.html',
   styleUrl: './applicant-records.component.scss'
 })
-export class ApplicantRecordsComponent implements OnInit {
+export class ApplicantRecordsComponent implements OnInit, OnDestroy {
   private applicantService = inject(ApplicantService);
   private forwardService = inject(ForwardService);
   private auth = inject(AuthService);
@@ -36,6 +37,7 @@ export class ApplicantRecordsComponent implements OnInit {
   /** Latest forward per application id */
   forwards = new Map<number, ForwardRecord>();
   infoMessage = '';
+  private infoTimer?: ReturnType<typeof setTimeout>;
 
   ngOnInit(): void {
     this.load();
@@ -89,7 +91,12 @@ export class ApplicantRecordsComponent implements OnInit {
         ? `${appNo} "${f.branchLabel}" को ईमेल (${f.complaintTypeLabel}) पर भेजा गया — डेमो, ईमेल सेवा अभी उपलब्ध नहीं; रिफ्रेश पर यह हट जाएगा। / Emailed to the department (demo only, not saved).`
         : `${appNo} "${f.branchLabel}" को अग्रेषित किया गया। / Forwarded successfully.`;
     this.forwarding = null;
-    setTimeout(() => (this.infoMessage = ''), 5000);
+    clearTimeout(this.infoTimer);
+    this.infoTimer = setTimeout(() => (this.infoMessage = ''), MESSAGE_DURATION_MS);
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.infoTimer);
   }
 
   /** "Village, Panchayat" without a stray comma when one is missing (village is optional). */

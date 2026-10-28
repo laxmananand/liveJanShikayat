@@ -178,6 +178,10 @@ namespace janshikayat.Controllers
             {
                 return BadRequest(new { status = "false", message = "Remark is required." });
             }
+            if (_IComplain.IsClosed(request.ApplicantId))
+            {
+                return Conflict(new { status = "false", message = DisposedMessage });
+            }
 
             string? documentPath = null;
             if (request.Document != null)
@@ -234,6 +238,62 @@ namespace janshikayat.Controllers
             }
             return PhysicalFile(fullPath, "application/pdf");
         }
+
+        // Responses page: forwarded applications the receiving office has replied to (remarks by non-Admin roles)
+        [Authorize(Roles = AdminRole)]
+        [HttpGet("get-responses")]
+        public IActionResult GetResponses()
+        {
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetResponses(AdminRole) });
+        }
+
+        // Sidebar badge: pending applications with a reply Admin has not opened yet
+        [Authorize(Roles = AdminRole)]
+        [HttpGet("get-unseen-response-count")]
+        public IActionResult GetUnseenResponseCount()
+        {
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetUnseenResponseCount(AdminRole) });
+        }
+
+        [Authorize(Roles = AdminRole)]
+        [HttpPost("mark-responses-seen/{applicantId:long}")]
+        public IActionResult MarkResponsesSeen(long applicantId)
+        {
+            _IComplain.MarkResponsesSeen(applicantId, AdminRole);
+            return Ok(new { status = "true", message = "Marked as seen." });
+        }
+
+        // Closing is one-time and moves the application from Pending to Disposed; no remarks can be added after it
+        [Authorize(Roles = AdminRole)]
+        [HttpPost("close-application")]
+        public IActionResult CloseApplication([FromBody] ApplicationCloseRequest request)
+        {
+            if (_IComplain.IsClosed(request.ApplicantId))
+            {
+                return Conflict(new { status = "false", message = DisposedMessage });
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            ApplicationClosureDto? saved;
+            try
+            {
+                saved = _IComplain.CloseApplication(request, userId, ip);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number is 2601 or 2627)
+            {
+                // Another close of the same application won the race (unique index)
+                return Conflict(new { status = "false", message = DisposedMessage });
+            }
+            if (saved == null)
+            {
+                return NotFound(new { status = "false", message = "Application not found or not forwarded yet." });
+            }
+            return Ok(new { status = "true", message = "Application closed.", data = saved });
+        }
+
+        private const string DisposedMessage = "Application is already closed (disposed).";
 
         private const long MaxRemarkDocumentSize = 5 * 1024 * 1024;
         private static readonly string RemarkDocumentFolder = Path.Combine(Directory.GetCurrentDirectory(), "RemarkDocuments");

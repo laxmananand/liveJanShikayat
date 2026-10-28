@@ -13,6 +13,7 @@ import { ComplaintListComponent } from './features/complaints/complaint-list/com
 import { EntryPageComponent } from './features/complaints/entry-page/entry-page.component';
 import { ApplicantRecordsComponent } from './features/complaints/applicant-records/applicant-records.component';
 import { ForwardedApplicationsComponent } from './features/complaints/forwarded-applications/forwarded-applications.component';
+import { ForwardResponsesComponent } from './features/complaints/forward-responses/forward-responses.component';
 import { TrackingPageComponent } from './features/complaints/tracking-page/tracking-page.component';
 import { ComplaintDetailComponent } from './features/complaints/complaint-detail/complaint-detail.component';
 import { UserManagementComponent } from './features/admin/user-management/user-management.component';
@@ -62,6 +63,13 @@ export const routes: Routes = [
         path: 'complaints/forwarded',
         component: ForwardedApplicationsComponent,
         title: 'अग्रेषित आवेदन | जन शिकायत निदान पोर्टल'
+      },
+      {
+        path: 'complaints/responses',
+        component: ForwardResponsesComponent,
+        // Replies to Admin's forwards; only Admin closes applications (the backend enforces the same rule)
+        canActivate: [roleGuard(['SuperAdmin'])],
+        title: 'प्राप्त प्रतिवेदन | जन शिकायत निदान पोर्टल'
       },
       {
         path: 'complaints/records',

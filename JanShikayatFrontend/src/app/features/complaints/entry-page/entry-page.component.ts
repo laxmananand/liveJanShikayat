@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -91,6 +92,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   pdfError = '';
   pdfSizeDisplay = '';
   toastMessage = '';
+  private toastTimer?: ReturnType<typeof setTimeout>;
 
   // Draft → preview → finalise workflow
   showPreview = false;
@@ -150,6 +152,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.toastTimer);
     this.revokePdfUrl();
   }
 
@@ -785,9 +788,8 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   }
 
   private showToast(msg: string): void {
+    clearTimeout(this.toastTimer);
     this.toastMessage = msg;
-    setTimeout(() => {
-      this.toastMessage = '';
-    }, 3000);
+    this.toastTimer = setTimeout(() => (this.toastMessage = ''), MESSAGE_DURATION_MS);
   }
 }

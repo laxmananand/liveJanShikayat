@@ -208,11 +208,13 @@ namespace janshikayat.BAL.Services
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicantForwardDto>(
-                @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
-                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt,
-                         PrashakhaId, PrashakhaLabel, OfficeId, OfficeLabel, OfficeUnitCode, OfficeUnitLabel
-                  FROM Tbl_Applicant_Forward
-                  ORDER BY ForwardedDate, ID");
+                @"SELECT f.ApplicantId, f.CategoryId, f.CategoryLabel, f.BranchId, f.BranchLabel,
+                         f.ComplaintTypeId, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt,
+                         f.PrashakhaId, f.PrashakhaLabel, f.OfficeId, f.OfficeLabel, f.OfficeUnitCode, f.OfficeUnitLabel,
+                         " + ClosureColumns + @"
+                  FROM Tbl_Applicant_Forward f
+                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
+                  ORDER BY f.ForwardedDate, f.ID");
         }
 
         // Latest forward per application, newest first.
@@ -222,11 +224,13 @@ namespace janshikayat.BAL.Services
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicantForwardDto>(
-                @"SELECT ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
-                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedDate AS ForwardedAt,
-                         PrashakhaId, PrashakhaLabel, OfficeId, OfficeLabel, OfficeUnitCode, OfficeUnitLabel
+                @"SELECT x.ApplicantId, x.CategoryId, x.CategoryLabel, x.BranchId, x.BranchLabel,
+                         x.ComplaintTypeId, x.ComplaintTypeLabel, x.Remarks, x.ForwardedBy, x.ForwardedDate AS ForwardedAt,
+                         x.PrashakhaId, x.PrashakhaLabel, x.OfficeId, x.OfficeLabel, x.OfficeUnitCode, x.OfficeUnitLabel,
+                         " + ClosureColumns + @"
                   FROM (SELECT f.*, ROW_NUMBER() OVER (PARTITION BY f.ApplicantId ORDER BY f.ForwardedDate DESC, f.ID DESC) AS rn
                         FROM Tbl_Applicant_Forward f) x
+                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = x.ApplicantId
                   WHERE x.rn = 1
                     AND (@All = 1
                          OR (@BranchId IS NOT NULL AND x.BranchId = CAST(@BranchId AS VARCHAR(50)))
@@ -254,7 +258,8 @@ namespace janshikayat.BAL.Services
                          inserted.RemarkByRole, inserted.CreatedDate,
                          CAST(CASE WHEN inserted.DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument
                   SELECT @ApplicantId, @Remark, @RemarkBy, @RemarkByRole, @CreatedIp, @DocumentPath
-                  WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)",
+                  WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
+                    AND NOT EXISTS (SELECT 1 FROM Tbl_Applicant_Closure WHERE ApplicantId = @ApplicantId)",
                 parameters);
         }
 
@@ -279,6 +284,93 @@ namespace janshikayat.BAL.Services
             return conn.QueryFirstOrDefault<string?>(
                 "SELECT DocumentPath FROM Tbl_Applicant_Remarks WHERE ID = @ID",
                 new { ID = remarkId });
+        }
+
+        // Closure fields for a query that LEFT JOINs Tbl_Applicant_Closure as c
+        private const string ClosureColumns =
+            @"CAST(CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END AS BIT) AS IsDisposed,
+              c.ClosedDate AS ClosedAt, c.ClosedBy, c.ClosureRemarks";
+
+        // Forwarded applications with at least one reply (a remark by a role other than Admin).
+        // Pending ones first, each group with the latest reply first.
+        public IEnumerable<ApplicationResponseDto> GetResponses(string adminRole)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<ApplicationResponseDto>(
+                @"SELECT f.ApplicantId, f.CategoryLabel, f.BranchLabel, f.ComplaintTypeLabel,
+                         f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel, f.ForwardedDate AS ForwardedAt,
+                         r.ResponseCount, r.UnseenCount, r.LastResponseAt,
+                         lr.Remark AS LastRemark, lr.RemarkBy AS LastRemarkBy, lr.RemarkByRole AS LastRemarkByRole,
+                         " + ClosureColumns + @"
+                  FROM Tbl_Applicant_Forward f
+                  CROSS APPLY (SELECT COUNT(*) AS ResponseCount,
+                                      SUM(CASE WHEN m.SeenByAdminDate IS NULL THEN 1 ELSE 0 END) AS UnseenCount,
+                                      MAX(m.CreatedDate) AS LastResponseAt
+                               FROM Tbl_Applicant_Remarks m
+                               WHERE m.ApplicantId = f.ApplicantId AND ISNULL(m.RemarkByRole, '') <> @AdminRole) r
+                  OUTER APPLY (SELECT TOP 1 m.Remark, m.RemarkBy, m.RemarkByRole
+                               FROM Tbl_Applicant_Remarks m
+                               WHERE m.ApplicantId = f.ApplicantId AND ISNULL(m.RemarkByRole, '') <> @AdminRole
+                               ORDER BY m.CreatedDate DESC, m.ID DESC) lr
+                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
+                  WHERE r.ResponseCount > 0
+                  ORDER BY CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END, r.LastResponseAt DESC",
+                new { AdminRole = adminRole });
+        }
+
+        // Pending applications with a reply Admin has not opened yet (the sidebar badge)
+        public int GetUnseenResponseCount(string adminRole)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.ExecuteScalar<int>(
+                @"SELECT COUNT(DISTINCT m.ApplicantId)
+                  FROM Tbl_Applicant_Remarks m
+                  JOIN Tbl_Applicant_Forward f ON f.ApplicantId = m.ApplicantId
+                  WHERE m.SeenByAdminDate IS NULL AND ISNULL(m.RemarkByRole, '') <> @AdminRole
+                    AND NOT EXISTS (SELECT 1 FROM Tbl_Applicant_Closure c WHERE c.ApplicantId = m.ApplicantId)",
+                new { AdminRole = adminRole });
+        }
+
+        public void MarkResponsesSeen(long applicantId, string adminRole)
+        {
+            using var conn = _context.CreateConnection();
+
+            conn.Execute(
+                @"UPDATE Tbl_Applicant_Remarks SET SeenByAdminDate = GETDATE()
+                  WHERE ApplicantId = @ApplicantId AND SeenByAdminDate IS NULL AND ISNULL(RemarkByRole, '') <> @AdminRole",
+                new { ApplicantId = applicantId, AdminRole = adminRole });
+        }
+
+        // An application is closed only once (UX_Applicant_Closure_ApplicantId)
+        public bool IsClosed(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.ExecuteScalar<bool>(
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM Tbl_Applicant_Closure WHERE ApplicantId = @ApplicantId) THEN 1 ELSE 0 END",
+                new { ApplicantId = applicantId });
+        }
+
+        // Returns null when the application does not exist (or is inactive) or has not been forwarded
+        public ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip)
+        {
+            using var conn = _context.CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@ApplicantId", request.ApplicantId);
+            parameters.Add("@ClosureRemarks", string.IsNullOrWhiteSpace(request.Remarks) ? null : request.Remarks.Trim());
+            parameters.Add("@ClosedBy", closedBy);
+            parameters.Add("@ClosedIp", ip);
+
+            return conn.QueryFirstOrDefault<ApplicationClosureDto>(
+                @"INSERT INTO Tbl_Applicant_Closure (ApplicantId, ClosureRemarks, ClosedBy, ClosedIp)
+                  OUTPUT inserted.ApplicantId, inserted.ClosureRemarks, inserted.ClosedBy, inserted.ClosedDate AS ClosedAt
+                  SELECT @ApplicantId, @ClosureRemarks, @ClosedBy, @ClosedIp
+                  WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
+                    AND EXISTS (SELECT 1 FROM Tbl_Applicant_Forward WHERE ApplicantId = @ApplicantId)",
+                parameters);
         }
     }
 }

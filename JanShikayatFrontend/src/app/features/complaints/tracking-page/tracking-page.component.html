@@ -802,5 +802,6 @@
     </div>
   </div>
 
-  <app-applicant-details-modal [record]="detailsRecord" (closed)="detailsRecord = null"></app-applicant-details-modal>
+  <app-applicant-details-modal [record]="detailsRecord" [closure]="detailsForward?.isDisposed ? detailsForward : null"
+                               (closed)="detailsRecord = null; detailsForward = null"></app-applicant-details-modal>
 </div>

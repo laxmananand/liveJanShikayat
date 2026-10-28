@@ -184,6 +184,30 @@
   }
 }
 
+.closure-note {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  background: #e9f6ec;
+  border: 1px solid #b7e0c0;
+  color: #1f6b33;
+  font-size: 0.85rem;
+
+  i {
+    margin-top: 0.15rem;
+  }
+  small {
+    display: block;
+    color: #4f7a5a;
+  }
+  p {
+    margin: 0.3rem 0 0;
+    color: #2b3a2f;
+  }
+}
+
 .remark-error {
   color: #b42318;
   font-size: 0.85rem;

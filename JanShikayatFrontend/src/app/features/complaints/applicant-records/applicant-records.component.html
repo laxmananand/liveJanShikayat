@@ -116,5 +116,6 @@
 
   <app-forward-dialog *ngIf="isAdmin" [record]="forwarding" (closed)="forwarding = null" (forwarded)="onForwarded($event)"></app-forward-dialog>
 
-  <app-applicant-details-modal [record]="selected" (closed)="selected = null"></app-applicant-details-modal>
+  <app-applicant-details-modal [record]="selected" [closure]="selected && forwards.get(selected.id)?.isDisposed ? forwards.get(selected.id)! : null"
+                               (closed)="selected = null"></app-applicant-details-modal>
 </section>

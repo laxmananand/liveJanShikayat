@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 
 const REMEMBER_KEY = 'js_login_email';
 
@@ -13,7 +14,7 @@ const REMEMBER_KEY = 'js_login_email';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
@@ -28,6 +29,7 @@ export class LoginComponent {
   loading = false;
   errorMessage = '';
   infoMessage = '';
+  private infoTimer?: ReturnType<typeof setTimeout>;
   showPassword = false;
 
   // Captcha served by the backend (GET /Auth/generate-captcha).
@@ -61,7 +63,9 @@ export class LoginComponent {
 
   forgotPassword(): void {
     this.errorMessage = '';
+    clearTimeout(this.infoTimer);
     this.infoMessage = 'पासवर्ड रीसेट हेतु अपने विभागीय प्रशासक (Super Admin) से संपर्क करें।';
+    this.infoTimer = setTimeout(() => (this.infoMessage = ''), MESSAGE_DURATION_MS);
   }
 
   submit(): void {
@@ -104,5 +108,9 @@ export class LoginComponent {
     } catch {
       /* storage unavailable — ignore */
     }
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.infoTimer);
   }
 }

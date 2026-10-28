@@ -51,6 +51,51 @@ namespace janshikayat.Models
         public string? OfficeLabel { get; set; }
         public int? OfficeUnitCode { get; set; }
         public string? OfficeUnitLabel { get; set; }
+        // Closed by Admin (Tbl_Applicant_Closure): status Disposed instead of Pending
+        public bool IsDisposed { get; set; }
+        public DateTime? ClosedAt { get; set; }
+        public string? ClosedBy { get; set; }
+        public string? ClosureRemarks { get; set; }
+    }
+
+    // Admin only: close a forwarded application, which moves it from Pending to Disposed
+    public class ApplicationCloseRequest
+    {
+        [Range(1, long.MaxValue)]
+        public long ApplicantId { get; set; }
+        [StringLength(1000)]
+        public string? Remarks { get; set; }
+    }
+    public class ApplicationClosureDto
+    {
+        public long ApplicantId { get; set; }
+        public string? ClosureRemarks { get; set; }
+        public string ClosedBy { get; set; }
+        public DateTime ClosedAt { get; set; }
+    }
+
+    // Admin's Responses page: one forwarded application that the receiving office has replied to
+    public class ApplicationResponseDto
+    {
+        public long ApplicantId { get; set; }
+        public string CategoryLabel { get; set; }
+        public string BranchLabel { get; set; }
+        public string ComplaintTypeLabel { get; set; }
+        public string? PrashakhaLabel { get; set; }
+        public string? OfficeLabel { get; set; }
+        public string? OfficeUnitLabel { get; set; }
+        public DateTime ForwardedAt { get; set; }
+        // Remarks by roles other than Admin; Unseen = not yet opened by Admin
+        public int ResponseCount { get; set; }
+        public int UnseenCount { get; set; }
+        public DateTime LastResponseAt { get; set; }
+        public string LastRemark { get; set; }
+        public string LastRemarkBy { get; set; }
+        public string? LastRemarkByRole { get; set; }
+        public bool IsDisposed { get; set; }
+        public DateTime? ClosedAt { get; set; }
+        public string? ClosedBy { get; set; }
+        public string? ClosureRemarks { get; set; }
     }
 
     // Any logged-in user: add / view remarks on an application

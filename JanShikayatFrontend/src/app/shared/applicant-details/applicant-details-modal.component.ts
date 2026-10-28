@@ -5,6 +5,13 @@ import { ApplicantRecord, ApplicantRemark } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
 import { openBase64Document, openBlobDocument } from '../../core/utils/document';
 
+/** Closure details of a Disposed application (from ForwardRecord / ForwardResponse). */
+export interface ApplicationClosureInfo {
+  closedAt?: string | null;
+  closedBy?: string | null;
+  closureRemarks?: string | null;
+}
+
 /** Must match MaxRemarkDocumentSize in ApplicantController. */
 const MAX_REMARK_PDF_BYTES = 5 * 1024 * 1024;
 
@@ -23,6 +30,8 @@ export class ApplicantDetailsModalComponent implements OnChanges {
   @Input() record: ApplicantRecord | null = null;
   /** false: remarks are shown read-only (no box to add one). */
   @Input() allowRemark = true;
+  /** Set when Admin has closed the application: it is shown as Disposed and no remark can be added. */
+  @Input() closure: ApplicationClosureInfo | null = null;
   @Output() closed = new EventEmitter<void>();
 
   remarks: ApplicantRemark[] = [];

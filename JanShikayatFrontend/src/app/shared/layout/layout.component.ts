@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { filter, interval, map, merge, startWith } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { FontSizeService } from '../../core/services/font-size.service';
+import { ForwardService } from '../../core/services/forward.service';
 import { roleLabel } from '../../core/utils/labels';
 import { FEATURES } from '../../core/config/features';
 
@@ -33,6 +34,19 @@ export class LayoutComponent {
     ),
     { initialValue: this.router.url }
   );
+
+  private forwardService = inject(ForwardService);
+  /** Admin's प्राप्त प्रतिवेदन badge: pending applications with a reply not opened yet. */
+  unseenResponses = this.forwardService.unseenResponses;
+
+  constructor() {
+    // Refreshed on every page change and once a minute, so new replies show up without a reload
+    merge(this.router.events.pipe(filter((e) => e instanceof NavigationEnd)), interval(60_000))
+      .pipe(startWith(null), takeUntilDestroyed())
+      .subscribe(() => {
+        if (this.isAdmin) this.forwardService.refreshUnseenResponses();
+      });
+  }
 
   get isComplaintsPage(): boolean {
     return this.router.parseUrl(this.url()).root.children['primary']?.segments.map((s) => s.path).join('/') === 'complaints';

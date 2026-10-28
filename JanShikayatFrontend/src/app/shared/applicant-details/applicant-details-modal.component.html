@@ -58,7 +58,15 @@
           </li>
         </ul>
 
-        <ng-container *ngIf="allowRemark">
+        <div class="closure-note" *ngIf="closure">
+          <i class="fa-solid fa-circle-check"></i>
+          <div>
+            <strong>निष्पादित / Disposed</strong> — यह आवेदन बंद किया जा चुका है, अब टिप्पणी नहीं जोड़ी जा सकती।
+            <small>{{ closure.closedBy }}<ng-container *ngIf="closure.closedAt"> • {{ closure.closedAt | date: 'dd-MM-yyyy HH:mm' }}</ng-container></small>
+            <p *ngIf="closure.closureRemarks">{{ closure.closureRemarks }}</p>
+          </div>
+        </div>
+        <ng-container *ngIf="allowRemark && !closure">
           <textarea rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
                     placeholder="अपनी टिप्पणी लिखें / Write your remark" aria-label="टिप्पणी"></textarea>
           <div class="remark-actions">

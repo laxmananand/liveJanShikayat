@@ -35,6 +35,8 @@ export class ForwardedApplicationsComponent implements OnInit {
   errorMessage = '';
   searchTerm = '';
   selected: ApplicantRecord | null = null;
+  /** Forward of the open record: carries its closure when Admin has disposed of it */
+  selectedForward: ForwardRecord | null = null;
   allowRemark = false;
 
   get isAdmin(): boolean {
@@ -97,9 +99,10 @@ export class ForwardedApplicationsComponent implements OnInit {
   }
 
   /** View (eye) opens the details read-only; the Remarks button also lets the user add a remark. */
-  openDetails(r: ApplicantRecord, allowRemark: boolean): void {
+  openDetails(row: ForwardedRow, allowRemark: boolean): void {
     this.allowRemark = allowRemark;
-    this.selected = r;
+    this.selectedForward = row.forward;
+    this.selected = row.record;
   }
 
   openDoc(r: ApplicantRecord): void {

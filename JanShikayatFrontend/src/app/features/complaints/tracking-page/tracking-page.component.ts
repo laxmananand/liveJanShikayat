@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin } from 'rxjs';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -92,6 +93,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   errorMessage = '';
   copiedId = '';
   toastMessage = '';
+  private toastTimer?: ReturnType<typeof setTimeout>;
   // Progress tracker (stepper) hidden for now — set to true to restore
   showProgressTracker = false;
 
@@ -119,6 +121,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
   /** Full application popup (same one as अंतिम आवेदन), with remarks */
   detailsRecord: ApplicantRecord | null = null;
+  /** Latest forward of detailsRecord; its closure (Disposed) locks the remarks */
+  detailsForward: ForwardRecord | null = null;
 
   /** Card / chip filters that cover several statuses — each matches what its KPI card counts */
   private readonly statusGroups: Record<string, string[]> = {
@@ -159,6 +163,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.toastTimer);
     this.revokePdfUrl();
   }
 
@@ -193,11 +198,12 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The only workflow data recorded so far is the forward: not forwarded = लंबित at the entry desk,
-   * forwarded = अग्रेषित to the chosen branch / section.
+   * Workflow data recorded so far: not forwarded = लंबित at the entry desk, forwarded = अग्रेषित to the
+   * chosen branch / section, closed by Admin after the reply = निस्तारित (Disposed).
    */
   private toTracked(r: ApplicantRecord, forward: ForwardRecord | null): TrackedGrievanceItem {
-    const status: ComplaintStatus = forward ? 'ForwardedToDepartment' : 'Pending';
+    const disposed = !!forward?.isDisposed;
+    const status: ComplaintStatus = disposed ? 'Disposed' : forward ? 'ForwardedToDepartment' : 'Pending';
     const place = [r.villageName, r.panchayatName].filter((n) => !!n?.trim()).join(', ');
 
     return {
@@ -224,10 +230,12 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
           (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '') +
           (forward.officeUnitLabel || forward.officeLabel ? ` → ${forward.officeUnitLabel || forward.officeLabel}` : '')
         : 'प्रविष्टि कोषांग (अग्रेषण हेतु लंबित)',
-      custodyOfficer: forward
-        ? `अग्रेषित: ${new Date(forward.forwardedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
-        : 'एडमिन / प्रविष्टि सहायक',
-      lifecycleStage: forward ? 3 : 1,
+      custodyOfficer: forward?.isDisposed && forward.closedAt
+        ? `निस्तारित: ${new Date(forward.closedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
+        : forward
+          ? `अग्रेषित: ${new Date(forward.forwardedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
+          : 'एडमिन / प्रविष्टि सहायक',
+      lifecycleStage: disposed ? 5 : forward ? 3 : 1,
       hasPdf: !!r.documentBase64,
       pdfFileName: `Aavedan_${(r.applicationNo || String(r.id)).replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
       pdfFileSize: r.documentBase64 ? base64Size(r.documentBase64) : 'दस्तावेज़ नहीं'
@@ -409,6 +417,17 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
             }
           ]
         : []),
+      ...(f?.isDisposed && f.closedAt
+        ? [
+            {
+              fromStatus: 'ForwardedToDepartment',
+              toStatus: 'Disposed',
+              reason: f.closureRemarks || 'प्रतिवेदन प्राप्त होने के बाद आवेदन बंद किया गया।',
+              actionByName: f.closedBy ?? '',
+              actionAt: f.closedAt
+            }
+          ]
+        : []),
       ...remarks.map((m) => ({
         fromStatus: '',
         toStatus: 'टिप्पणी',
@@ -449,6 +468,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
   /** Full application popup (all fields + remarks), shared with अंतिम आवेदन */
   openDetailsModal(item: TrackedGrievanceItem): void {
+    this.detailsForward = item.forward;
     this.detailsRecord = item.record;
   }
 
@@ -464,9 +484,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   }
 
   showToast(msg: string): void {
+    clearTimeout(this.toastTimer);
     this.toastMessage = msg;
-    setTimeout(() => {
-      this.toastMessage = '';
-    }, 3200);
+    this.toastTimer = setTimeout(() => (this.toastMessage = ''), MESSAGE_DURATION_MS);
   }
 }

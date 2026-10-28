@@ -164,6 +164,44 @@
   width: 0;
 }
 
+/* Unseen-replies count (प्राप्त प्रतिवेदन); a dot on the icon takes its place when the sidebar is collapsed */
+.nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e8590c;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.nav-icon {
+  position: relative;
+}
+
+.nav-dot {
+  display: none;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e8590c;
+}
+
+.sidebar-collapsed .nav-badge {
+  display: none;
+}
+
+.sidebar-collapsed .nav-dot {
+  display: block;
+}
+
 .sidebar-footer {
   padding: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
@@ -553,6 +591,14 @@
     width: auto;
     height: auto;
     padding: revert;
+  }
+
+  .sidebar-collapsed .nav-badge {
+    display: inline-block;
+  }
+
+  .sidebar-collapsed .nav-dot {
+    display: none;
   }
 
   .sidebar-backdrop {

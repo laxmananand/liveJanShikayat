@@ -45,6 +45,13 @@
         <span class="nav-label">अग्रेषित आवेदन</span>
       </a>
 
+      <a *ngIf="isAdmin" routerLink="/complaints/responses" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()"
+         [title]="unseenResponses() ? 'प्राप्त प्रतिवेदन — ' + unseenResponses() + ' नए (Responses Received)' : 'प्राप्त प्रतिवेदन (Responses Received)'">
+        <span class="nav-icon"><i class="fa-solid fa-inbox"></i><span class="nav-dot" *ngIf="unseenResponses()"></span></span>
+        <span class="nav-label">प्राप्त प्रतिवेदन</span>
+        <span class="nav-badge" *ngIf="unseenResponses()">{{ unseenResponses() }}</span>
+      </a>
+
       <a routerLink="/complaints/tracking" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="शिकायत ट्रैकिंग (Track Grievance)">
         <span class="nav-icon"><i class="fa-solid fa-route"></i></span>
         <span class="nav-label">शिकायत ट्रैकिंग</span>

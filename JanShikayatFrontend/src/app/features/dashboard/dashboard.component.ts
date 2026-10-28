@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin, map, of } from 'rxjs';
 import { ApplicantService } from '../../core/services/applicant.service';
-import { ForwardService } from '../../core/services/forward.service';
+import { ForwardRecord, ForwardService } from '../../core/services/forward.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ApplicantRecord, DashboardSummary } from '../../core/models/models';
 import { roleLabel } from '../../core/utils/labels';
@@ -33,6 +33,8 @@ export class DashboardComponent implements OnInit {
   receivedToday = 0;
   receivedThisMonth = 0;
   selected: ApplicantRecord | null = null;
+  /** Latest forward per application id (carries the Disposed closure) */
+  private forwards = new Map<number, ForwardRecord>();
 
   roleLabel = roleLabel;
 
@@ -60,9 +62,11 @@ export class DashboardComponent implements OnInit {
     // Admin sees every application; everyone else only those currently forwarded to them
     forkJoin({
       list: this.applicantService.getApplicants(force),
+      forwards: this.forwardService.latestByApplicant(force),
       mine: this.isAdmin ? of(null) : this.forwardService.myForwards(force).pipe(map((f) => new Set(f.map((x) => x.applicantId))))
     }).subscribe({
-      next: ({ list: all, mine }) => {
+      next: ({ list: all, forwards, mine }) => {
+        this.forwards = forwards;
         const list = mine ? all.filter((r) => mine.has(r.id)) : all;
         const s = this.summarise(list);
         this.summary = s;
@@ -88,8 +92,8 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Build the counts from GET /Applicant/get-all. The API has no status or source yet,
-   * so every application counts as pending and none as an online (citizen) submission.
+   * Build the counts from GET /Applicant/get-all. An application closed by Admin counts as disposed,
+   * every other one as pending; the API has no source yet, so none is an online (citizen) submission.
    */
   private summarise(list: ApplicantRecord[]): DashboardSummary {
     const now = new Date();
@@ -112,15 +116,23 @@ export class DashboardComponent implements OnInit {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
+    const disposed = list.filter((r) => this.forwards.get(r.id)?.isDisposed).length;
+
     return {
       totalComplaints: list.length,
-      pending: list.length,
+      pending: list.length - disposed,
       underReview: 0,
       forwarded: 0,
       underFieldEnquiry: 0,
-      disposed: 0,
+      disposed,
       onlineSubmissions: 0
     };
+  }
+
+  /** Closure of a Disposed application (locks its remarks), else null */
+  closureOf(r: ApplicantRecord | null): ForwardRecord | null {
+    const f = r ? this.forwards.get(r.id) : undefined;
+    return f?.isDisposed ? f : null;
   }
 
   get isAdmin(): boolean {

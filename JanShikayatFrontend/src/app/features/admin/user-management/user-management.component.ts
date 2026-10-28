@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService, RegisterUserPayload } from '../../../core/services/auth.service';
 import { LookupService } from '../../../core/services/lookup.service';
 import { Branch, Department } from '../../../core/models/models';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 
 @Component({
   selector: 'app-user-management',
@@ -12,7 +13,7 @@ import { Branch, Department } from '../../../core/models/models';
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss'
 })
-export class UserManagementComponent implements OnInit {
+export class UserManagementComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private lookupService = inject(LookupService);
@@ -21,6 +22,7 @@ export class UserManagementComponent implements OnInit {
   departments: Department[] = [];
   submitting = false;
   message = '';
+  private messageTimer?: ReturnType<typeof setTimeout>;
   errorMessage = '';
 
   roles = [
@@ -57,7 +59,7 @@ export class UserManagementComponent implements OnInit {
     this.auth.register(this.form.value as RegisterUserPayload).subscribe({
       next: () => {
         this.submitting = false;
-        this.message = `${this.form.value.email} के लिए खाता बनाया गया।`;
+        this.showMessage(`${this.form.value.email} के लिए खाता बनाया गया।`);
         this.form.reset({ role: 'BranchOfficer' });
       },
       error: (err) => {
@@ -65,5 +67,16 @@ export class UserManagementComponent implements OnInit {
         this.errorMessage = err.error?.errors?.join(', ') || err.error?.message || 'खाता नहीं बनाया जा सका।';
       }
     });
+  }
+
+  /** Success messages hide themselves after MESSAGE_DURATION_MS; a newer message restarts the timer. */
+  private showMessage(message: string): void {
+    clearTimeout(this.messageTimer);
+    this.message = message;
+    this.messageTimer = setTimeout(() => (this.message = ''), MESSAGE_DURATION_MS);
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.messageTimer);
   }
 }

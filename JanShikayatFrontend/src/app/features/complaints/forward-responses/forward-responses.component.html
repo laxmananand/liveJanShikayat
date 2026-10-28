@@ -1,0 +1,136 @@
+<section class="records-page">
+  <header class="records-head">
+    <div>
+      <span class="section-kicker"><i class="fa-solid fa-inbox"></i> प्राप्त प्रतिवेदन / Responses Received</span>
+      <h1>प्राप्त प्रतिवेदन</h1>
+      <p class="sub">अग्रेषित आवेदनों पर शाखा / प्रशाखा / कार्यालय द्वारा दी गई टिप्पणियाँ। प्रतिवेदन देखकर आवेदन बंद करें।</p>
+    </div>
+    <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading">
+      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
+    </button>
+  </header>
+
+  <div class="status-tabs" role="tablist">
+    <button type="button" role="tab" [class.active]="statusTab === 'Pending'" [attr.aria-selected]="statusTab === 'Pending'" (click)="statusTab = 'Pending'">
+      <i class="fa-solid fa-hourglass-half"></i> लंबित / Pending <span class="tab-count">{{ count('Pending') }}</span>
+    </button>
+    <button type="button" role="tab" [class.active]="statusTab === 'Disposed'" [attr.aria-selected]="statusTab === 'Disposed'" (click)="statusTab = 'Disposed'">
+      <i class="fa-solid fa-circle-check"></i> निष्पादित / Disposed <span class="tab-count">{{ count('Disposed') }}</span>
+    </button>
+    <button type="button" role="tab" [class.active]="statusTab === ''" [attr.aria-selected]="statusTab === ''" (click)="statusTab = ''">
+      <i class="fa-solid fa-layer-group"></i> सभी / All <span class="tab-count">{{ count('') }}</span>
+    </button>
+  </div>
+
+  <div class="records-toolbar">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, नाम, मोबाइल, शाखा या टिप्पणी से खोजें" />
+    </div>
+    <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदन</span>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+  </div>
+  <div class="alert alert-success" *ngIf="successMessage">
+    <i class="fa-solid fa-circle-check"></i> {{ successMessage }}
+    <button type="button" class="alert-dismiss" (click)="successMessage = ''" aria-label="बंद करें"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <div class="loading-row" *ngIf="loading">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…
+  </div>
+
+  <div class="table-wrap sheet-wrap" *ngIf="!loading && filtered.length">
+    <table class="records-table sheet">
+      <thead>
+        <tr>
+          <th class="col-sn">क्रम सं.<small>(Sl. No.)</small></th>
+          <th>आवेदन संख्या<small>(Application No.)</small></th>
+          <th>आवेदक का नाम<small>(Applicant)</small></th>
+          <th>जिला</th>
+          <th>अग्रेषित<small>(Forwarded To)</small></th>
+          <th>अग्रेषित दिनांक</th>
+          <th>नवीनतम प्रतिवेदन<small>(Latest Response)</small></th>
+          <th class="col-center">स्थिति<small>(Status)</small></th>
+          <th class="col-center col-remarks">कार्रवाई<small>(Action)</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filtered; let i = index" [class.row-unseen]="row.response.unseenCount > 0 && !row.response.isDisposed">
+          <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+          <td data-label="आवेदन संख्या">
+            <span class="app-no">{{ row.record.applicationNo || '—' }}</span>
+            <span class="new-tag" *ngIf="row.response.unseenCount > 0 && !row.response.isDisposed">नया / New</span>
+          </td>
+          <td data-label="आवेदक का नाम">{{ row.record.applicantName }}</td>
+          <td data-label="जिला">{{ row.record.districtName || '—' }}</td>
+          <td data-label="अग्रेषित">
+            {{ row.response.branchLabel }}
+            <small class="sub">{{ forwardedTo(row.response) }}</small>
+          </td>
+          <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.response.forwardedAt | date: 'dd/MM/yyyy' }}</td>
+          <td data-label="नवीनतम प्रतिवेदन" class="col-response">
+            <span class="response-text" [title]="row.response.lastRemark">{{ row.response.lastRemark }}</span>
+            <small class="sub">
+              {{ row.response.lastRemarkBy }}<ng-container *ngIf="row.response.lastRemarkByRole"> ({{ row.response.lastRemarkByRole }})</ng-container>
+              • {{ row.response.lastResponseAt | date: 'dd/MM/yyyy HH:mm' }}
+              <ng-container *ngIf="row.response.responseCount > 1"> • कुल {{ row.response.responseCount }} टिप्पणियाँ</ng-container>
+            </small>
+          </td>
+          <td class="col-center" data-label="स्थिति">
+            <span class="state-badge" [ngClass]="row.response.isDisposed ? 'state-disposed' : 'state-pending'">
+              {{ row.response.isDisposed ? 'निष्पादित / Disposed' : 'लंबित / Pending' }}
+            </span>
+            <small class="sub" *ngIf="row.response.isDisposed && row.response.closedAt">{{ row.response.closedAt | date: 'dd/MM/yyyy' }}</small>
+          </td>
+          <td class="col-center col-remarks" data-label="कार्रवाई">
+            <div class="icon-btns">
+              <button type="button" class="btn-send" (click)="openDetails(row)" title="प्रतिवेदन / टिप्पणियाँ देखें — View responses">
+                <i class="fa-solid fa-comment-dots"></i> देखें
+              </button>
+              <button type="button" class="btn-close-app" *ngIf="!row.response.isDisposed" (click)="askClose(row)" title="आवेदन बंद करें — Close application">
+                <i class="fa-solid fa-lock"></i> बंद करें / Close
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
+    <i class="fa-solid fa-inbox"></i>
+    <p *ngIf="statusTab === 'Pending'">कोई लंबित प्रतिवेदन नहीं है।</p>
+    <p *ngIf="statusTab === 'Disposed'">अभी तक कोई आवेदन बंद नहीं किया गया है।</p>
+    <p *ngIf="statusTab === ''">अग्रेषित आवेदनों पर अभी तक कोई प्रतिवेदन प्राप्त नहीं हुआ है।</p>
+  </div>
+
+  <app-applicant-details-modal
+    [record]="selected?.record ?? null"
+    [allowRemark]="true"
+    [closure]="selected?.response?.isDisposed ? selected!.response : null"
+    (closed)="selected = null"></app-applicant-details-modal>
+
+  <!-- Close confirmation -->
+  <div class="confirm-backdrop" *ngIf="closing as c" (click)="cancelClose()">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="closeTitle" (click)="$event.stopPropagation()">
+      <h2 id="closeTitle"><i class="fa-solid fa-lock"></i> आवेदन बंद करें / Close application</h2>
+      <p>
+        आवेदन संख्या <strong>{{ c.record.applicationNo || c.record.id }}</strong> ({{ c.record.applicantName }}) बंद करने पर
+        इसकी स्थिति <strong>लंबित</strong> से <strong>निष्पादित (Disposed)</strong> हो जाएगी और इस पर आगे कोई टिप्पणी नहीं जोड़ी जा सकेगी।
+      </p>
+      <label for="closeRemarks">समापन टिप्पणी / Closing remark <small>(वैकल्पिक / optional)</small></label>
+      <textarea id="closeRemarks" rows="3" maxlength="1000" [(ngModel)]="closeRemarks" [disabled]="savingClose"
+                placeholder="जैसे: प्रतिवेदन के आधार पर मामला निष्पादित किया गया"></textarea>
+      <span class="close-error" *ngIf="closeError">{{ closeError }}</span>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-ghost" (click)="cancelClose()" [disabled]="savingClose">रद्द करें / Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmClose()" [disabled]="savingClose">
+          <i class="fa-solid" [ngClass]="savingClose ? 'fa-circle-notch fa-spin' : 'fa-lock'"></i> बंद करें / Close
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CompetentAuthorityDesignation, ComplaintDetail, Department } from '../../../core/models/models';
 import { statusLabel, sourceLabel, remarkTypeLabel, statusProgress } from '../../../core/utils/labels';
 import { StatusFlowComponent } from '../../../shared/status-flow/status-flow.component';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 
 @Component({
   selector: 'app-complaint-detail',
@@ -16,7 +17,7 @@ import { StatusFlowComponent } from '../../../shared/status-flow/status-flow.com
   templateUrl: './complaint-detail.component.html',
   styleUrl: './complaint-detail.component.scss'
 })
-export class ComplaintDetailComponent implements OnInit {
+export class ComplaintDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private complaintService = inject(ComplaintService);
@@ -33,6 +34,7 @@ export class ComplaintDetailComponent implements OnInit {
 
   busy = false;
   message = '';
+  private messageTimer?: ReturnType<typeof setTimeout>;
   errorMessage = '';
   reportFile: File | null = null;
 
@@ -132,7 +134,7 @@ export class ComplaintDetailComponent implements OnInit {
       next: () => {
         this.busy = false;
         this.reportFile = null;
-        this.message = 'रिपोर्ट सफलतापूर्वक अपलोड की गई।';
+        this.showMessage('रिपोर्ट सफलतापूर्वक अपलोड की गई।');
         this.load();
       },
       error: () => {
@@ -153,7 +155,7 @@ export class ComplaintDetailComponent implements OnInit {
       next: () => {
         this.busy = false;
         this.remarkForm.reset({ remarkType: 'Enquiry', text: '' });
-        this.message = 'टिप्पणी जोड़ी गई।';
+        this.showMessage('टिप्पणी जोड़ी गई।');
         this.load();
       },
       error: () => {
@@ -190,7 +192,7 @@ export class ComplaintDetailComponent implements OnInit {
         next: () => {
           this.busy = false;
           this.forwardForm.reset({ targetType: 'department', reason: '' });
-          this.message = 'शिकायत अग्रेषित की गई।';
+          this.showMessage('शिकायत अग्रेषित की गई।');
           this.load();
         },
         error: () => {
@@ -210,7 +212,7 @@ export class ComplaintDetailComponent implements OnInit {
       next: () => {
         this.busy = false;
         this.actionForm.reset();
-        this.message = 'कार्रवाई दर्ज की गई।';
+        this.showMessage('कार्रवाई दर्ज की गई।');
         this.load();
       },
       error: () => {
@@ -229,7 +231,7 @@ export class ComplaintDetailComponent implements OnInit {
     this.complaintService.close(this.complaintId, this.closeForm.value.closureRemarks!).subscribe({
       next: () => {
         this.busy = false;
-        this.message = 'प्रकरण बंद कर दिया गया।';
+        this.showMessage('प्रकरण बंद कर दिया गया।');
         this.load();
       },
       error: () => {
@@ -237,5 +239,16 @@ export class ComplaintDetailComponent implements OnInit {
         this.errorMessage = 'प्रकरण बंद करने में विफल।';
       }
     });
+  }
+
+  /** Success messages hide themselves after MESSAGE_DURATION_MS; a newer message restarts the timer. */
+  private showMessage(message: string): void {
+    clearTimeout(this.messageTimer);
+    this.message = message;
+    this.messageTimer = setTimeout(() => (this.message = ''), MESSAGE_DURATION_MS);
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.messageTimer);
   }
 }

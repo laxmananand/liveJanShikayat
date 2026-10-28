@@ -14,5 +14,10 @@ namespace janshikayat.BAL.Interfaces
         ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
         string? GetRemarkDocumentPath(long remarkId);
+        IEnumerable<ApplicationResponseDto> GetResponses(string adminRole);
+        int GetUnseenResponseCount(string adminRole);
+        void MarkResponsesSeen(long applicantId, string adminRole);
+        bool IsClosed(long applicantId);
+        ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
     }
 }

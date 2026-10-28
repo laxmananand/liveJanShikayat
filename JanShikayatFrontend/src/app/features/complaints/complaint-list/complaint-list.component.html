@@ -71,7 +71,7 @@
             <small class="sub-line">{{ c.blockName }} • {{ c.districtName }}<span *ngIf="c.policeStation"> • थाना: {{ c.policeStation }}</span></small>
           </td>
           <td class="nowrap">{{ c.applicationDate ? (c.applicationDate | date: 'dd-MM-yyyy') : '—' }}</td>
-          <td><span class="status-badge" [ngClass]="'status-' + defaultStatus">{{ statusLabel(defaultStatus) }}</span></td>
+          <td><span class="status-badge" [ngClass]="'status-' + statusOf(c)">{{ statusLabel(statusOf(c)) }}</span></td>
         </tr>
       </tbody>
     </table>
@@ -83,4 +83,4 @@
   </div>
 </div>
 
-<app-applicant-details-modal [record]="selected" (closed)="selected = null"></app-applicant-details-modal>
+<app-applicant-details-modal [record]="selected" [closure]="closureOf(selected)" (closed)="selected = null"></app-applicant-details-modal>
