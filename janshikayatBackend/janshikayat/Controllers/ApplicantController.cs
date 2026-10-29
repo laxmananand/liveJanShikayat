@@ -3,6 +3,7 @@ using janshikayat.BAL.Services;
 using janshikayat.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Reflection;
 using System.Security.Claims;
 
@@ -292,6 +293,26 @@ namespace janshikayat.Controllers
             }
             return Ok(new { status = "true", message = "Application closed.", data = saved });
         }
+
+        // Citizen portal (landing page): live status of an application by its number. No login needed, so it
+        // returns workflow status only (no name, mobile or address) and is rate limited per IP against number guessing.
+        [AllowAnonymous]
+        [EnableRateLimiting(PublicTrackRateLimit)]
+        [HttpGet("track/{applicationNo}")]
+        public IActionResult TrackApplication(string applicationNo)
+        {
+            // Older numbers were shown with dashes / spaces (JS-2026-0001); stored numbers have neither
+            var number = new string(applicationNo.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+            var tracked = number.Length is > 0 and <= 30 ? _IComplain.TrackApplication(number, AdminRole) : null;
+            if (tracked == null)
+            {
+                return NotFound(new { status = "false", message = "Application not found." });
+            }
+            return Ok(new { status = "true", message = "Success", data = tracked });
+        }
+
+        // Policy name registered in Program.cs
+        public const string PublicTrackRateLimit = "PublicTrack";
 
         private const string DisposedMessage = "Application is already closed (disposed).";
 

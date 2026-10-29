@@ -19,5 +19,6 @@ namespace janshikayat.BAL.Interfaces
         void MarkResponsesSeen(long applicantId, string adminRole);
         bool IsClosed(long applicantId);
         ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
+        PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);
     }
 }

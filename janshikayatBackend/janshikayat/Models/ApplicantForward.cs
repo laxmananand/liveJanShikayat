@@ -98,6 +98,25 @@ namespace janshikayat.Models
         public string? ClosureRemarks { get; set; }
     }
 
+    // Public (citizen) tracking by Application_No: workflow status only, never personal details
+    public class PublicTrackingDto
+    {
+        public string ComplaintNumber { get; set; } = string.Empty;
+        // Pending -> ForwardedToDepartment -> ActionTaken (office replied) -> Disposed (closed by Admin)
+        public string Status { get; set; } = string.Empty;
+        public DateTime RegisteredAt { get; set; }
+        public DateTime LastUpdatedAt { get; set; }
+        public string? DepartmentName { get; set; }
+        public string? DepartmentNameHindi { get; set; }
+        public DateTime? ClosedAt { get; set; }
+        public List<PublicTimelineEntryDto> Timeline { get; set; } = new();
+    }
+    public class PublicTimelineEntryDto
+    {
+        public string Status { get; set; } = string.Empty;
+        public DateTime At { get; set; }
+    }
+
     // Any logged-in user: add / view remarks on an application
     public class ApplicantRemarkRequest
     {

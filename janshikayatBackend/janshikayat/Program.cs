@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Threading.RateLimiting;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -106,6 +107,16 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Public application tracking (no login): at most 20 lookups per minute per IP, then 429
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(janshikayat.Controllers.ApplicantController.PublicTrackRateLimit, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) }));
+});
+
 var app = builder.Build();
 
 // Swagger
@@ -120,6 +131,8 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseCors("AllowAngular");
+
+app.UseRateLimiter();
 
 app.UseSession();
 

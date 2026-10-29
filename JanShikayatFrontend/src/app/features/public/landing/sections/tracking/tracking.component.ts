@@ -28,7 +28,7 @@ export class TrackingComponent implements OnInit {
   statusProgress = statusProgress;
 
   ngOnInit(): void {
-    // Deep link from the registration success screen: /?track=JS20260001#track
+    // Deep link from the registration success screen: /?track=JS23014150001#track
     const prefill = this.route.snapshot.queryParamMap.get('track');
     if (prefill) {
       this.complaintId = prefill;

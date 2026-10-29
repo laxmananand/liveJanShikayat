@@ -286,6 +286,62 @@ namespace janshikayat.BAL.Services
                 new { ID = remarkId });
         }
 
+        // Public tracking: null when no active application has this number.
+        // Each workflow step that has happened becomes a timeline entry; the last one is the current status.
+        public PublicTrackingDto? TrackApplication(string applicationNo, string adminRole)
+        {
+            using var conn = _context.CreateConnection();
+
+            var row = conn.QueryFirstOrDefault<PublicTrackingRow>(
+                @"SELECT d.Application_No, d.CreatedDate,
+                         f.ForwardedDate, f.BranchLabel, f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel,
+                         r.FirstResponseAt, c.ClosedDate
+                  FROM Tbl_Applicant_Details d
+                  LEFT JOIN Tbl_Applicant_Forward f ON f.ApplicantId = d.ID
+                  OUTER APPLY (SELECT MIN(m.CreatedDate) AS FirstResponseAt
+                               FROM Tbl_Applicant_Remarks m
+                               WHERE m.ApplicantId = d.ID AND ISNULL(m.RemarkByRole, '') <> @AdminRole) r
+                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = d.ID
+                  WHERE d.Application_No = @ApplicationNo AND d.Is_Active = 1",
+                new { ApplicationNo = applicationNo, AdminRole = adminRole });
+            if (row == null)
+                return null;
+
+            var registeredAt = row.CreatedDate ?? DateTime.Now;
+            var timeline = new List<PublicTimelineEntryDto> { new() { Status = "Pending", At = registeredAt } };
+            if (row.ForwardedDate != null)
+                timeline.Add(new() { Status = "ForwardedToDepartment", At = row.ForwardedDate.Value });
+            if (row.ForwardedDate != null && row.FirstResponseAt != null)
+                timeline.Add(new() { Status = "ActionTaken", At = row.FirstResponseAt.Value });
+            if (row.ClosedDate != null)
+                timeline.Add(new() { Status = "Disposed", At = row.ClosedDate.Value });
+
+            var office = row.OfficeUnitLabel ?? row.OfficeLabel ?? row.PrashakhaLabel;
+            return new PublicTrackingDto
+            {
+                ComplaintNumber = row.Application_No,
+                Status = timeline[^1].Status,
+                RegisteredAt = registeredAt,
+                LastUpdatedAt = timeline[^1].At,
+                DepartmentName = row.BranchLabel == null ? null : office == null ? row.BranchLabel : $"{row.BranchLabel} • {office}",
+                ClosedAt = row.ClosedDate,
+                Timeline = timeline
+            };
+        }
+
+        private class PublicTrackingRow
+        {
+            public string Application_No { get; set; } = string.Empty;
+            public DateTime? CreatedDate { get; set; }
+            public DateTime? ForwardedDate { get; set; }
+            public string? BranchLabel { get; set; }
+            public string? PrashakhaLabel { get; set; }
+            public string? OfficeLabel { get; set; }
+            public string? OfficeUnitLabel { get; set; }
+            public DateTime? FirstResponseAt { get; set; }
+            public DateTime? ClosedDate { get; set; }
+        }
+
         // Closure fields for a query that LEFT JOINs Tbl_Applicant_Closure as c
         private const string ClosureColumns =
             @"CAST(CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END AS BIT) AS IsDisposed,

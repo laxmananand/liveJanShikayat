@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import {
   Captcha,
   PublicComplaintCreated,
   PublicComplaintPayload,
-  PublicTimelineEntry,
   PublicTracking
 } from '../models/models';
 import { MockDbService, mockError, mockResponse } from '../mock/mock-db.service';
@@ -17,44 +18,25 @@ const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 /**
  * Anonymous endpoints used by the citizen-facing portal.
  *
- * MOCK IMPLEMENTATION — the CAPTCHA is drawn in the browser and complaints go
- * into MockDbService. Public method signatures match the old HTTP version; swap
+ * Tracking is live (ApplicantController). MOCK IMPLEMENTATION for the rest — the CAPTCHA is drawn in
+ * the browser and complaints go into MockDbService. Public method signatures match the old HTTP version; swap
  * each body for the HttpClient call noted above it when the new backend is ready.
  */
 @Injectable({ providedIn: 'root' })
 export class PublicService {
+  private http = inject(HttpClient);
   private db = inject(MockDbService);
   private captchas = new Map<string, { code: string; expiresAt: number }>();
 
-  /** API: GET /public/track/{complaintNumber} */
+  /**
+   * API: GET /Applicant/track/{applicationNo} (no login) → live status of a finalised application from the
+   * database: workflow steps only, no personal details. 404 = unknown number, 429 = too many lookups.
+   */
   track(complaintNumber: string): Observable<PublicTracking> {
-    return mockResponse(() => {
-      const number = complaintNumber.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-      const complaint = this.db.complaints.find((c) => c.complaintNumber === number);
-      if (!number || !complaint) throw mockError(404, { message: 'Complaint not found.' });
-
-      const timeline: PublicTimelineEntry[] = [...complaint.history]
-        .sort((a, b) => a.actionAt.localeCompare(b.actionAt))
-        .map((h) => ({ status: h.toStatus as PublicTimelineEntry['status'], at: h.actionAt }));
-
-      // Remarks move Pending -> UnderReview without a history row, so make sure
-      // the current status is always the last timeline entry.
-      if (!timeline.length || timeline[timeline.length - 1].status !== complaint.status) {
-        timeline.push({ status: complaint.status, at: timeline.length ? timeline[timeline.length - 1].at : complaint.createdAt });
-      }
-
-      const dept = MOCK_DEPARTMENTS.find((d) => d.id === complaint.departmentId);
-      return {
-        complaintNumber: complaint.complaintNumber,
-        status: complaint.status,
-        registeredAt: complaint.createdAt,
-        lastUpdatedAt: complaint.closedAt ?? timeline[timeline.length - 1].at,
-        departmentName: dept?.name ?? null,
-        departmentNameHindi: dept?.nameHindi ?? null,
-        closedAt: complaint.closedAt ?? null,
-        timeline
-      };
-    });
+    const number = complaintNumber.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    return this.http
+      .get<{ data: PublicTracking }>(`${environment.apiUrl}/Applicant/track/${encodeURIComponent(number)}`)
+      .pipe(map((res) => res.data));
   }
 
   /** API: GET /public/captcha */
