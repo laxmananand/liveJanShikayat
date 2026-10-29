@@ -6,38 +6,38 @@
   padding: 0.6rem 0.85rem;
   margin-bottom: 1rem;
   background: #fff;
-  border: 1px solid #e0d4c8;
+  border: 1px solid #c8cee0;
   border-radius: 8px;
 
   &.active {
-    border-color: #d2691e;
-    box-shadow: 0 0 0 2px rgba(210, 105, 30, 0.12);
+    border-color: #174bd9;
+    box-shadow: 0 0 0 2px rgba(23, 75, 217, 0.12);
   }
 }
 
 .df-title {
   font-weight: 700;
-  color: #4a2417;
+  color: #17284a;
   white-space: nowrap;
 
   i {
-    color: #d2691e;
+    color: #174bd9;
     margin-right: 0.25rem;
   }
 }
 
 .df-single {
-  color: #6b5444;
+  color: #424e6d;
   font-size: 0.9rem;
 }
 
 .df-field,
 .df-date input {
   padding: 0.4rem 0.55rem;
-  border: 1px solid #e0d4c8;
+  border: 1px solid #c8cee0;
   border-radius: 6px;
   font-size: 0.92rem;
-  color: #4a2417;
+  color: #17284a;
   background: #fff;
 }
 
@@ -48,7 +48,7 @@
   margin: 0;
 
   span {
-    color: #6b5444;
+    color: #424e6d;
     font-size: 0.9rem;
   }
 }
@@ -61,19 +61,19 @@
 
 .df-chip {
   padding: 0.3rem 0.65rem;
-  border: 1px solid #e0d4c8;
+  border: 1px solid #c8cee0;
   border-radius: 999px;
-  background: #f8f2ec;
-  color: #4a2417;
+  background: #eceff8;
+  color: #17284a;
   font-size: 0.85rem;
   cursor: pointer;
 
   &:hover {
-    border-color: #d2691e;
+    border-color: #174bd9;
   }
   &.on {
-    background: #d2691e;
-    border-color: #d2691e;
+    background: #174bd9;
+    border-color: #174bd9;
     color: #fff;
   }
 }
@@ -89,7 +89,7 @@
   cursor: pointer;
 
   &:hover {
-    background: #fbeae7;
+    background: #e7eefb;
   }
 }
 

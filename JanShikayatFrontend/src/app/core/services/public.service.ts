@@ -136,7 +136,7 @@ function drawCaptcha(code: string): string {
   if (!ctx) return '';
 
   const rand = (min: number, max: number) => min + Math.random() * (max - min);
-  ctx.fillStyle = '#f9f5f3';
+  ctx.fillStyle = '#f3f5f9';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   for (let i = 0; i < 6; i++) {
@@ -153,7 +153,7 @@ function drawCaptcha(code: string): string {
     ctx.save();
     ctx.translate(18 + i * 28, 25 + rand(-4, 4));
     ctx.rotate(rand(-0.35, 0.35));
-    ctx.fillStyle = ['#4a2c1f', '#7a1f1f', '#1f5c3a', '#4b2a7a'][i % 4];
+    ctx.fillStyle = ['#1f2c4a', '#7a1f1f', '#1f5c3a', '#4b2a7a'][i % 4];
     ctx.fillText(ch, -8, 0);
     ctx.restore();
   });

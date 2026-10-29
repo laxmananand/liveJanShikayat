@@ -25,15 +25,15 @@
     color: var(--ink);
     transition: all var(--transition-fast);
 
-    i { color: #a88a7c; }
+    i { color: #7a89aa; }
   }
 
-  label:hover { border-color: #f2c4a6; }
+  label:hover { border-color: #a6bbf2; }
 
   label.active {
     border-color: var(--accent);
-    background: #fdf5f1;
-    box-shadow: 0 0 0 4px rgba(210, 105, 30, 0.12);
+    background: #f1f5fd;
+    box-shadow: 0 0 0 4px rgba(23, 75, 217, 0.12);
 
     i { color: var(--accent); }
   }

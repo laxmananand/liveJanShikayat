@@ -13,7 +13,7 @@
 .split-heading > p {
   margin: 0;
   max-width: 440px;
-  color: #7a5a4c;
+  color: #4a5a7c;
   line-height: 1.8;
   font-size: 0.95rem;
 }
@@ -26,10 +26,10 @@
 
 .feature-card {
   position: relative;
-  border: 1px solid rgba(59, 29, 16, 0.1);
+  border: 1px solid rgba(16, 29, 59, 0.1);
   border-radius: 10px;
   padding: 32px;
-  background: #fbf6f3;
+  background: #f3f5fb;
   min-height: 260px;
   transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
@@ -39,8 +39,8 @@
 }
 
 .feature-card:hover {
-  box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10);
-  border-color: #dcc4b8;
+  box-shadow: 0 6px 16px rgba(16, 29, 59, 0.10);
+  border-color: #b8c3dc;
   background: #ffffff;
 }
 
@@ -53,10 +53,10 @@
 
 .feature-no {
   font-size: 0.7rem;
-  color: #d2691e;
+  color: #174bd9;
   font-weight: 700;
   letter-spacing: 0.08em;
-  background: rgba(210, 105, 30, 0.1);
+  background: rgba(23, 75, 217, 0.1);
   padding: 4px 10px;
   border-radius: 10px;
 }
@@ -66,30 +66,30 @@
   height: 52px;
   border-radius: 8px;
   background: #ffffff;
-  color: #4a2417;
+  color: #17284a;
   display: grid;
   place-items: center;
   font-size: 1.35rem;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
   transition: transform 0.3s ease;
 }
 
 .feature-card:hover .feature-icon {
   transform: scale(1.1) rotate(-5deg);
-  background: #442214;
-  color: #f4b48a;
+  background: #142344;
+  color: #8aa7f4;
 }
 
 .feature-card h3 {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #3b1d10;
+  color: #101d3b;
   margin-bottom: 12px;
 }
 
 .feature-card p {
   font-size: 0.88rem;
-  color: #7a5a4c;
+  color: #4a5a7c;
   line-height: 1.75;
   margin-bottom: 20px;
 }
@@ -97,13 +97,13 @@
 .feature-footer {
   margin-top: auto;
   padding-top: 16px;
-  border-top: 1px solid rgba(59, 29, 16, 0.06);
+  border-top: 1px solid rgba(16, 29, 59, 0.06);
 }
 
 .explore-btn {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #d2691e;
+  color: #174bd9;
   display: inline-flex;
   align-items: center;
   gap: 6px;

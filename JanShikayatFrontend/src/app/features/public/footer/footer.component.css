@@ -1,6 +1,6 @@
 .site-footer {
-  background: #22130c;
-  color: #a88a7c;
+  background: #0c1322;
+  color: #7a89aa;
   padding: 70px 0 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -26,12 +26,12 @@
   width: 46px;
   height: 46px;
   border-radius: 6px;
-  background: #d2691e;
+  background: #174bd9;
   color: #ffffff;
   display: grid;
   place-items: center;
   font-size: 1.2rem;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
 }
 
 .brand-text strong {
@@ -45,7 +45,7 @@
 .brand-text small {
   display: block;
   font-size: 0.72rem;
-  color: #f4b48a;
+  color: #8aa7f4;
   margin-top: 2px;
 }
 
@@ -53,7 +53,7 @@
   font-size: 0.86rem;
   line-height: 1.8;
   margin-top: 20px;
-  color: #a88a7c;
+  color: #7a89aa;
 }
 
 .footer-col h4 {
@@ -72,7 +72,7 @@
   left: 0;
   width: 32px;
   height: 2px;
-  background: #d2691e;
+  background: #174bd9;
 }
 
 .footer-col ul {
@@ -90,19 +90,19 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #a88a7c;
+  color: #7a89aa;
   text-decoration: none;
   transition: all 0.25s ease;
 }
 
 .footer-col a i {
   font-size: 0.65rem;
-  color: #d2691e;
+  color: #174bd9;
   transition: transform 0.25s ease;
 }
 
 .footer-col a:hover {
-  color: #f4b48a;
+  color: #8aa7f4;
   transform: translateX(4px);
 }
 
@@ -117,11 +117,11 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.78rem;
-  color: #7a5a4c;
+  color: #4a5a7c;
 }
 
 .bottom-tag {
-  color: #a88a7c;
+  color: #7a89aa;
 }
 
 @media (max-width: 991.98px) {

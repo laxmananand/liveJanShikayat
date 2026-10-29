@@ -55,20 +55,10 @@ namespace janshikayat.BAL.Services
 
             svg.AppendLine(
                 "<svg xmlns=\"http://www.w3.org/2000/svg\" " +
-                "width=\"220\" height=\"80\">"
+                "width=\"220\" height=\"80\" viewBox=\"0 0 220 80\">"
             );
 
-            // Background
-            svg.AppendLine(
-                "<rect width=\"220\" height=\"80\" " +
-                "fill=\"white\"/>"
-            );
-
-            // Border
-            svg.AppendLine(
-                "<rect x=\"1\" y=\"1\" width=\"218\" height=\"78\" " +
-                "fill=\"none\" stroke=\"black\" stroke-width=\"2\"/>"
-            );
+            // No background or border: the page's captcha tile supplies both
 
             // Random lines
             for (int i = 0; i < 8; i++)
@@ -88,7 +78,7 @@ namespace janshikayat.BAL.Services
 
             // CAPTCHA text
             svg.AppendLine(
-                "<text x=\"25\" y=\"52\" " +
+                "<text x=\"110\" y=\"53\" text-anchor=\"middle\" " +
                 "font-family=\"Arial\" " +
                 "font-size=\"36\" " +
                 "font-weight=\"bold\" " +

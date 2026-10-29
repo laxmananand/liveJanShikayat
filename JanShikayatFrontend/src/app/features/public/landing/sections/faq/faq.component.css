@@ -7,14 +7,14 @@
 
 .faq-accordion .accordion-item {
   border: 0;
-  border-bottom: 1px solid rgba(59, 29, 16, 0.1);
+  border-bottom: 1px solid rgba(16, 29, 59, 0.1);
   background: transparent;
   margin-bottom: 12px;
 }
 
 .faq-accordion .accordion-button {
   background: transparent;
-  color: #3b1d10;
+  color: #101d3b;
   font: 700 0.98rem 'Noto Sans Devanagari', sans-serif;
   padding: 22px 10px;
   box-shadow: none;
@@ -26,9 +26,9 @@
 
 .faq-number {
   font-size: 0.8rem;
-  color: #d2691e;
+  color: #174bd9;
   font-weight: 700;
-  background: rgba(210, 105, 30, 0.1);
+  background: rgba(23, 75, 217, 0.1);
   padding: 4px 10px;
   border-radius: 5px;
   flex: none;
@@ -39,7 +39,7 @@
 }
 
 .faq-accordion .accordion-button:not(.collapsed) {
-  color: #d2691e;
+  color: #174bd9;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 6px;
 }
@@ -57,19 +57,19 @@
 }
 
 .faq-accordion .accordion-button:hover {
-  color: #d2691e;
+  color: #174bd9;
 }
 
 .faq-chevron {
   flex: none;
   font-size: 0.85rem;
-  color: #a88a7c;
+  color: #7a89aa;
   transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .accordion-button:not(.collapsed) .faq-chevron {
   transform: rotate(180deg);
-  color: #d2691e;
+  color: #174bd9;
 }
 
 .faq-accordion .accordion-collapse {
@@ -88,7 +88,7 @@
 
 .faq-accordion .accordion-body {
   padding: 6px 12px 24px 56px;
-  color: #7a5a4c;
+  color: #4a5a7c;
   font-size: 0.92rem;
   line-height: 1.85;
 }

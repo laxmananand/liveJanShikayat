@@ -1,7 +1,7 @@
 /* =========================================================
    VIBHAGIY JAN SHIKAYAT NIDAN PORTAL
    Design system & global styles (public portal + officer dashboard)
-   Theme: dark brown (#4a2417), orange (#d2691e), rust (#933b12) on blush.
+   Theme: deep navy (#17284a), royal blue (#174bd9), indigo (#0d3798) on cool slate.
    Flat surfaces, hairline borders, tight corners — no glows or glass.
    ========================================================= */
 
@@ -9,40 +9,40 @@
 
 :root {
   /* ── Design tokens (from the portal design) ── */
-  --ink: #3b1d10;
-  --ink-2: #4a2417;
-  --paper: #fbf6f3;
+  --ink: #101d3b;
+  --ink-2: #17284a;
+  --paper: #f3f5fb;
   --white: #ffffff;
-  --accent: #d2691e;
-  --accent-2: #e07b35;
-  --accent-soft: #fbe3d4;
-  --mint: #f6ebe7;
-  --line: #e6d3ca;
-  --muted: #7a5a4c;
-  --shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  --accent: #174bd9;
+  --accent-2: #2e60e7;
+  --accent-soft: #d4dffb;
+  --mint: #e7ecf6;
+  --line: #cad3e6;
+  --muted: #4a5a7c;
+  --shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
   --radius: 8px;
   --radius-sm: 6px;
 
   /* ── App tokens (used by the officer dashboard screens) ── */
-  --color-primary: #4a2417;
-  --color-primary-dark: #2e1810;
-  --color-primary-light: #6b3420;
-  --color-accent: #d2691e;
-  --color-accent-light: #e07b35;
+  --color-primary: #17284a;
+  --color-primary-dark: #101a2e;
+  --color-primary-light: #20386b;
+  --color-accent: #174bd9;
+  --color-accent-light: #2e60e7;
 
-  --color-bg: #f7efeb;
+  --color-bg: #ebeff7;
   --color-surface: #ffffff;
-  --color-border: #e6d3ca;
-  --color-text: #3b1d10;
-  --color-text-muted: #7a5a4c;
+  --color-border: #cad3e6;
+  --color-text: #101d3b;
+  --color-text-muted: #4a5a7c;
   --color-success: #2f7d4f;
-  --color-warning: #d2691e;
+  --color-warning: #174bd9;
   --color-danger: #b42318;
 
   --radius-lg: 8px;
-  --shadow-sm: 0 1px 2px rgba(59, 29, 16, 0.05);
-  --shadow-md: 0 2px 6px rgba(59, 29, 16, 0.08);
-  --shadow-lg: 0 6px 16px rgba(59, 29, 16, 0.10);
+  --shadow-sm: 0 1px 2px rgba(16, 29, 59, 0.05);
+  --shadow-md: 0 2px 6px rgba(16, 29, 59, 0.08);
+  --shadow-lg: 0 6px 16px rgba(16, 29, 59, 0.10);
 
   --sidebar-width: 272px;
   --sidebar-collapsed-width: 78px;
@@ -96,7 +96,7 @@ button {
 }
 
 .section { padding: 90px 0; }
-.section-light { background: #fbf6f3; }
+.section-light { background: #f3f5fb; }
 .section-paper { background: #ffffff; }
 
 .section-heading { margin-bottom: 48px; }
@@ -142,9 +142,9 @@ button {
 }
 
 .accent-text { color: var(--accent); }
-.accent-text-light { color: #f4b48a; }
+.accent-text-light { color: #8aa7f4; }
 
-.glass-elevation { box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10); }
+.glass-elevation { box-shadow: 0 6px 16px rgba(16, 29, 59, 0.10); }
 
 @media (max-width: 991.98px) {
   .section { padding: 70px 0; }
@@ -165,11 +165,11 @@ button {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #fbf6f3; }
+::-webkit-scrollbar-track { background: #f3f5fb; }
 ::-webkit-scrollbar-thumb {
-  background: #dcc4b8;
+  background: #b8c3dc;
   border-radius: 10px;
-  border: 2px solid #fbf6f3;
+  border: 2px solid #f3f5fb;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
@@ -178,9 +178,9 @@ button {
    --------------------------------------------------------- */
 .card {
   background: var(--color-surface);
-  border: 1px solid rgba(59, 29, 16, 0.08);
+  border: 1px solid rgba(16, 29, 59, 0.08);
   border-radius: var(--radius-lg);
-  box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10);
+  box-shadow: 0 6px 16px rgba(16, 29, 59, 0.10);
   padding: 24px;
 }
 
@@ -231,22 +231,22 @@ button {
 .btn-primary:hover,
 .btn-primary:visited { color: #fff; }
 .btn-primary {
-  background: #4a2417;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  background: #17284a;
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
 }
 .btn-primary:hover {
-  background: #3b1d10;
+  background: #101d3b;
 }
 
 .btn-accent,
 .btn-accent:hover,
 .btn-accent:visited { color: #fff; }
 .btn-accent {
-  background: #d2691e;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  background: #174bd9;
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
 }
 .btn-accent:hover {
-  background: #a94f18;
+  background: #123eaf;
 }
 
 .btn-outline,
@@ -258,14 +258,14 @@ button {
 .btn-outline:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: #fdf5f1;
+  background: #f1f5fd;
 }
 
 .btn-danger,
 .btn-danger:hover { color: #fff; }
 .btn-danger {
   background: #dc2626;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
 }
 .btn-danger:hover { transform: translateY(-1px); }
 
@@ -312,7 +312,7 @@ button {
 .form-field textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(210, 105, 30, 0.14);
+  box-shadow: 0 0 0 4px rgba(23, 75, 217, 0.14);
 }
 
 .form-field input.ng-invalid.ng-touched,
@@ -354,7 +354,7 @@ button {
 .alert i { margin-top: 3px; }
 .alert-success { background: #ecfdf3; color: #166534; border: 1px solid #bbf7d0; }
 .alert-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-.alert-info { background: var(--mint); color: var(--ink-2); border: 1px solid rgba(74, 36, 23, 0.2); }
+.alert-info { background: var(--mint); color: var(--ink-2); border: 1px solid rgba(23, 40, 74, 0.2); }
 
 /* File picker used on complaint forms */
 .file-drop {
@@ -368,7 +368,7 @@ button {
   cursor: pointer;
   transition: border-color var(--transition-fast), background var(--transition-fast);
 }
-.file-drop:hover { border-color: var(--accent); background: #fdf5f1; }
+.file-drop:hover { border-color: var(--accent); background: #f1f5fd; }
 .file-drop input[type='file'] { display: none; }
 .file-drop .file-icon {
   width: 44px;
@@ -432,12 +432,12 @@ button {
   background: currentColor;
 }
 
-.status-Pending { background: #fdf0e1; color: #a94f18; }
-.status-UnderReview { background: #f6ebe7; color: #4a2417; }
+.status-Pending { background: #fdf0e1; color: #123eaf; }
+.status-UnderReview { background: #e7ecf6; color: #17284a; }
 .status-ForwardedToDepartment { background: #f3e6ee; color: #7b3a62; }
 .status-ForwardedForFieldEnquiry { background: #fde8e8; color: #b42318; }
 .status-ActionTaken { background: #e3f6ec; color: #147a47; }
-.status-Disposed { background: #f3ecea; color: #4a3026; }
+.status-Disposed { background: #eaedf3; color: #26324a; }
 
 .source-chip {
   display: inline-flex;
@@ -464,13 +464,13 @@ table.data-table th,
 table.data-table td {
   text-align: left;
   padding: 14px 16px;
-  border-bottom: 1px solid #f6f0ed;
+  border-bottom: 1px solid #edf0f6;
   font-size: 0.88rem;
   vertical-align: middle;
 }
 
 table.data-table th {
-  background: #fbf8f6;
+  background: #f6f7fb;
   color: var(--muted);
   font-weight: 700;
   font-size: 0.72rem;
@@ -482,7 +482,7 @@ table.data-table th {
 table.data-table tbody tr { transition: background var(--transition-fast); }
 
 table.data-table tbody tr:hover {
-  background: #fdf5f1;
+  background: #f1f5fd;
   cursor: pointer;
 }
 
@@ -493,7 +493,7 @@ table.data-table tbody tr:hover {
 }
 .empty-state i {
   font-size: 2rem;
-  color: #dcc4b8;
+  color: #b8c3dc;
   display: block;
   margin-bottom: 12px;
 }

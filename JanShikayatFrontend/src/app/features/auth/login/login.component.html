@@ -86,21 +86,33 @@
           </button>
         </div>
 
-        <div class="captcha-row">
-          <div class="captcha-box" aria-label="कैप्चा कोड" role="img">
-            <img *ngIf="captchaImage" [src]="captchaImage" alt="कैप्चा कोड" style="height: 100%; width: auto;" />
-            <span *ngIf="captchaLoading" class="captcha-loading"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
-          </div>
-          <button type="button" class="captcha-refresh" (click)="refreshCaptcha()" aria-label="नया कोड" title="नया कोड">
-            <i class="fa-solid fa-rotate-right"></i>
-          </button>
-        </div>
-
         <div class="field">
-          <div class="field-box single" [class.invalid]="form.get('captcha')?.touched && form.get('captcha')?.invalid">
-            <input id="captcha" type="text" formControlName="captcha" placeholder="ऊपर दिया गया कोड दर्ज करें"
-              autocomplete="off" aria-label="कैप्चा कोड दर्ज करें" />
+          <div class="captcha-field" [class.invalid]="form.get('captcha')?.touched && form.get('captcha')?.invalid">
+            <label for="captcha"><i class="fa-solid fa-shield-halved"></i> सुरक्षा कोड</label>
+            <div class="captcha-body">
+              <div class="captcha-image" [class.loading]="captchaLoading">
+                <img *ngIf="captchaImage" [src]="captchaImage" alt="सुरक्षा कोड (कैप्चा) चित्र" draggable="false" />
+                <span *ngIf="captchaLoading" class="captcha-spinner" aria-hidden="true">
+                  <i class="fa-solid fa-circle-notch fa-spin"></i>
+                </span>
+              </div>
+              <button type="button" class="captcha-refresh" (click)="refreshCaptcha()" [disabled]="captchaLoading"
+                aria-label="नया कोड लाएँ" title="नया कोड लाएँ">
+                <i class="fa-solid fa-rotate-right" [class.fa-spin]="captchaLoading"></i>
+              </button>
+              <input id="captcha" type="text" formControlName="captcha" placeholder="कोड लिखें"
+                [attr.maxlength]="captchaLength" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                inputmode="text" (input)="normaliseCaptcha()" aria-describedby="captcha-hint" />
+            </div>
           </div>
+          <span id="captcha-hint" class="error-text" *ngIf="form.get('captcha')?.touched && form.get('captcha')?.invalid; else captchaHint">
+            कृपया चित्र में दिखाए गए {{ captchaLength }} अक्षर दर्ज करें।
+          </span>
+          <ng-template #captchaHint>
+            <span id="captcha-hint" class="hint-text">
+              अक्षर बड़े-छोटे (A/a) से फ़र्क नहीं पड़ता। पढ़ने में कठिनाई हो तो <i class="fa-solid fa-rotate-right"></i> दबाएँ।
+            </span>
+          </ng-template>
         </div>
 
         <div class="alert alert-error" *ngIf="errorMessage">

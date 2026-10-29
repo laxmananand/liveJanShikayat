@@ -25,15 +25,15 @@ import { STATUS_STAGES, statusStageIndex } from '../../core/utils/labels';
   styles: [`
     .status-flow-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .flow-pill {
-      font-size: 0.72rem; font-weight: 800; color: #7a5a4c; background: #f6ebe7;
+      font-size: 0.72rem; font-weight: 800; color: #4a5a7c; background: #e7ecf6;
       padding: 7px 14px; border-radius: 99px; display: inline-flex; align-items: center; gap: 6px;
     }
-    .flow-pill.active { background: #442214; color: #fff; }
+    .flow-pill.active { background: #142344; color: #fff; }
     .flow-pill.current {
-      background: #d2691e; color: #fff;
+      background: #174bd9; color: #fff;
     }
     .flow-pill.done { background: #15803d; }
-    .flow-arrow { color: #a88a7c; font-size: 0.65rem; }
+    .flow-arrow { color: #7a89aa; font-size: 0.65rem; }
     @media (max-width: 575.98px) {
       .status-flow-bar { gap: 6px; }
       .flow-pill { font-size: 0.68rem; padding: 5px 10px; }

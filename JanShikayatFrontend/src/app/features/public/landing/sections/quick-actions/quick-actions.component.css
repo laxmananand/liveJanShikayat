@@ -10,9 +10,9 @@
   grid-template-columns: repeat(4, 1fr);
   background: #ffffff;
   border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(59, 29, 16, 0.10);
+  box-shadow: 0 6px 16px rgba(16, 29, 59, 0.10);
   overflow: hidden;
-  border: 1px solid rgba(59, 29, 16, 0.08);
+  border: 1px solid rgba(16, 29, 59, 0.08);
 }
 
 .quick-card {
@@ -20,10 +20,10 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  border-right: 1px solid #ecdcd4;
+  border-right: 1px solid #d4dbec;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   text-decoration: none;
-  color: #3b1d10;
+  color: #101d3b;
   position: relative;
 }
 
@@ -32,25 +32,25 @@
 }
 
 .quick-card:hover {
-  background: #fbf6f3;
+  background: #f3f5fb;
 }
 
 .quick-card.primary-action {
-  background: #d2691e;
+  background: #174bd9;
   color: #ffffff;
   border-right-color: transparent;
 }
 
 .quick-card.primary-action:hover {
-  background: #a94f18;
+  background: #123eaf;
 }
 
 .qa-icon-wrap {
   width: 48px;
   height: 48px;
   border-radius: 6px;
-  background: #f6ebe7;
-  color: #4a2417;
+  background: #e7ecf6;
+  color: #17284a;
   display: grid;
   place-items: center;
   font-size: 1.25rem;
@@ -74,7 +74,7 @@
 .qa-content small {
   display: block;
   font-size: 0.68rem;
-  color: #7a5a4c;
+  color: #4a5a7c;
   font-weight: 500;
 }
 
@@ -85,7 +85,7 @@
 .qa-content strong {
   display: block;
   font-size: 0.92rem;
-  color: #3b1d10;
+  color: #101d3b;
   margin-top: 2px;
   font-weight: 700;
 }
@@ -96,7 +96,7 @@
 
 .qa-arrow {
   font-size: 0.85rem;
-  color: #a88a7c;
+  color: #7a89aa;
   transition: all 0.3s ease;
 }
 
@@ -106,7 +106,7 @@
 
 .quick-card:hover .qa-arrow {
   transform: translateX(4px);
-  color: #d2691e;
+  color: #174bd9;
 }
 
 .primary-action:hover .qa-arrow {
@@ -124,7 +124,7 @@
     border-right: 0;
   }
   .quick-card:nth-child(-n+2) {
-    border-bottom: 1px solid #ecdcd4;
+    border-bottom: 1px solid #d4dbec;
   }
 }
 
@@ -140,7 +140,7 @@
   .quick-card {
     padding: 16px 16px;
     border-right: 0 !important;
-    border-bottom: 1px solid #ecdcd4;
+    border-bottom: 1px solid #d4dbec;
   }
   .quick-card:last-child {
     border-bottom: 0;

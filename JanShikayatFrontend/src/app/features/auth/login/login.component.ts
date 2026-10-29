@@ -6,6 +6,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 
 const REMEMBER_KEY = 'js_login_email';
+/** Matches AuthController.GenerateCaptcha (6 characters) */
+const CAPTCHA_LENGTH = 6;
 
 @Component({
   selector: 'app-login',
@@ -23,8 +25,10 @@ export class LoginComponent implements OnDestroy {
     email: [this.rememberedEmail(), [Validators.required]],
     password: ['', Validators.required],
     remember: [!!this.rememberedEmail()],
-    captcha: ['', Validators.required]
+    captcha: ['', [Validators.required, Validators.minLength(CAPTCHA_LENGTH)]]
   });
+
+  readonly captchaLength = CAPTCHA_LENGTH;
 
   loading = false;
   errorMessage = '';
@@ -61,6 +65,13 @@ export class LoginComponent implements OnDestroy {
     });
   }
 
+  /** Uppercase, no spaces — the server compares case-insensitively, this just reads like the image. */
+  normaliseCaptcha(): void {
+    const ctrl = this.form.get('captcha');
+    const value = (ctrl?.value ?? '').replace(/\s+/g, '').toUpperCase().slice(0, CAPTCHA_LENGTH);
+    if (ctrl && value !== ctrl.value) ctrl.setValue(value, { emitEvent: false });
+  }
+
   forgotPassword(): void {
     this.errorMessage = '';
     clearTimeout(this.infoTimer);
@@ -89,6 +100,8 @@ export class LoginComponent implements OnDestroy {
         this.loading = false;
         this.errorMessage = err?.error?.message || err?.message || 'यूज़रनेम, पासवर्ड या कैप्चा गलत है।';
         this.refreshCaptcha();
+        // A used captcha is never valid again, so put the cursor where the new one goes
+        setTimeout(() => document.getElementById('captcha')?.focus());
       }
     });
   }

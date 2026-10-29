@@ -12,17 +12,17 @@
     gap: 0.4rem;
     padding: 0.45rem 0.85rem;
     border-radius: 999px;
-    border: 1px solid #e0d6cc;
+    border: 1px solid #ccd1e0;
     background: #fff;
-    color: #5a4636;
+    color: #363f5a;
     font: inherit;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
 
     &.active {
-      background: #7a2e14;
-      border-color: #7a2e14;
+      background: #14367a;
+      border-color: #14367a;
       color: #fff;
 
       .tab-count {
@@ -36,8 +36,8 @@
     min-width: 1.5rem;
     padding: 0 0.4rem;
     border-radius: 999px;
-    background: #f3ece6;
-    color: #5a4636;
+    background: #e6e9f3;
+    color: #363f5a;
     font-size: 0.75rem;
     text-align: center;
   }
@@ -102,7 +102,7 @@
 
     &.state-pending {
       background: #fdf0e1;
-      color: #a94f18;
+      color: #123eaf;
     }
     &.state-disposed {
       background: #e3f4e7;
@@ -137,7 +137,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(30, 20, 12, 0.45);
+  background: rgba(12, 17, 30, 0.45);
 }
 
 .confirm-modal {
@@ -154,7 +154,7 @@
   h2 {
     margin: 0;
     font-size: 1.1rem;
-    color: #7a2e14;
+    color: #14367a;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -162,23 +162,23 @@
   p {
     margin: 0;
     font-size: 0.88rem;
-    color: #4a3a2d;
+    color: #2d344a;
     line-height: 1.5;
   }
   label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #3a2a1d;
+    color: #1d243a;
 
     small {
       font-weight: 400;
-      color: #8a7563;
+      color: #616c8c;
     }
   }
   textarea {
     width: 100%;
     padding: 0.5rem 0.6rem;
-    border: 1px solid #d9cfc5;
+    border: 1px solid #c5cad9;
     border-radius: 6px;
     font: inherit;
     font-size: 0.88rem;

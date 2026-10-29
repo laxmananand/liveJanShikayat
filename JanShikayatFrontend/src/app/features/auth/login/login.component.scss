@@ -7,15 +7,15 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #f6ebe7;
-  color: #3b1d10;
+  background: #e7ecf6;
+  color: #101d3b;
 }
 
 /* ── Top brand bar ── */
 .login-topbar {
   flex: none;
-  background: #f6ebe7;
-  border-bottom: 1px solid #ead6cc;
+  background: #e7ecf6;
+  border-bottom: 1px solid #ccd5ea;
 }
 
 .topbar-inner {
@@ -39,7 +39,7 @@
 .topbar-divider {
   width: 1px;
   height: 36px;
-  background: #e0b9a3;
+  background: #a3b5e0;
 }
 
 .topbar-text {
@@ -47,8 +47,8 @@
   flex-direction: column;
   line-height: 1.25;
 
-  strong { color: #d2691e; font-size: 1.05rem; font-weight: 700; }
-  small { color: #d2691e; font-size: 0.72rem; font-weight: 600; }
+  strong { color: #174bd9; font-size: 1.05rem; font-weight: 700; }
+  small { color: #174bd9; font-size: 0.72rem; font-weight: 600; }
 }
 
 .topbar-nav {
@@ -58,15 +58,15 @@
   font-size: 0.9rem;
   font-weight: 500;
 
-  a { color: #3b1d10; }
-  a:hover { color: #d2691e; }
+  a { color: #101d3b; }
+  a:hover { color: #174bd9; }
 }
 
 .topbar-login {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #4a2417;
+  background: #17284a;
   color: #ffffff;
   padding: 9px 20px;
   border-radius: 6px;
@@ -84,12 +84,12 @@
   background: #ffffff;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(74, 36, 23, 0.10);
+  box-shadow: 0 10px 30px rgba(23, 40, 74, 0.10);
 }
 
 /* ── Brand panel ── */
 .brand-panel {
-  background: linear-gradient(150deg, #5a2a14 0%, #6b3219 55%, #8a4a26 100%);
+  background: linear-gradient(150deg, #142a5a 0%, #19336b 55%, #22418e 100%);
   color: #ffffff;
   padding: 40px 48px;
   display: flex;
@@ -102,7 +102,7 @@
   .welcome {
     display: block;
     font-size: 1.15rem;
-    color: #ead6cc;
+    color: #ccd5ea;
     margin-bottom: 6px;
   }
 
@@ -118,14 +118,14 @@
     margin: 0 0 16px;
     font-size: 1.15rem;
     font-weight: 700;
-    color: #fbe3d4;
+    color: #d4dffb;
   }
 
   p {
     margin: 22px 0 0;
     font-size: 0.95rem;
     line-height: 1.7;
-    color: #ead6cc;
+    color: #ccd5ea;
   }
 }
 
@@ -133,7 +133,7 @@
   display: block;
   width: 60px;
   height: 3px;
-  background: #d2691e;
+  background: #174bd9;
   border-radius: 2px;
   margin: 22px 0;
 }
@@ -142,8 +142,8 @@
   display: inline-block;
   padding: 8px 22px;
   border-radius: 999px;
-  background: rgba(210, 105, 30, 0.22);
-  border: 1px solid rgba(244, 180, 138, 0.45);
+  background: rgba(23, 75, 217, 0.22);
+  border: 1px solid rgba(138, 167, 244, 0.45);
   color: #ffffff;
   font-size: 0.8rem;
   font-weight: 700;
@@ -159,7 +159,7 @@
 .form-logos {
   text-align: center;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f0e2db;
+  border-bottom: 1px solid #dbe1f0;
   margin-bottom: 12px;
 }
 
@@ -177,14 +177,14 @@
   text-align: left;
   line-height: 1.25;
 
-  strong { font-size: 1rem; color: #3b1d10; }
-  small { font-size: 0.7rem; font-weight: 700; color: #d2691e; letter-spacing: 0.02em; }
+  strong { font-size: 1rem; color: #101d3b; }
+  small { font-size: 0.7rem; font-weight: 700; color: #174bd9; letter-spacing: 0.02em; }
 }
 
 .nic-line {
   margin: 4px 0 0;
   font-size: 0.7rem;
-  color: #7a5a4c;
+  color: #4a5a7c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -197,7 +197,7 @@
   margin: 0 0 12px;
   font-size: 1.35rem;
   font-weight: 700;
-  color: #3b1d10;
+  color: #101d3b;
 }
 
 /* Boxed fields with the label inside, as in the sample */
@@ -205,8 +205,8 @@
 
 .field-box {
   position: relative;
-  background: #f6ebe7;
-  border: 1px solid #e3cbc0;
+  background: #e7ecf6;
+  border: 1px solid #c0cbe3;
   border-radius: 8px;
   padding: 6px 14px 7px;
   transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -217,7 +217,7 @@
     gap: 6px;
     font-size: 0.75rem;
     font-weight: 500;
-    color: #d2691e;
+    color: #174bd9;
     margin-bottom: 2px;
   }
 
@@ -228,18 +228,18 @@
     padding: 2px 0;
     font-size: 0.95rem;
     font-family: inherit;
-    color: #3b1d10;
+    color: #101d3b;
     outline: none;
   }
 
-  input::placeholder { color: #b8998b; }
+  input::placeholder { color: #8998ba; }
 
   /* keep browser autofill from painting the box light blue */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #3b1d10;
-    -webkit-box-shadow: 0 0 0 40px #f6ebe7 inset;
+    -webkit-text-fill-color: #101d3b;
+    -webkit-box-shadow: 0 0 0 40px #e7ecf6 inset;
     transition: background-color 9999s ease-out;
   }
 
@@ -247,8 +247,8 @@
   &.has-action { padding-right: 48px; }
 
   &:focus-within {
-    border-color: #d2691e;
-    box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.15);
+    border-color: #174bd9;
+    box-shadow: 0 0 0 3px rgba(23, 75, 217, 0.15);
   }
 
   &.invalid { border-color: #e0918a; }
@@ -261,11 +261,11 @@
   transform: translateY(-50%);
   border: none;
   background: transparent;
-  color: #d2691e;
+  color: #174bd9;
   font-size: 1rem;
   padding: 4px;
 
-  &:hover { color: #a94f18; }
+  &:hover { color: #123eaf; }
 }
 
 .form-row {
@@ -281,65 +281,146 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #3b1d10;
+  color: #101d3b;
   cursor: pointer;
 
-  input { width: 15px; height: 15px; accent-color: #d2691e; margin: 0; }
+  input { width: 15px; height: 15px; accent-color: #174bd9; margin: 0; }
 }
 
 .link-btn {
   border: none;
   background: transparent;
-  color: #d2691e;
+  color: #174bd9;
   font-size: 0.88rem;
   padding: 0;
   display: inline-flex;
   align-items: center;
   gap: 5px;
 
-  &:hover { color: #a94f18; text-decoration: underline; }
+  &:hover { color: #123eaf; text-decoration: underline; }
 }
 
 /* Captcha */
-.captcha-row {
-  display: grid;
-  grid-template-columns: 1fr 48px;
-  gap: 10px;
-  margin-bottom: 10px;
+/* Captcha: one boxed field (like the others) holding image, refresh and input */
+.captcha-field {
+  background: #e7ecf6;
+  border: 1px solid #c0cbe3;
+  border-radius: 8px;
+  padding: 6px 8px 8px 14px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #174bd9;
+    margin-bottom: 5px;
+  }
+
+  &:focus-within {
+    border-color: #174bd9;
+    box-shadow: 0 0 0 3px rgba(23, 75, 217, 0.15);
+  }
+
+  &.invalid { border-color: #e0918a; }
 }
 
-.captcha-box {
-  height: 44px;
-  border: 1px solid #e3cbc0;
-  border-radius: 8px;
-  background:
-    repeating-linear-gradient(115deg, transparent 0 14px, rgba(210, 105, 30, 0.12) 14px 15px),
-    #fbf3ef;
+.captcha-body {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 0 16px;
+  gap: 8px;
+}
+
+.captcha-image {
+  position: relative;
+  flex: 0 0 132px;
+  height: 40px;
+  border-radius: 6px;
+  /* Same tone as the field so the code sits flush, with no frame of its own */
+  background: #dde4f3;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   user-select: none;
 
-  span {
-    display: inline-block;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #3b1d10;
-
-    &:nth-child(even) { color: #d2691e; }
+  img {
+    width: 100%;
+    height: 100%;
+    /* Crop the SVG's empty margins so the characters fill the tile */
+    object-fit: cover;
+    transform: scale(1.12);
+    pointer-events: none;
+    transition: opacity 150ms ease;
   }
+
+  &.loading img { opacity: 0.25; }
+}
+
+.captcha-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #174bd9;
 }
 
 .captcha-refresh {
-  border: 1px solid #e3cbc0;
-  border-radius: 8px;
-  background: #f6ebe7;
-  color: #d2691e;
-  font-size: 1rem;
+  flex: 0 0 36px;
+  height: 36px;
+  border: 1px solid #c0cbe3;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #174bd9;
+  font-size: 0.9rem;
+  transition: border-color 150ms ease, background 150ms ease;
 
-  &:hover { border-color: #d2691e; }
+  &:hover:not(:disabled) { border-color: #174bd9; background: #f3f6fd; }
+  &:disabled { opacity: 0.6; cursor: wait; }
+}
+
+.captcha-body input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid #c0cbe3;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0 10px;
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #101d3b;
+  outline: none;
+
+  &:focus { border-color: #174bd9; }
+
+  &::placeholder {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: #8998ba;
+  }
+}
+
+.hint-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: #5d6b8a;
+
+  i { font-size: 0.7rem; color: #174bd9; }
+}
+
+@media (max-width: 380px) {
+  .captcha-image { flex-basis: 108px; }
 }
 
 .login-btn {
@@ -348,7 +429,7 @@
   padding: 12px 20px;
   border: none;
   border-radius: 8px;
-  background: #d2691e;
+  background: #174bd9;
   color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
@@ -358,7 +439,7 @@
   gap: 10px;
   transition: background 150ms ease;
 
-  &:hover:not(:disabled) { background: #b5561a; }
+  &:hover:not(:disabled) { background: #1442bb; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
@@ -375,9 +456,9 @@
 
 .register-line {
   margin: 0;
-  color: #3b1d10;
+  color: #101d3b;
 
-  a { color: #d2691e; font-weight: 700; margin-left: 4px; }
+  a { color: #174bd9; font-weight: 700; margin-left: 4px; }
   a:hover { text-decoration: underline; }
 }
 
@@ -386,16 +467,16 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #d2691e;
+  color: #174bd9;
 
-  &:hover { color: #a94f18; }
+  &:hover { color: #123eaf; }
 }
 
 /* Demo shortcuts (mock build only) */
 .demo-accounts {
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px dashed #e3cbc0;
+  border-top: 1px dashed #c0cbe3;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -405,7 +486,7 @@
   margin: 0;
   flex: none;
   font-size: 0.72rem;
-  color: #7a5a4c;
+  color: #4a5a7c;
 }
 
 .demo-list {
@@ -415,15 +496,15 @@
 }
 
 .demo-chip {
-  border: 1px solid #e3cbc0;
-  background: #fbf6f3;
-  color: #4a2417;
+  border: 1px solid #c0cbe3;
+  background: #f3f5fb;
+  color: #17284a;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
 
-  &:hover { border-color: #d2691e; color: #d2691e; }
+  &:hover { border-color: #174bd9; color: #174bd9; }
 }
 
 /* ── Responsive ── */

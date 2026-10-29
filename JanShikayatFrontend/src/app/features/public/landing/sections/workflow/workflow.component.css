@@ -1,5 +1,5 @@
 .workflow-section {
-  background: #933b12;
+  background: #0d3798;
   color: #ffffff;
   overflow: hidden;
   position: relative;
@@ -22,11 +22,11 @@
 }
 
 .accent-text-light {
-  color: #f4b48a;
+  color: #8aa7f4;
 }
 
 .light-heading p {
-  color: #f6dccd;
+  color: #cdd9f6;
 }
 
 .timeline-wrapper {
@@ -69,28 +69,28 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #7a300f;
+  background: #0f307a;
   border: 2px solid rgba(255, 255, 255, 0.25);
   display: grid;
   place-items: center;
-  color: #f4b48a;
+  color: #8aa7f4;
   font-size: 0.85rem;
   font-weight: 700;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
   transition: all 0.3s ease;
 }
 
 .timeline-item:first-child .timeline-marker {
   background: #ffffff;
   border-color: #ffffff;
-  color: #933b12;
-  box-shadow: 0 1px 2px rgba(59, 29, 16, 0.06);
+  color: #0d3798;
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
 }
 
 .timeline-item:hover .timeline-marker {
   transform: scale(1.1);
-  border-color: #f4b48a;
-  background: #4a2417;
+  border-color: #8aa7f4;
+  background: #17284a;
   color: #ffffff;
 }
 
@@ -110,18 +110,18 @@
 
 .timeline-item:hover .timeline-card {
   background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(232, 183, 126, 0.5);
+  border-color: rgba(126, 149, 232, 0.5);
 }
 
 .timeline-icon {
   width: 44px;
   height: 44px;
   border-radius: 6px;
-  background: rgba(210, 105, 30, 0.14);
+  background: rgba(23, 75, 217, 0.14);
   display: grid;
   place-items: center;
   margin-bottom: 14px;
-  color: #f4b48a;
+  color: #8aa7f4;
   font-size: 1.1rem;
 }
 
@@ -136,7 +136,7 @@
 .timeline-card p {
   font-size: 0.72rem;
   line-height: 1.6;
-  color: #a88a7c;
+  color: #7a89aa;
   margin: 0;
 }
 
@@ -170,7 +170,7 @@
     width: 2px;
     height: auto;
     right: auto;
-    background: #d2691e;
+    background: #174bd9;
     z-index: 1;
   }
   .timeline-item {
