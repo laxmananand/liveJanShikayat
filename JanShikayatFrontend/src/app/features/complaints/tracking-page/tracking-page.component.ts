@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, map } from 'rxjs';
 import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
@@ -149,6 +149,11 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   sourceLabel = sourceLabel;
   statusProgress = statusProgress;
 
+  /** Admin tracks every application; other logins only those forwarded to their branch / Prashakha. */
+  get isAdmin(): boolean {
+    return this.auth.hasRole('SuperAdmin');
+  }
+
   ngOnInit(): void {
     // Listen to query params if tracking specific ID from elsewhere
     this.route.queryParams.subscribe((params) => {
@@ -167,17 +172,22 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
     this.revokePdfUrl();
   }
 
-  /** Live data: every finalised application with its latest forward. `force` skips the in-memory cache. */
+  /**
+   * Live data with each application's latest forward. Admin sees every finalised application; other
+   * logins see only the applications forwarded to them (the server scopes get-my-forwards).
+   * `force` skips the in-memory cache.
+   */
   loadComplaints(force = false): void {
     this.loading = true;
     this.errorMessage = '';
     forkJoin({
       records: this.applicantService.getApplicants(force),
-      forwards: this.forwardService.latestByApplicant(force)
+      forwards: this.isAdmin ? this.forwardService.latestByApplicant(force) : this.myLatestForwards(force)
     }).subscribe({
       next: ({ records, forwards }) => {
-        this.trackedList = records.map((r) => this.toTracked(r, forwards.get(r.id) ?? null));
-        this.districts = [...new Set(records.map((r) => r.districtName).filter(Boolean))].sort();
+        const visible = this.isAdmin ? records : records.filter((r) => forwards.has(r.id));
+        this.trackedList = visible.map((r) => this.toTracked(r, forwards.get(r.id) ?? null));
+        this.districts = [...new Set(visible.map((r) => r.districtName).filter(Boolean))].sort();
         this.applyFilters();
         this.updateMetrics();
         this.loading = false;
@@ -195,6 +205,17 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
               : `परिवाद लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
       }
     });
+  }
+
+  /** Forwards to this login, newest first → latest forward per application id. */
+  private myLatestForwards(force: boolean): Observable<Map<number, ForwardRecord>> {
+    return this.forwardService.myForwards(force).pipe(
+      map((list) => {
+        const latest = new Map<number, ForwardRecord>();
+        list.forEach((f) => latest.has(f.applicantId) || latest.set(f.applicantId, f));
+        return latest;
+      })
+    );
   }
 
   /**

@@ -24,15 +24,19 @@
       <h1 class="page-title">शिकायत ट्रैकिंग एवं स्थिति जांच (Grievance Tracking)</h1>
       <p class="page-sub">
         शिकायत संदर्भ संख्या (Tracking ID), मोबाइल नंबर अथवा आवेदक के नाम से परिवाद की वास्तविक स्थिति, वर्तमान शाखा एवं अपलोड किए गए दस्तावेज़ों को ट्रैक करें।
+        <ng-container *ngIf="!isAdmin"><br /><strong>केवल आपकी शाखा / प्रशाखा को अग्रेषित आवेदन दिखाए जा रहे हैं।</strong></ng-container>
       </p>
     </div>
 
     <div class="header-actions">
-      <a *ngIf="auth.hasRole('SuperAdmin')" routerLink="/complaints/entry" class="btn btn-primary-accent">
+      <a *ngIf="isAdmin" routerLink="/complaints/entry" class="btn btn-primary-accent">
         <i class="fa-solid fa-file-signature"></i> नई प्रविष्टि दर्ज करें
       </a>
-      <a routerLink="/complaints" class="btn btn-outline">
+      <a *ngIf="isAdmin" routerLink="/complaints" class="btn btn-outline">
         <i class="fa-solid fa-folder-open"></i> सभी शिकायतें
+      </a>
+      <a *ngIf="!isAdmin" routerLink="/complaints/forwarded" class="btn btn-outline">
+        <i class="fa-solid fa-share-from-square"></i> अग्रेषित आवेदन
       </a>
     </div>
   </div>
@@ -535,7 +539,7 @@
       <button type="button" class="btn btn-outline" (click)="onReset()">
         <i class="fa-solid fa-rotate-right"></i> सभी फ़िल्टर साफ़ करें
       </button>
-      <a *ngIf="auth.hasRole('SuperAdmin')" routerLink="/complaints/entry" class="btn btn-primary-accent">
+      <a *ngIf="isAdmin" routerLink="/complaints/entry" class="btn btn-primary-accent">
         <i class="fa-solid fa-file-pen"></i> शिकायत प्रविष्टि
       </a>
     </div>
