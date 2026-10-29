@@ -164,7 +164,7 @@ namespace janshikayat.BAL.Services
                   WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
                     AND EXISTS (SELECT 1 FROM Mst_Branch b
                                 WHERE b.Complain_id = TRY_CAST(@BranchId AS BIGINT) AND b.Is_Active = 1
-                                  AND TRY_CAST(@CategoryId AS INT) IN (b.Home_Categ, b.Section_Categ, b.District_Categ))
+                                  AND TRY_CAST(@CategoryId AS INT) IN (b.Home_Categ, b.Section_Categ, b.District_Categ, b.Regional_Categ))
                     AND EXISTS (SELECT 1 FROM Mst_Complain_Sub_Type s
                                 WHERE s.Sub_Type_id = TRY_CAST(@ComplaintTypeId AS BIGINT)
                                   AND s.Complain_Id = TRY_CAST(@BranchId AS BIGINT))
@@ -174,10 +174,11 @@ namespace janshikayat.BAL.Services
                               THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Prashakha p WHERE CAST(p.ID AS INT) = @PrashakhaId) THEN 1 ELSE 0 END
                               ELSE CASE WHEN @PrashakhaId IS NULL THEN 1 ELSE 0 END
                          END) = 1
-                    -- District Administration needs a regional office of that category, plus one of its offices
-                    -- when it has a list (IG / DIG / SP have none yet); other categories must not carry either
+                    -- District Administration / Regional Office need a regional office of that category, plus one of its
+                    -- offices when it has a list (IG / DIG / SP have none yet); other categories must not carry either
                     AND (CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
-                                           WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT) AND c.Category = 'District Administration')
+                                           WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT)
+                                             AND c.Category IN ('District Administration', 'Regional Office'))
                               THEN CASE WHEN EXISTS (SELECT 1 FROM Mst_Regional_Office o
                                                      WHERE o.Office_Id = @OfficeId AND o.Is_Active = 1
                                                        AND o.Category_Id = TRY_CAST(@CategoryId AS INT)

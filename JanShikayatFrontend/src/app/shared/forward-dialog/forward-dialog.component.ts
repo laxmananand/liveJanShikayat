@@ -10,10 +10,10 @@ import { AuthService } from '../../core/services/auth.service';
 /**
  * Forward popup: category → branch → complaint type (+ optional remark).
  * "Section" first asks for a Prashakha (Mst_Prashakha); that Prashakha's login receives the application.
- * "District Administration" first asks for a regional office (Mst_Regional_Office: Commissioner, DM, IG, DIG, SP)
- * and then one office of it (vw_Office_Unit: 9 Commissioners / 38 DM offices); an office without a list
- * (IG, DIG, SP for now) skips that step and goes straight to the branch.
- * Options come from Mst_Category → Mst_Branch (Home/Section/District_Categ) → Mst_Complain_Sub_Type.
+ * "District Administration" (DM, SP) and "Regional Office" (Commissioner, IG, DIG) first ask for an office of that
+ * category (Mst_Regional_Office) and then one unit of it (vw_Office_Unit: 9 Commissioners / 38 DM offices); an office
+ * without a list (IG, DIG, SP for now) skips that step and goes straight to the branch.
+ * Options come from Mst_Category → Mst_Branch (Home/Section/District/Regional_Categ) → Mst_Complain_Sub_Type.
  * The "Department" category instead lists Mst_Departments and shows that department's email in step 3;
  * sending it by email is not built yet, so that forward is a frontend-only demo (nothing is saved).
  */
@@ -74,10 +74,10 @@ export class ForwardDialogComponent implements OnChanges {
     return c?.label.trim().toLowerCase() === 'section';
   }
 
-  /** District Administration goes to a regional office and one of its offices first (matched by name, like Department). */
-  get isDistrictAdmin(): boolean {
+  /** District Administration / Regional Office go to an office of that category first (matched by name, like Department). */
+  get hasOffices(): boolean {
     const c = this.categories.find((x) => x.id === this.form.controls.categoryId.value);
-    return c?.label.trim().toLowerCase() === 'district administration';
+    return ['district administration', 'regional office'].includes(c?.label.trim().toLowerCase() ?? '');
   }
 
   /** The officer step is hidden once the chosen office turns out to have no list (IG, DIG, SP). */
@@ -85,15 +85,15 @@ export class ForwardDialogComponent implements OnChanges {
     return !this.form.controls.officeId.value || this.loadingOfficeUnits || this.officeUnits.length > 0;
   }
 
-  /** District Administration: office chosen, plus an officer when that office has a list. */
+  /** District Administration / Regional Office: office chosen, plus an officer when that office has a list. */
   private get officeComplete(): boolean {
     const { officeId, officeUnitId } = this.form.controls;
     return !!officeId.value && !this.loadingOfficeUnits && (!this.officeUnits.length || !!officeUnitId.value);
   }
 
-  /** Section adds the Prashakha step and District Administration the office step(s), so later steps shift. */
+  /** Section adds the Prashakha step and District Administration / Regional Office the office step(s), so later steps shift. */
   get stepOffset(): number {
-    return this.isSection ? 1 : this.isDistrictAdmin ? (this.showOfficeUnit ? 2 : 1) : 0;
+    return this.isSection ? 1 : this.hasOffices ? (this.showOfficeUnit ? 2 : 1) : 0;
   }
 
   ngOnChanges(): void {
@@ -149,7 +149,7 @@ export class ForwardDialogComponent implements OnChanges {
     if (!selected) return;
 
     if (this.isSection) this.loadPrashakhas();
-    if (this.isDistrictAdmin) this.loadOffices(+selected);
+    if (this.hasOffices) this.loadOffices(+selected);
 
     this.loadingBranches = true;
     if (this.isDepartment) {
@@ -176,8 +176,8 @@ export class ForwardDialogComponent implements OnChanges {
         if (categoryId.value !== selected) return;
         this.branches = list.map((b) => ({ id: String(b.complain_id), label: `${b.branch_Hindi?.trim()} / ${b.branch_Eng}` }));
         this.loadingBranches = false;
-        // Section / District Administration: the branch is picked only after the Prashakha / office
-        if (this.branches.length && (!this.isSection || prashakhaId.value) && (!this.isDistrictAdmin || this.officeComplete))
+        // Section / office categories: the branch is picked only after the Prashakha / office
+        if (this.branches.length && (!this.isSection || prashakhaId.value) && (!this.hasOffices || this.officeComplete))
           branchId.enable();
       },
       error: () => {
@@ -302,9 +302,9 @@ export class ForwardDialogComponent implements OnChanges {
     this.form.markAllAsTouched();
     if (!categoryId.value || !branchId.value || !complaintTypeId.value || this.form.invalid) return;
     if (this.isSection && !prashakhaId.value) return;
-    if (this.isDistrictAdmin && !this.officeComplete) return;
+    if (this.hasOffices && !this.officeComplete) return;
     const prashakha = this.isSection ? this.prashakhas.find((p) => p.id === prashakhaId.value) : undefined;
-    const office = this.isDistrictAdmin ? this.offices.find((o) => o.id === officeId.value) : undefined;
+    const office = this.hasOffices ? this.offices.find((o) => o.id === officeId.value) : undefined;
     const officeUnit = office && this.officeUnits.length ? this.officeUnits.find((u) => u.id === officeUnitId.value) : undefined;
 
     const category = this.categories.find((c) => c.id === categoryId.value)!;

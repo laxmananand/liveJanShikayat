@@ -7,6 +7,7 @@
 -- IG / DIG / SP have no office list yet, so they go straight to the branch; to give one a list,
 -- add a table for it and UNION it into vw_Office_Unit (the popup and the save check then require an officer).
 -- Safe to re-run: tables/columns are created only if missing; rows are upserted.
+-- Commissionary / IG / DIG now sit under Regional Office (5): re-run Regional_Office_Category.sql after this script.
 
 USE Jansikayat_DB;
 GO

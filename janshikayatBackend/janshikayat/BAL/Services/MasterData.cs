@@ -121,7 +121,8 @@ namespace janshikayat.BAL.Services
 
             var sql = @"select Complain_id, Branch_Eng, Branch_Hindi from Mst_Branch
                         where Is_Active = 1
-                          and (Home_Categ = @CategoryId or Section_Categ = @CategoryId or District_Categ = @CategoryId)
+                          and (Home_Categ = @CategoryId or Section_Categ = @CategoryId or District_Categ = @CategoryId
+                               or Regional_Categ = @CategoryId)
                         order by Complain_id";
 
             return conn.Query<MstBranch>(sql, new { CategoryId = categoryId }).ToList();
