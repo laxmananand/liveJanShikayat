@@ -69,5 +69,7 @@ export const DEMO_ROLE_LABELS: Record<AppRole, string> = {
   SuperAdmin: 'सुपर एडमिन',
   BranchOfficer: 'शाखा अधिकारी',
   DepartmentHead: 'विभागाध्यक्ष',
-  CompetentAuthority: 'सक्षम प्राधिकारी (एसडीओ)'
+  CompetentAuthority: 'सक्षम प्राधिकारी (एसडीओ)',
+  Commissioner: 'प्रमंडलीय आयुक्त',
+  DistrictMagistrate: 'जिलाधिकारी'
 };

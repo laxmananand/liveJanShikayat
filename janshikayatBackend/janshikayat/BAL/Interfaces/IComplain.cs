@@ -10,7 +10,7 @@ namespace janshikayat.BAL.Interfaces
         ApplicantForwardDto? ForwardApplicant(ApplicantForwardRequest request, string forwardedBy, string? ip);
         IEnumerable<ApplicantForwardDto> GetForwards();
         bool IsForwarded(long applicantId);
-        IEnumerable<ApplicantForwardDto> GetLatestForwards(bool all, long? branchId, int? prashakhaId);
+        IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope);
         ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
         string? GetRemarkDocumentPath(long remarkId);
@@ -20,5 +20,7 @@ namespace janshikayat.BAL.Interfaces
         bool IsClosed(long applicantId);
         ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
         PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);
+        IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope);
+        IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope);
     }
 }

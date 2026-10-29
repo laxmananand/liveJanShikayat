@@ -149,7 +149,8 @@ namespace janshikayat.BAL.Services
             var user = conn.QueryFirstOrDefault<UserLoginRow>(
                 @"SELECT TOP 1
                        t.AutoId, t.UserName, t.Password,
-                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId, t.Prashakha_Id AS PrashakhaId
+                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId, t.Prashakha_Id AS PrashakhaId,
+                       t.Office_Id AS OfficeId, t.Office_Unit_Code AS OfficeUnitCode
                   FROM Tbl_UserLogin t
                   LEFT JOIN Mst_Role r ON t.Role = r.Id
                   WHERE t.UserName = @UserName AND t.Password = @Password",
@@ -162,7 +163,7 @@ namespace janshikayat.BAL.Services
 
             string roleStr = user.RoleName ?? "";
             // 5) Generate JWT
-            var token = GenerateJwtToken(user.UserName, roleStr, user.BranchId, user.PrashakhaId);
+            var token = GenerateJwtToken(user.UserName, roleStr, user.BranchId, user.PrashakhaId, user.OfficeId, user.OfficeUnitCode);
             return new LoginResponse
             {
                 AuthToken = token,
@@ -170,7 +171,9 @@ namespace janshikayat.BAL.Services
                 username = user.UserName,
                 ROLE = roleStr,
                 branchId = user.BranchId,
-                prashakhaId = user.PrashakhaId
+                prashakhaId = user.PrashakhaId,
+                officeId = user.OfficeId,
+                officeUnitCode = user.OfficeUnitCode
             };
         }
 
@@ -182,7 +185,8 @@ namespace janshikayat.BAL.Services
         }
 
      
-        private string GenerateJwtToken(string LOGIN_ID, string role = null, long? branchId = null, int? prashakhaId = null)
+        private string GenerateJwtToken(string LOGIN_ID, string role = null, long? branchId = null, int? prashakhaId = null,
+                                        int? officeId = null, int? officeUnitCode = null)
         {
             var claims = new List<Claim>
             {
@@ -201,6 +205,13 @@ namespace janshikayat.BAL.Services
             // Tbl_UserLogin.Prashakha_Id -> Mst_Prashakha.ID; Section forwards to that Prashakha reach this login
             if (prashakhaId.HasValue)
                 claims.Add(new Claim("PrashakhaId", prashakhaId.Value.ToString()));
+
+            // Tbl_UserLogin.Office_Id / Office_Unit_Code -> vw_Office_Unit; Commissioner / DM logins see their office's forwards
+            if (officeId.HasValue && officeUnitCode.HasValue)
+            {
+                claims.Add(new Claim("OfficeId", officeId.Value.ToString()));
+                claims.Add(new Claim("OfficeUnitCode", officeUnitCode.Value.ToString()));
+            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -232,6 +243,8 @@ namespace janshikayat.BAL.Services
             public bool? IsActive { get; set; }
             public long? BranchId { get; set; }
             public int? PrashakhaId { get; set; }
+            public int? OfficeId { get; set; }
+            public int? OfficeUnitCode { get; set; }
         }
     }
 }

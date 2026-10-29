@@ -218,26 +218,120 @@ namespace janshikayat.BAL.Services
                   ORDER BY f.ForwardedDate, f.ID");
         }
 
-        // Latest forward per application, newest first.
-        // all = true: every forward (Admin); otherwise those sent to the user's branch or to the user's Prashakha.
-        public IEnumerable<ApplicantForwardDto> GetLatestForwards(bool all, long? branchId, int? prashakhaId)
+        // Latest forward per application, newest first, limited to what the login may see (ScopeFilter)
+        public IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope)
         {
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicantForwardDto>(
-                @"SELECT x.ApplicantId, x.CategoryId, x.CategoryLabel, x.BranchId, x.BranchLabel,
-                         x.ComplaintTypeId, x.ComplaintTypeLabel, x.Remarks, x.ForwardedBy, x.ForwardedDate AS ForwardedAt,
-                         x.PrashakhaId, x.PrashakhaLabel, x.OfficeId, x.OfficeLabel, x.OfficeUnitCode, x.OfficeUnitLabel,
+                @"SELECT f.ApplicantId, f.CategoryId, f.CategoryLabel, f.BranchId, f.BranchLabel,
+                         f.ComplaintTypeId, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt,
+                         f.PrashakhaId, f.PrashakhaLabel, f.OfficeId, f.OfficeLabel, f.OfficeUnitCode, f.OfficeUnitLabel,
                          " + ClosureColumns + @"
-                  FROM (SELECT f.*, ROW_NUMBER() OVER (PARTITION BY f.ApplicantId ORDER BY f.ForwardedDate DESC, f.ID DESC) AS rn
-                        FROM Tbl_Applicant_Forward f) x
-                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = x.ApplicantId
-                  WHERE x.rn = 1
-                    AND (@All = 1
-                         OR (@BranchId IS NOT NULL AND x.BranchId = CAST(@BranchId AS VARCHAR(50)))
-                         OR (@PrashakhaId IS NOT NULL AND x.PrashakhaId = @PrashakhaId))
-                  ORDER BY x.ForwardedDate DESC, x.ID DESC",
-                new { All = all, BranchId = branchId, PrashakhaId = prashakhaId });
+                  FROM (SELECT x.*, ROW_NUMBER() OVER (PARTITION BY x.ApplicantId ORDER BY x.ForwardedDate DESC, x.ID DESC) AS rn
+                        FROM Tbl_Applicant_Forward x) f
+                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
+                  WHERE f.rn = 1 AND " + ScopeFilter + @"
+                  ORDER BY f.ForwardedDate DESC, f.ID DESC",
+                scope);
+        }
+
+        // Applications a login may see, for a query whose forward is f (Tbl_Applicant_Forward, LEFT JOINed
+        // where unforwarded applications count) and whose parameters are an AccessScope:
+        //   Admin all; Branch / Prashakha their forwards; Commissioner its own forwards and those to the DM offices
+        //   of its division; DM its own forwards
+        private const string ScopeFilter =
+            @"(@All = 1
+               OR (@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
+               OR (@PrashakhaId IS NOT NULL AND f.PrashakhaId = @PrashakhaId)
+               OR (@OfficeId = 1 AND ((f.OfficeId = 1 AND f.OfficeUnitCode = @OfficeUnitCode)
+                                      OR (f.OfficeId = 2 AND f.OfficeUnitCode IN (SELECT m.Dist_Code FROM Mst_DM_Office m
+                                                                                  WHERE m.Division_Code = @OfficeUnitCode))))
+               OR (@OfficeId = 2 AND f.OfficeId = 2 AND f.OfficeUnitCode = @OfficeUnitCode))";
+
+        // Pendency Report: shared FROM / WHERE. An application is forwarded once (UX_Applicant_Forward_ApplicantId),
+        // so f is its forward or NULL; c is its closure or NULL. Village / thana / panchayat may be 0 (not selected).
+        private const string PendencySource =
+            @"FROM Tbl_Applicant_Details d
+              LEFT JOIN Tbl_Applicant_Forward f ON f.ApplicantId = d.ID
+              LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = d.ID
+              LEFT JOIN mst_Commissionary_Districts dist ON dist.DISTRICTCODE = d.District
+              LEFT JOIN Blocks b ON b.BlockCode = d.Block AND b.DistCode = d.District
+              LEFT JOIN mst_Panchayats pt ON pt.PanchayatCode = d.Panchayat AND pt.BlockCode = d.Block AND pt.DistrictCode = d.District
+              LEFT JOIN mst_VillageMaster v ON v.VILLCODE = d.Village AND v.BLOCKCODE = d.Block AND v.DISTCODE = d.District
+              LEFT JOIN mst_thana th ON th.PS_Code = d.Thana
+              WHERE d.Is_Active = 1
+                AND (@District IS NULL OR d.District = @District)
+                AND (@Block IS NULL OR d.Block = @Block)
+                AND (@Thana IS NULL OR ISNULL(d.Thana, 0) = @Thana)
+                AND (@Panchayat IS NULL OR ISNULL(d.Panchayat, 0) = @Panchayat)
+                AND (@FromDate IS NULL OR d.Application_Date >= @FromDate)
+                AND (@ToDate IS NULL OR d.Application_Date < DATEADD(DAY, 1, @ToDate))
+                AND ";
+
+        private static DynamicParameters PendencyParameters(PendencyReportRequest request, AccessScope scope)
+        {
+            var parameters = new DynamicParameters(scope);
+            parameters.Add("@District", request.District);
+            parameters.Add("@Block", request.Block);
+            parameters.Add("@Thana", request.Thana);
+            parameters.Add("@Panchayat", request.Panchayat);
+            parameters.Add("@FromDate", request.FromDate?.Date);
+            parameters.Add("@ToDate", request.ToDate?.Date);
+            return parameters;
+        }
+
+        // Counts per district / block / thana / panchayat; the grouping columns come from this fixed list, never the request
+        public IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope)
+        {
+            var (code, name) = (request.Level ?? "").ToLowerInvariant() switch
+            {
+                "block" => ("CAST(ISNULL(d.Block, 0) AS BIGINT)", "b.BlockName"),
+                "thana" => ("CAST(ISNULL(d.Thana, 0) AS BIGINT)", "th.Police_Station"),
+                "panchayat" => ("CAST(ISNULL(d.Panchayat, 0) AS BIGINT)", "pt.PanchayatName"),
+                _ => ("CAST(ISNULL(d.District, 0) AS BIGINT)", "dist.DISTRICTNAME")
+            };
+
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<PendencyRowDto>(
+                $@"SELECT {code} AS Code, ISNULL(MAX({name}), '') AS Name,
+                          COUNT(*) AS Total,
+                          SUM(CASE WHEN f.ID IS NULL THEN 1 ELSE 0 END) AS Unforwarded,
+                          SUM(CASE WHEN f.ID IS NOT NULL AND c.ID IS NULL THEN 1 ELSE 0 END) AS Pending,
+                          SUM(CASE WHEN c.ID IS NOT NULL THEN 1 ELSE 0 END) AS Disposed
+                   " + PendencySource + ScopeFilter + $@"
+                   GROUP BY {code}
+                   ORDER BY CASE WHEN {code} = 0 THEN 1 ELSE 0 END, Name",
+                PendencyParameters(request, scope));
+        }
+
+        // The applications behind a count, pending ones first and the oldest of them on top
+        public IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope)
+        {
+            var parameters = PendencyParameters(request, scope);
+            parameters.Add("@Status", (request.Status ?? "").ToLowerInvariant());
+
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<PendencyApplicationDto>(
+                @"SELECT d.ID AS ApplicantId, d.Application_No AS ApplicationNo, d.Applicant_Name AS ApplicantName,
+                         d.Father_Husband_Name AS FatherHusbandName, d.Mobile_Number AS MobileNumber,
+                         d.Application_Date AS ApplicationDate,
+                         ISNULL(dist.DISTRICTNAME, '') AS DistrictName, ISNULL(b.BlockName, '') AS BlockName,
+                         ISNULL(pt.PanchayatName, '') AS PanchayatName, ISNULL(v.VILLNAME, '') AS VillageName,
+                         ISNULL(th.Police_Station, '') AS PoliceStation,
+                         f.CategoryLabel, f.BranchLabel, f.ComplaintTypeLabel, f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel,
+                         f.ForwardedDate AS ForwardedAt, c.ClosedDate AS ClosedAt,
+                         CASE WHEN c.ID IS NOT NULL THEN 'Disposed' WHEN f.ID IS NOT NULL THEN 'Pending' ELSE 'Unforwarded' END AS Status,
+                         DATEDIFF(DAY, ISNULL(d.Application_Date, d.CreatedDate), ISNULL(c.ClosedDate, GETDATE())) AS PendingDays
+                  " + PendencySource + ScopeFilter + @"
+                    AND (@Status = ''
+                         OR (@Status = 'unforwarded' AND f.ID IS NULL)
+                         OR (@Status = 'pending' AND f.ID IS NOT NULL AND c.ID IS NULL)
+                         OR (@Status = 'disposed' AND c.ID IS NOT NULL))
+                  ORDER BY CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END, ISNULL(d.Application_Date, d.CreatedDate), d.ID",
+                parameters);
         }
 
         // Returns null when the application does not exist (or is inactive)

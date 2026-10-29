@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 
 const TOKEN_KEY = 'js_auth_token';
 const USER_KEY = 'js_auth_user';
-const ALL_ROLES: AppRole[] = ['SuperAdmin', 'BranchOfficer', 'DepartmentHead', 'CompetentAuthority'];
+const ALL_ROLES: AppRole[] = ['SuperAdmin', 'BranchOfficer', 'DepartmentHead', 'CompetentAuthority', 'Commissioner', 'DistrictMagistrate'];
 
 /** Expiry time (ms since epoch) from the JWT's `exp` claim; null if the token cannot be read. */
 function tokenExpiry(token: string): number | null {
@@ -45,6 +45,8 @@ interface BackendLoginEnvelope {
     role: string; // Mst_Role.Role name ("Admin", "Branch", "Saction"); older builds sent the numeric Id
     branchId?: number | null; // Tbl_UserLogin.Branch_Id (Mst_Branch.Complain_id) for branch logins
     prashakhaId?: number | null; // Tbl_UserLogin.Prashakha_Id (Mst_Prashakha.ID) for Prashakha logins
+    officeId?: number | null; // Tbl_UserLogin.Office_Id (1 = Commissionary, 2 = DM) for Commissioner / DM logins
+    officeUnitCode?: number | null; // Tbl_UserLogin.Office_Unit_Code (division code / district code)
   };
 }
 
@@ -63,6 +65,10 @@ function mapRole(code: string | null | undefined): AppRole {
     case 'branch':
     case '3':
       return 'DepartmentHead';
+    case 'commissioner':
+      return 'Commissioner';
+    case 'dm':
+      return 'DistrictMagistrate';
     case 'saction':
     case '1':
     default:
@@ -143,7 +149,9 @@ export class AuthService {
             role: mapRole(d.role),
             branchId: d.branchId ?? null,
             departmentId: null,
-            prashakhaId: d.prashakhaId ?? null
+            prashakhaId: d.prashakhaId ?? null,
+            officeId: d.officeId ?? null,
+            officeUnitCode: d.officeUnitCode ?? null
           };
           return resp;
         }),
@@ -155,7 +163,9 @@ export class AuthService {
             role: res.role,
             branchId: res.branchId,
             departmentId: res.departmentId,
-            prashakhaId: res.prashakhaId ?? null
+            prashakhaId: res.prashakhaId ?? null,
+            officeId: res.officeId ?? null,
+            officeUnitCode: res.officeUnitCode ?? null
           };
           localStorage.setItem(USER_KEY, JSON.stringify(user));
           this.currentUser.set(user);

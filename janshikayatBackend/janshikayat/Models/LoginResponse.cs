@@ -11,6 +11,9 @@
         public long? branchId { get; set; }
         // Mst_Prashakha.ID for Prashakha logins; null for everyone else
         public int? prashakhaId { get; set; }
+        // Mst_Regional_Office.Office_Id and vw_Office_Unit.Unit_Code for Commissioner / DM logins; null for everyone else
+        public int? officeId { get; set; }
+        public int? officeUnitCode { get; set; }
 
     }
 }

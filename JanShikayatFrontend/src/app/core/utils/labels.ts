@@ -11,7 +11,9 @@ export const ROLE_LABELS: Record<string, string> = {
   SuperAdmin: 'सुपर एडमिन',
   BranchOfficer: 'शाखा अधिकारी',
   DepartmentHead: 'विभागाध्यक्ष',
-  CompetentAuthority: 'सक्षम प्राधिकारी'
+  CompetentAuthority: 'सक्षम प्राधिकारी',
+  Commissioner: 'प्रमंडलीय आयुक्त',
+  DistrictMagistrate: 'जिलाधिकारी'
 };
 
 export const SOURCE_LABELS: Record<string, string> = {

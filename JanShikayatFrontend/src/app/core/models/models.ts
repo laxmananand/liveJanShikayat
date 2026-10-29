@@ -1,4 +1,4 @@
-export type AppRole = 'SuperAdmin' | 'BranchOfficer' | 'DepartmentHead' | 'CompetentAuthority';
+export type AppRole = 'SuperAdmin' | 'BranchOfficer' | 'DepartmentHead' | 'CompetentAuthority' | 'Commissioner' | 'DistrictMagistrate';
 
 export interface LoginResponse {
   token: string;
@@ -9,6 +9,8 @@ export interface LoginResponse {
   branchId: number | null;
   departmentId: number | null;
   prashakhaId?: number | null;
+  officeId?: number | null;
+  officeUnitCode?: number | null;
 }
 
 export interface CurrentUser {
@@ -19,6 +21,9 @@ export interface CurrentUser {
   departmentId: number | null;
   /** Tbl_UserLogin.Prashakha_Id (Mst_Prashakha.ID) for Prashakha logins */
   prashakhaId?: number | null;
+  /** Tbl_UserLogin.Office_Id / Office_Unit_Code (vw_Office_Unit) for Commissioner (1) and DM (2) logins */
+  officeId?: number | null;
+  officeUnitCode?: number | null;
 }
 
 export interface Branch {

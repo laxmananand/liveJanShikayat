@@ -52,6 +52,11 @@
         <span class="nav-badge" *ngIf="unseenResponses()">{{ unseenResponses() }}</span>
       </a>
 
+      <a routerLink="/reports/pendency" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="पेंडेंसी रिपोर्ट (Pendency Report)">
+        <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
+        <span class="nav-label">पेंडेंसी रिपोर्ट</span>
+      </a>
+
       <a routerLink="/complaints/tracking" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()" title="शिकायत ट्रैकिंग (Track Grievance)">
         <span class="nav-icon"><i class="fa-solid fa-route"></i></span>
         <span class="nav-label">शिकायत ट्रैकिंग</span>

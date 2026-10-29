@@ -153,21 +153,52 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwards() });
         }
 
-        // Forwarded Applications page: Admin sees every forwarded application; any other login
-        // those forwarded to its branch (Branch_Id) or, for Section forwards, to its Prashakha (Prashakha_Id)
+        // Forwarded Applications page: Admin sees every forwarded application; any other login those forwarded to
+        // its branch (Branch_Id), its Prashakha (Prashakha_Id) or its Commissioner / DM office (Office_Id / Office_Unit_Code)
         [Authorize]
         [HttpGet("get-my-forwards")]
         public IActionResult GetMyForwards()
         {
-            if (User.IsInRole(AdminRole))
-                return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(true, null, null) });
-
-            long? branchId = long.TryParse(User.FindFirstValue("BranchId"), out var b) ? b : null;
-            int? prashakhaId = int.TryParse(User.FindFirstValue("PrashakhaId"), out var p) ? p : null;
-            if (branchId == null && prashakhaId == null)
+            var scope = CurrentScope();
+            if (scope.IsEmpty)
                 return Ok(new { status = "true", message = "Success", data = Array.Empty<ApplicantForwardDto>() });
 
-            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(false, branchId, prashakhaId) });
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(scope) });
+        }
+
+        // Pendency Report: counts per district / block / thana / panchayat, each login within its own hierarchy
+        [Authorize]
+        [HttpGet("pendency-report")]
+        public IActionResult GetPendencyReport([FromQuery] PendencyReportRequest request)
+        {
+            var scope = CurrentScope();
+            var data = scope.IsEmpty ? Enumerable.Empty<PendencyRowDto>() : _IComplain.GetPendencyReport(request, scope);
+            return Ok(new { status = "true", message = "Success", data });
+        }
+
+        // Pendency Report: the applications behind a count (same filters, plus Status)
+        [Authorize]
+        [HttpGet("pendency-applications")]
+        public IActionResult GetPendencyApplications([FromQuery] PendencyReportRequest request)
+        {
+            var scope = CurrentScope();
+            var data = scope.IsEmpty ? Enumerable.Empty<PendencyApplicationDto>() : _IComplain.GetPendencyApplications(request, scope);
+            return Ok(new { status = "true", message = "Success", data });
+        }
+
+        // What the logged-in user may see, from the claims AuthService puts in the JWT
+        private AccessScope CurrentScope()
+        {
+            if (User.IsInRole(AdminRole))
+                return new AccessScope { All = true };
+
+            return new AccessScope
+            {
+                BranchId = long.TryParse(User.FindFirstValue("BranchId"), out var b) ? b : null,
+                PrashakhaId = int.TryParse(User.FindFirstValue("PrashakhaId"), out var p) ? p : null,
+                OfficeId = int.TryParse(User.FindFirstValue("OfficeId"), out var o) ? o : null,
+                OfficeUnitCode = int.TryParse(User.FindFirstValue("OfficeUnitCode"), out var u) ? u : null
+            };
         }
 
         // Every logged-in role (Admin, Saction, Branch) can add remarks

@@ -17,6 +17,7 @@ import { ForwardResponsesComponent } from './features/complaints/forward-respons
 import { TrackingPageComponent } from './features/complaints/tracking-page/tracking-page.component';
 import { ComplaintDetailComponent } from './features/complaints/complaint-detail/complaint-detail.component';
 import { UserManagementComponent } from './features/admin/user-management/user-management.component';
+import { PendencyReportComponent } from './features/reports/pendency-report/pendency-report.component';
 import { FEATURES } from './core/config/features';
 
 export const routes: Routes = [
@@ -90,6 +91,12 @@ export const routes: Routes = [
         path: 'complaints/new',
         redirectTo: 'complaints/entry',
         pathMatch: 'full'
+      },
+      {
+        path: 'reports/pendency',
+        component: PendencyReportComponent,
+        // Every login; the server limits the report to the user's own hierarchy
+        title: 'पेंडेंसी रिपोर्ट (Pendency Report) | जन शिकायत निदान पोर्टल'
       },
       { path: 'complaints/:id', component: ComplaintDetailComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायत विवरण | जन शिकायत निदान पोर्टल' },
       {

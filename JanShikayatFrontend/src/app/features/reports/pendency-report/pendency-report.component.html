@@ -1,0 +1,163 @@
+<section class="records-page pendency-page">
+  <header class="records-head">
+    <div>
+      <span class="section-kicker"><i class="fa-solid fa-chart-column"></i> पेंडेंसी रिपोर्ट / Pendency Report</span>
+      <h1>पेंडेंसी रिपोर्ट</h1>
+      <p class="sub">{{ scopeText }}</p>
+    </div>
+    <button type="button" class="btn btn-ghost" (click)="refresh()" [disabled]="loading">
+      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
+    </button>
+  </header>
+
+  <div class="report-card">
+    <h2 class="report-title">
+      {{ listView ? 'आवेदनों की सूची' : level.label + '-वार आवेदन पेंडेंसी रिपोर्ट' }}
+      <small>({{ listView ? 'Application List' : level.heading + ' Wise Pendency Report' }})</small>
+    </h2>
+    <p class="report-trail" *ngIf="trail.length || listView">
+      <ng-container *ngFor="let t of trail; let last = last">{{ t.label }} :- <strong>{{ t.name }}</strong><ng-container *ngIf="!last">, </ng-container></ng-container>
+      <ng-container *ngIf="listView"><ng-container *ngIf="trail.length"> • </ng-container>स्थिति :- <strong>{{ statusFilterText }}</strong></ng-container>
+    </p>
+
+    <div class="report-actions">
+      <button type="button" class="btn btn-back" *ngIf="canGoBack" (click)="back()">
+        <i class="fa-solid fa-arrow-left"></i> वापस (Back)
+      </button>
+      <label class="date-field">
+        <span>आवेदन तिथि से</span>
+        <input type="date" [(ngModel)]="fromDate" [max]="toDate || today" />
+      </label>
+      <label class="date-field">
+        <span>तक</span>
+        <input type="date" [(ngModel)]="toDate" [min]="fromDate" [max]="today" />
+      </label>
+      <button type="button" class="btn btn-action" (click)="search()" [disabled]="loading">
+        <i class="fa-solid fa-magnifying-glass"></i> खोजें (Search)
+      </button>
+      <button type="button" class="btn btn-ghost" *ngIf="filter.fromDate || filter.toDate" (click)="clearDates()">
+        <i class="fa-solid fa-xmark"></i> तिथि हटाएँ
+      </button>
+      <button type="button" class="btn btn-action" (click)="exportToExcel()"
+              [disabled]="loading || (listView ? !applications.length : !rows.length)">
+        <i class="fa-solid fa-file-excel"></i> Export To Excel
+      </button>
+    </div>
+
+    <div class="report-meta" *ngIf="generatedAt && !loading">
+      <span class="stamp">{{ generatedAt | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
+      <span class="hint" *ngIf="!listView">{{ hint }}</span>
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+    </div>
+
+    <div class="loading-row" *ngIf="loading">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…
+    </div>
+
+    <!-- ── Counts per district / block / thana / panchayat ── -->
+    <div class="table-wrap report-wrap" *ngIf="!loading && !listView && rows.length">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th class="col-sn">क्रम सं.<small>Sl. No.</small></th>
+            <th>{{ level.label }}<small>{{ level.heading }}</small></th>
+            <th class="col-num">कुल आवेदन<small>Total</small></th>
+            <th class="col-num" *ngIf="isAdmin">अग्रसारण हेतु लंबित<small>Not Forwarded</small></th>
+            <th class="col-num">कार्यालय स्तर पर लंबित<small>Pending</small></th>
+            <th class="col-num">निष्पादित<small>Disposed</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows; let i = index">
+            <td class="col-sn">{{ i + 1 }}</td>
+            <td><button type="button" class="link" (click)="drill(row)">{{ rowName(row) }}</button></td>
+            <td class="col-num"><button type="button" class="link" (click)="openList('', row)">{{ row.total }}</button></td>
+            <td class="col-num" *ngIf="isAdmin"><button type="button" class="link warn" (click)="openList('unforwarded', row)">{{ row.unforwarded }}</button></td>
+            <td class="col-num"><button type="button" class="link danger" (click)="openList('pending', row)">{{ row.pending }}</button></td>
+            <td class="col-num"><button type="button" class="link ok" (click)="openList('disposed', row)">{{ row.disposed }}</button></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>कुल (Total) :</td>
+            <td class="col-num"><button type="button" class="link" (click)="openList('', null)">{{ totals.total }}</button></td>
+            <td class="col-num" *ngIf="isAdmin"><button type="button" class="link" (click)="openList('unforwarded', null)">{{ totals.unforwarded }}</button></td>
+            <td class="col-num"><button type="button" class="link" (click)="openList('pending', null)">{{ totals.pending }}</button></td>
+            <td class="col-num"><button type="button" class="link" (click)="openList('disposed', null)">{{ totals.disposed }}</button></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- ── Applications behind a count ── -->
+    <div class="table-wrap sheet-wrap" *ngIf="!loading && listView && applications.length">
+      <table class="records-table sheet sheet-compact">
+        <thead>
+          <tr>
+            <th class="col-sn">क्रम सं.<small>(Sl. No.)</small></th>
+            <th>आवेदन संख्या<small>(Application No.)</small></th>
+            <th>आवेदक का नाम</th>
+            <th>पिता/पति का नाम</th>
+            <th>जिला</th>
+            <th>प्रखंड</th>
+            <th>पंचायत</th>
+            <th>गाँव</th>
+            <th>थाना</th>
+            <th>मोबाइल संख्या</th>
+            <th>आवेदन प्राप्ति की तिथि</th>
+            <th>अग्रेषित<small>(Forwarded To)</small></th>
+            <th>शिकायत का प्रकार</th>
+            <th>अग्रेषित दिनांक</th>
+            <th class="col-center">स्थिति<small>(Status)</small></th>
+            <th class="col-center">दिन<small>(Days)</small></th>
+            <th class="col-center">देखें<small>(View)</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of applications; let i = index">
+            <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+            <td data-label="आवेदन संख्या"><span class="app-no">{{ a.applicationNo || '—' }}</span></td>
+            <td data-label="आवेदक का नाम">{{ a.applicantName }}</td>
+            <td data-label="पिता/पति का नाम">{{ a.fatherHusbandName || '—' }}</td>
+            <td data-label="जिला">{{ a.districtName || '—' }}</td>
+            <td data-label="प्रखंड">{{ a.blockName || '—' }}</td>
+            <td data-label="पंचायत">{{ a.panchayatName || '—' }}</td>
+            <td data-label="गाँव">{{ a.villageName || '—' }}</td>
+            <td data-label="थाना">{{ a.policeStation || '—' }}</td>
+            <td class="nowrap" data-label="मोबाइल संख्या">{{ a.mobileNumber || '—' }}</td>
+            <td class="nowrap" data-label="प्राप्ति तिथि">{{ a.applicationDate ? (a.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
+            <td data-label="अग्रेषित">
+              {{ forwardedTo(a) }}
+              <small class="sub" *ngIf="a.categoryLabel">{{ a.categoryLabel }}</small>
+            </td>
+            <td data-label="शिकायत का प्रकार">{{ a.complaintTypeLabel || '—' }}</td>
+            <td class="nowrap" data-label="अग्रेषित दिनांक">{{ a.forwardedAt ? (a.forwardedAt | date: 'dd/MM/yyyy') : '—' }}</td>
+            <td class="col-center" data-label="स्थिति">
+              <span class="status-badge" [class.yes]="a.status === 'Disposed'" [class.unforwarded]="a.status === 'Unforwarded'"
+                    [title]="a.closedAt ? 'निष्पादन दिनांक: ' + (a.closedAt | date: 'dd/MM/yyyy') : ''">
+                {{ statusText(a.status) }}
+              </span>
+            </td>
+            <td class="col-center" data-label="दिन" [class.overdue]="a.status !== 'Disposed' && a.pendingDays > 30">{{ a.pendingDays }}</td>
+            <td class="col-center" data-label="देखें">
+              <button type="button" class="icon-btn view" (click)="view(a)" [disabled]="opening" title="पूरा विवरण देखें / View details">
+                <i class="fa-solid" [ngClass]="opening ? 'fa-circle-notch fa-spin' : 'fa-eye'"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && !errorMessage && (listView ? !applications.length : !rows.length)">
+      <i class="fa-solid fa-folder-open"></i>
+      <p>{{ isAdmin ? 'चयनित मानदंड के अनुसार कोई आवेदन नहीं मिला।' : 'आपके क्षेत्राधिकार में चयनित मानदंड के अनुसार कोई आवेदन नहीं मिला।' }}</p>
+    </div>
+  </div>
+
+  <app-applicant-details-modal [record]="selected" [allowRemark]="false" (closed)="selected = null"></app-applicant-details-modal>
+</section>
