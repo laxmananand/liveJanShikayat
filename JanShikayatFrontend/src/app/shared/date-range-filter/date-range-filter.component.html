@@ -1,0 +1,30 @@
+<div class="date-filter" [class.active]="active" role="group" aria-label="दिनांक फ़िल्टर / Date filter">
+  <span class="df-title"><i class="fa-solid fa-calendar-days"></i> दिनांक फ़िल्टर</span>
+
+  <select *ngIf="fields.length > 1" class="df-field" [ngModel]="range.field" (ngModelChange)="set({ field: $event })"
+          aria-label="किस दिनांक पर फ़िल्टर करें / Filter on">
+    <option *ngFor="let f of fields" [value]="f.key">{{ f.label }}</option>
+  </select>
+  <span *ngIf="fields.length === 1" class="df-single">{{ fields[0].label }}</span>
+
+  <label class="df-date">
+    <span>से <small>(From)</small></span>
+    <input type="date" [ngModel]="range.from" (ngModelChange)="set({ from: $event || '' })" [max]="range.to || today"
+           aria-label="से / From date" />
+  </label>
+  <label class="df-date">
+    <span>तक <small>(To)</small></span>
+    <input type="date" [ngModel]="range.to" (ngModelChange)="set({ to: $event || '' })" [min]="range.from" [max]="today"
+           aria-label="तक / To date" />
+  </label>
+
+  <div class="df-presets">
+    <button *ngFor="let p of presets" type="button" class="df-chip" [class.on]="isPreset(p.key)" (click)="applyPreset(p.key)">
+      {{ p.label }}
+    </button>
+  </div>
+
+  <button *ngIf="active" type="button" class="df-clear" (click)="clear()" title="दिनांक फ़िल्टर हटाएँ / Clear date filter">
+    <i class="fa-solid fa-xmark"></i> हटाएँ
+  </button>
+</div>

@@ -8,6 +8,8 @@ import { ForwardRecord, ForwardService } from '../../../core/services/forward.se
 import { AuthService } from '../../../core/services/auth.service';
 import { openBase64Document } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
+import { DateRange, inDateRange, isRangeActive } from '../../../core/utils/date-range';
+import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
 
 interface ForwardedRow {
   record: ApplicantRecord;
@@ -21,7 +23,7 @@ interface ForwardedRow {
 @Component({
   selector: 'app-forwarded-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent],
   templateUrl: './forwarded-applications.component.html',
   styleUrl: '../applicant-records/applicant-records.component.scss'
 })
@@ -34,6 +36,12 @@ export class ForwardedApplicationsComponent implements OnInit {
   loading = true;
   errorMessage = '';
   searchTerm = '';
+  readonly dateFields: DateField[] = [
+    { key: 'forwarded', label: 'अग्रेषित दिनांक' },
+    { key: 'received', label: 'आवेदन प्राप्ति की तिथि' },
+    { key: 'closed', label: 'निष्पादन दिनांक' }
+  ];
+  dateRange: DateRange = { field: 'forwarded', from: '', to: '' };
   selected: ApplicantRecord | null = null;
   /** Forward of the open record: carries its closure when Admin has disposed of it */
   selectedForward: ForwardRecord | null = null;
@@ -81,16 +89,29 @@ export class ForwardedApplicationsComponent implements OnInit {
 
   get filtered(): ForwardedRow[] {
     const q = this.searchTerm.trim().toLowerCase();
-    if (!q) return this.rows;
+    if (!q && !isRangeActive(this.dateRange)) return this.rows;
     return this.rows.filter(
       ({ record: r, forward: f }) =>
-        r.applicationNo.toLowerCase().includes(q) ||
-        r.applicantName.toLowerCase().includes(q) ||
-        r.mobileNumber.includes(q) ||
-        r.districtName.toLowerCase().includes(q) ||
-        f.branchLabel.toLowerCase().includes(q) ||
-        f.complaintTypeLabel.toLowerCase().includes(q)
+        inDateRange(this.dateOf(r, f), this.dateRange) &&
+        (!q ||
+          r.applicationNo.toLowerCase().includes(q) ||
+          r.applicantName.toLowerCase().includes(q) ||
+          r.mobileNumber.includes(q) ||
+          r.districtName.toLowerCase().includes(q) ||
+          f.branchLabel.toLowerCase().includes(q) ||
+          f.complaintTypeLabel.toLowerCase().includes(q))
     );
+  }
+
+  private dateOf(r: ApplicantRecord, f: ForwardRecord): string | null | undefined {
+    switch (this.dateRange.field) {
+      case 'received':
+        return r.applicationDate;
+      case 'closed':
+        return f.closedAt;
+      default:
+        return f.forwardedAt;
+    }
   }
 
   /** "Village, Panchayat" without a stray comma when one is missing (village is optional). */

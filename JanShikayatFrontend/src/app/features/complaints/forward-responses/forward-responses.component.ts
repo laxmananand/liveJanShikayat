@@ -7,6 +7,8 @@ import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
 import { ForwardResponse, ForwardService } from '../../../core/services/forward.service';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
+import { DateRange, inDateRange } from '../../../core/utils/date-range';
+import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
 
 interface ResponseRow {
   record: ApplicantRecord;
@@ -23,7 +25,7 @@ type StatusTab = 'Pending' | 'Disposed' | '';
 @Component({
   selector: 'app-forward-responses',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent],
   templateUrl: './forward-responses.component.html',
   styleUrls: ['../applicant-records/applicant-records.component.scss', './forward-responses.component.scss']
 })
@@ -38,6 +40,12 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
   private successTimer?: ReturnType<typeof setTimeout>;
   searchTerm = '';
   statusTab: StatusTab = 'Pending';
+  readonly dateFields: DateField[] = [
+    { key: 'response', label: 'प्रतिवेदन दिनांक' },
+    { key: 'forwarded', label: 'अग्रेषित दिनांक' },
+    { key: 'closed', label: 'निष्पादन दिनांक' }
+  ];
+  dateRange: DateRange = { field: 'response', from: '', to: '' };
 
   /** Row whose details / remarks are open */
   selected: ResponseRow | null = null;
@@ -91,6 +99,7 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
     return this.rows.filter(
       (row) =>
         (!this.statusTab || this.statusOf(row) === this.statusTab) &&
+        inDateRange(this.dateOf(row.response), this.dateRange) &&
         (!q ||
           row.record.applicationNo.toLowerCase().includes(q) ||
           row.record.applicantName.toLowerCase().includes(q) ||
@@ -98,6 +107,17 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
           row.response.branchLabel.toLowerCase().includes(q) ||
           row.response.lastRemark.toLowerCase().includes(q))
     );
+  }
+
+  private dateOf(f: ForwardResponse): string | null {
+    switch (this.dateRange.field) {
+      case 'forwarded':
+        return f.forwardedAt;
+      case 'closed':
+        return f.closedAt;
+      default:
+        return f.lastResponseAt;
+    }
   }
 
   forwardedTo(f: ForwardResponse): string {

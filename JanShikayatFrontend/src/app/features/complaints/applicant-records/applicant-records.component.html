@@ -18,6 +18,8 @@
     <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदक</span>
   </div>
 
+  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
+
   <div class="alert alert-info" *ngIf="infoMessage">
     <i class="fa-solid fa-circle-info"></i> {{ infoMessage }}
   </div>
@@ -108,8 +110,9 @@
 
   <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
     <i class="fa-solid fa-folder-open"></i>
-    <p>अभी तक कोई आवेदन अंतिम रूप से दर्ज नहीं हुआ है।</p>
-    <a *ngIf="isAdmin" routerLink="/complaints/entry" class="btn btn-primary-accent">
+    <p *ngIf="!records.length">अभी तक कोई आवेदन अंतिम रूप से दर्ज नहीं हुआ है।</p>
+    <p *ngIf="records.length">खोज / चयनित दिनांक से मेल खाता कोई आवेदन नहीं मिला।</p>
+    <a *ngIf="isAdmin && !records.length"routerLink="/complaints/entry" class="btn btn-primary-accent">
       <i class="fa-solid fa-file-pen"></i> शिकायत प्रविष्टि
     </a>
   </div>

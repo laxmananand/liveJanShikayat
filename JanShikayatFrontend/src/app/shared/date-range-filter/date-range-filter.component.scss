@@ -1,0 +1,105 @@
+.date-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1rem;
+  background: #fff;
+  border: 1px solid #e0d4c8;
+  border-radius: 8px;
+
+  &.active {
+    border-color: #d2691e;
+    box-shadow: 0 0 0 2px rgba(210, 105, 30, 0.12);
+  }
+}
+
+.df-title {
+  font-weight: 700;
+  color: #4a2417;
+  white-space: nowrap;
+
+  i {
+    color: #d2691e;
+    margin-right: 0.25rem;
+  }
+}
+
+.df-single {
+  color: #6b5444;
+  font-size: 0.9rem;
+}
+
+.df-field,
+.df-date input {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #e0d4c8;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  color: #4a2417;
+  background: #fff;
+}
+
+.df-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+
+  span {
+    color: #6b5444;
+    font-size: 0.9rem;
+  }
+}
+
+.df-presets {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.df-chip {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid #e0d4c8;
+  border-radius: 999px;
+  background: #f8f2ec;
+  color: #4a2417;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #d2691e;
+  }
+  &.on {
+    background: #d2691e;
+    border-color: #d2691e;
+    color: #fff;
+  }
+}
+
+.df-clear {
+  margin-left: auto;
+  padding: 0.3rem 0.65rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #b23b2e;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #fbeae7;
+  }
+}
+
+@media (max-width: 640px) {
+  .df-field,
+  .df-date,
+  .df-date input {
+    flex: 1 1 100%;
+  }
+  .df-clear {
+    margin-left: 0;
+  }
+}

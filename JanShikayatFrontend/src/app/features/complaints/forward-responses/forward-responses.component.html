@@ -30,6 +30,8 @@
     <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदन</span>
   </div>
 
+  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
+
   <div class="alert alert-error" *ngIf="errorMessage">
     <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
   </div>

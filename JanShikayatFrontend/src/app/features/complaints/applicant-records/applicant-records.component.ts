@@ -10,11 +10,13 @@ import { ApplicantDetailsModalComponent } from '../../../shared/applicant-detail
 import { ForwardDialogComponent } from '../../../shared/forward-dialog/forward-dialog.component';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { DateRange, inDateRange, isRangeActive } from '../../../core/utils/date-range';
+import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
 
 @Component({
   selector: 'app-applicant-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardDialogComponent, DateRangeFilterComponent],
   templateUrl: './applicant-records.component.html',
   styleUrl: './applicant-records.component.scss'
 })
@@ -32,6 +34,11 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
   loading = true;
   errorMessage = '';
   searchTerm = '';
+  readonly dateFields: DateField[] = [
+    { key: 'received', label: 'आवेदन प्राप्ति की तिथि' },
+    { key: 'forwarded', label: 'अग्रेषित दिनांक' }
+  ];
+  dateRange: DateRange = { field: 'received', from: '', to: '' };
   selected: ApplicantRecord | null = null;
   forwarding: ApplicantRecord | null = null;
   /** Latest forward per application id */
@@ -67,13 +74,18 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
 
   get filtered(): ApplicantRecord[] {
     const q = this.searchTerm.trim().toLowerCase();
-    if (!q) return this.records;
+    if (!q && !isRangeActive(this.dateRange)) return this.records;
     return this.records.filter(
       (r) =>
-        r.applicationNo.toLowerCase().includes(q) ||
-        r.applicantName.toLowerCase().includes(q) ||
-        r.mobileNumber.includes(q) ||
-        r.districtName.toLowerCase().includes(q)
+        inDateRange(
+          this.dateRange.field === 'forwarded' ? this.forwards.get(r.id)?.forwardedAt : r.applicationDate,
+          this.dateRange
+        ) &&
+        (!q ||
+          r.applicationNo.toLowerCase().includes(q) ||
+          r.applicantName.toLowerCase().includes(q) ||
+          r.mobileNumber.includes(q) ||
+          r.districtName.toLowerCase().includes(q))
     );
   }
 

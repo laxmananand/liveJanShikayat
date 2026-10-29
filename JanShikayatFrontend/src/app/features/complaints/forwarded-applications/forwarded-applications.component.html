@@ -18,6 +18,8 @@
     <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदन</span>
   </div>
 
+  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
+
   <div class="alert alert-error" *ngIf="errorMessage">
     <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
   </div>
@@ -98,7 +100,8 @@
 
   <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
     <i class="fa-solid fa-folder-open"></i>
-    <p *ngIf="hasBranch">अभी तक कोई आवेदन अग्रेषित नहीं हुआ है।</p>
+    <p *ngIf="hasBranch && !rows.length">अभी तक कोई आवेदन अग्रेषित नहीं हुआ है।</p>
+    <p *ngIf="rows.length">खोज / चयनित दिनांक से मेल खाता कोई आवेदन नहीं मिला।</p>
     <p *ngIf="!hasBranch">आपका लॉगिन किसी शाखा से जुड़ा नहीं है, इसलिए कोई अग्रेषित आवेदन नहीं है।</p>
   </div>
 
