@@ -468,3 +468,107 @@
   .stat-card { padding: 16px; }
   .stat-value { font-size: 1.5rem; }
 }
+
+/* ── Pendency Report card ── */
+.pendency-card {
+  margin-bottom: 1.25rem;
+
+  .card-title small {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
+}
+
+.pendency-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.pendency-chip {
+  --chip: var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--chip);
+  border-radius: 8px;
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  span {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  b {
+    font-size: 1.35rem;
+    color: var(--chip);
+    font-variant-numeric: tabular-nums;
+  }
+  &:hover {
+    background: var(--color-bg);
+  }
+  &.warn { --chip: #b45309; }
+  &.danger { --chip: var(--color-danger); }
+  &.ok { --chip: var(--color-success); }
+}
+
+.pendency-table-wrap {
+  overflow-x: auto;
+}
+
+.pendency-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+  td {
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid #f0e8df;
+  }
+  tbody tr:nth-child(odd) {
+    background: #faf6f3;
+  }
+  .num {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: #1d4ed8;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+    &.warn { color: #b45309; }
+    &.danger { color: var(--color-danger); font-weight: 600; }
+    &.ok { color: var(--color-success); }
+  }
+}
+
+.pendency-more {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--color-accent);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}

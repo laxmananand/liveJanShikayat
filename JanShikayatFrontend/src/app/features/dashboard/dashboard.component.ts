@@ -6,6 +6,7 @@ import { ApplicantService } from '../../core/services/applicant.service';
 import { ForwardRecord, ForwardService } from '../../core/services/forward.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ApplicantRecord, DashboardSummary } from '../../core/models/models';
+import { PendencyRow, PendencyStatus, ReportService } from '../../core/services/report.service';
 import { roleLabel } from '../../core/utils/labels';
 import { ApplicantDetailsModalComponent } from '../../shared/applicant-details/applicant-details-modal.component';
 
@@ -33,6 +34,13 @@ export class DashboardComponent implements OnInit {
   receivedToday = 0;
   receivedThisMonth = 0;
   selected: ApplicantRecord | null = null;
+  /** Pendency Report card: district-wise counts within the user's own hierarchy (server-scoped) */
+  pendencyRows: PendencyRow[] = [];
+  pendencyLoading = true;
+  pendencyError = false;
+  /** Districts listed on the card; the full report has the rest */
+  readonly pendencyLimit = 8;
+
   /** Latest forward per application id (carries the Disposed closure) */
   private forwards = new Map<number, ForwardRecord>();
 
@@ -49,6 +57,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private applicantService: ApplicantService,
     private forwardService: ForwardService,
+    private reportService: ReportService,
     public auth: AuthService,
     private router: Router
   ) {}
@@ -59,6 +68,7 @@ export class DashboardComponent implements OnInit {
 
   load(force = false): void {
     this.loading = true;
+    this.loadPendency();
     // Admin sees every application; everyone else only those currently forwarded to them
     forkJoin({
       list: this.applicantService.getApplicants(force),
@@ -127,6 +137,51 @@ export class DashboardComponent implements OnInit {
       disposed,
       onlineSubmissions: 0
     };
+  }
+
+  /** Loaded on its own, so a failure here never hides the rest of the dashboard. */
+  private loadPendency(): void {
+    this.pendencyLoading = true;
+    this.pendencyError = false;
+    this.reportService.pendency('district', {}).subscribe({
+      next: (rows) => {
+        // Most pending first, so the card shows where action is needed
+        this.pendencyRows = [...rows].sort(
+          (a, b) => b.pending + b.unforwarded - (a.pending + a.unforwarded) || a.name.localeCompare(b.name)
+        );
+        this.pendencyLoading = false;
+      },
+      error: () => {
+        this.pendencyRows = [];
+        this.pendencyError = true;
+        this.pendencyLoading = false;
+      }
+    });
+  }
+
+  get pendencyTotals(): Omit<PendencyRow, 'code' | 'name'> {
+    return this.pendencyRows.reduce(
+      (t, r) => ({
+        total: t.total + r.total,
+        unforwarded: t.unforwarded + r.unforwarded,
+        pending: t.pending + r.pending,
+        disposed: t.disposed + r.disposed
+      }),
+      { total: 0, unforwarded: 0, pending: 0, disposed: 0 }
+    );
+  }
+
+  /** Pendency Report: a district's block-wise counts. */
+  openPendencyDistrict(row: PendencyRow): void {
+    this.router.navigate(['/reports/pendency'], { queryParams: { d: row.code, dn: row.name || row.code } });
+  }
+
+  /** Pendency Report application list, for one district or (row = null) all of the user's applications. */
+  openPendencyList(status: PendencyStatus, row: PendencyRow | null = null): void {
+    const queryParams: Record<string, string | number> = { view: 'list' };
+    if (status) queryParams['status'] = status;
+    if (row) Object.assign(queryParams, { d: row.code, dn: row.name || row.code, row: '1' });
+    this.router.navigate(['/reports/pendency'], { queryParams });
   }
 
   /** Closure of a Disposed application (locks its remarks), else null */

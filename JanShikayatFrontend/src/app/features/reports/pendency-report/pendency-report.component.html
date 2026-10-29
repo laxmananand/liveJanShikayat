@@ -1,24 +1,22 @@
 <section class="records-page pendency-page">
-  <header class="records-head">
-    <div>
-      <span class="section-kicker"><i class="fa-solid fa-chart-column"></i> पेंडेंसी रिपोर्ट / Pendency Report</span>
-      <h1>पेंडेंसी रिपोर्ट</h1>
-      <p class="sub">{{ scopeText }}</p>
-    </div>
-    <button type="button" class="btn btn-ghost" (click)="refresh()" [disabled]="loading">
-      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
-    </button>
-  </header>
-
   <div class="report-card">
-    <h2 class="report-title">
-      {{ listView ? 'आवेदनों की सूची' : level.label + '-वार आवेदन पेंडेंसी रिपोर्ट' }}
-      <small>({{ listView ? 'Application List' : level.heading + ' Wise Pendency Report' }})</small>
-    </h2>
-    <p class="report-trail" *ngIf="trail.length || listView">
-      <ng-container *ngFor="let t of trail; let last = last">{{ t.label }} :- <strong>{{ t.name }}</strong><ng-container *ngIf="!last">, </ng-container></ng-container>
-      <ng-container *ngIf="listView"><ng-container *ngIf="trail.length"> • </ng-container>स्थिति :- <strong>{{ statusFilterText }}</strong></ng-container>
-    </p>
+    <div class="report-head">
+      <div class="report-heading">
+        <h1 class="report-title">
+          <i class="fa-solid fa-chart-column"></i>
+          {{ listView ? 'आवेदनों की सूची' : level.label + '-वार आवेदन पेंडेंसी रिपोर्ट' }}
+          <small>({{ listView ? 'Application List' : level.heading + ' Wise Pendency Report' }})</small>
+        </h1>
+        <p class="report-trail">
+          <span class="scope">{{ scopeText }}</span>
+          <ng-container *ngFor="let t of trail"> • {{ t.label }} :- <strong>{{ t.name }}</strong></ng-container>
+          <ng-container *ngIf="listView"> • स्थिति :- <strong>{{ statusFilterText }}</strong></ng-container>
+        </p>
+      </div>
+      <button type="button" class="btn btn-ghost" (click)="refresh()" [disabled]="loading" title="रिफ्रेश">
+        <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
+      </button>
+    </div>
 
     <div class="report-actions">
       <button type="button" class="btn btn-back" *ngIf="canGoBack" (click)="back()">

@@ -12,6 +12,9 @@
     <a [routerLink]="listLink" class="btn btn-ghost">
       <i class="fa-solid" [ngClass]="isAdmin ? 'fa-folder-open' : 'fa-share-from-square'"></i> {{ isAdmin ? 'सभी शिकायतें' : 'अग्रेषित आवेदन' }}
     </a>
+    <a routerLink="/reports/pendency" class="btn btn-ghost">
+      <i class="fa-solid fa-chart-column"></i> पेंडेंसी रिपोर्ट
+    </a>
     <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading" title="आंकड़े रिफ्रेश करें">
       <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i>
     </button>
@@ -61,6 +64,63 @@
       <span class="stat-label">{{ t.label }}</span>
       <span class="stat-link">सूची देखें <i class="fa-solid fa-arrow-right"></i></span>
     </button>
+  </div>
+
+  <!-- Pendency Report (district-wise, within the user's own hierarchy) -->
+  <div class="card pendency-card">
+    <div class="insight-head">
+      <h2 class="card-title"><i class="fa-solid fa-chart-column"></i> पेंडेंसी रिपोर्ट <small>(जिला-वार)</small></h2>
+      <a routerLink="/reports/pendency" class="insight-link">पूरी रिपोर्ट देखें <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <p class="insight-empty" *ngIf="pendencyLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…</p>
+    <p class="insight-empty" *ngIf="!pendencyLoading && pendencyError">पेंडेंसी रिपोर्ट लोड नहीं हो सकी।</p>
+
+    <ng-container *ngIf="!pendencyLoading && !pendencyError">
+      <div class="pendency-chips">
+        <button type="button" class="pendency-chip" (click)="openPendencyList('')">
+          <span>कुल आवेदन</span><b>{{ pendencyTotals.total }}</b>
+        </button>
+        <button type="button" class="pendency-chip warn" *ngIf="isAdmin" (click)="openPendencyList('unforwarded')">
+          <span>अग्रसारण हेतु लंबित</span><b>{{ pendencyTotals.unforwarded }}</b>
+        </button>
+        <button type="button" class="pendency-chip danger" (click)="openPendencyList('pending')">
+          <span>कार्यालय स्तर पर लंबित</span><b>{{ pendencyTotals.pending }}</b>
+        </button>
+        <button type="button" class="pendency-chip ok" (click)="openPendencyList('disposed')">
+          <span>निष्पादित</span><b>{{ pendencyTotals.disposed }}</b>
+        </button>
+      </div>
+
+      <div class="pendency-table-wrap" *ngIf="pendencyRows.length; else noPendency">
+        <table class="pendency-table">
+          <thead>
+            <tr>
+              <th>जिला</th>
+              <th class="num">कुल</th>
+              <th class="num" *ngIf="isAdmin">अग्रसारण हेतु लंबित</th>
+              <th class="num">कार्यालय स्तर पर लंबित</th>
+              <th class="num">निष्पादित</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of pendencyRows | slice: 0 : pendencyLimit">
+              <td><button type="button" class="link" (click)="openPendencyDistrict(r)">{{ r.name || r.code }}</button></td>
+              <td class="num"><button type="button" class="link" (click)="openPendencyList('', r)">{{ r.total }}</button></td>
+              <td class="num" *ngIf="isAdmin"><button type="button" class="link warn" (click)="openPendencyList('unforwarded', r)">{{ r.unforwarded }}</button></td>
+              <td class="num"><button type="button" class="link danger" (click)="openPendencyList('pending', r)">{{ r.pending }}</button></td>
+              <td class="num"><button type="button" class="link ok" (click)="openPendencyList('disposed', r)">{{ r.disposed }}</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <a routerLink="/reports/pendency" class="pendency-more" *ngIf="pendencyRows.length > pendencyLimit">
+          +{{ pendencyRows.length - pendencyLimit }} और जिले — पूरी रिपोर्ट देखें <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+      <ng-template #noPendency>
+        <p class="insight-empty">{{ isAdmin ? 'अभी कोई आवेदन नहीं है।' : 'आपके क्षेत्राधिकार में अभी कोई आवेदन नहीं है।' }}</p>
+      </ng-template>
+    </ng-container>
   </div>
 
   <!-- Recent applications & district-wise counts -->

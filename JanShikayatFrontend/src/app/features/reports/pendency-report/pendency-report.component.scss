@@ -1,19 +1,36 @@
+.pendency-page {
+  padding-top: 0.75rem;
+}
+
 .report-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
-  padding: 1.25rem;
+  padding: 0.9rem 1.1rem 1.1rem;
+}
+
+.report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .report-title {
-  margin: 0 0 0.35rem;
-  text-align: center;
-  font-size: 1.35rem;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.3;
   color: var(--color-primary);
 
+  i {
+    color: var(--color-accent);
+    margin-right: 0.3rem;
+  }
   small {
-    display: block;
     font-size: 0.8rem;
     font-weight: 400;
     color: var(--color-text-muted);
@@ -21,10 +38,13 @@
 }
 
 .report-trail {
-  margin: 0 0 1rem;
-  text-align: center;
+  margin: 0.2rem 0 0;
+  font-size: 0.88rem;
   color: var(--color-text);
 
+  .scope {
+    color: var(--color-text-muted);
+  }
   strong {
     color: var(--color-primary);
   }
@@ -33,13 +53,12 @@
 .report-actions {
   display: flex;
   align-items: flex-end;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
 
   .btn {
-    min-height: 2.6rem;
+    min-height: 2.4rem;
     font-weight: 600;
   }
   .btn-back {
@@ -64,7 +83,7 @@
   color: var(--color-text-muted);
 
   input {
-    min-height: 2.6rem;
+    min-height: 2.4rem;
     padding: 0 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: 8px;
@@ -119,7 +138,7 @@
   }
   .col-num {
     width: 14%;
-    text-align: right;
+    text-align: center !important;
     font-variant-numeric: tabular-nums;
   }
 
@@ -179,6 +198,9 @@
 }
 
 @media (max-width: 860px) {
+  .report-head {
+    flex-direction: column;
+  }
   .report-wrap {
     overflow-x: auto;
   }
