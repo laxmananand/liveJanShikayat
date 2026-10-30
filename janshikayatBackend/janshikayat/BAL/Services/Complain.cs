@@ -523,5 +523,15 @@ namespace janshikayat.BAL.Services
                     AND EXISTS (SELECT 1 FROM Tbl_Applicant_Forward WHERE ApplicantId = @ApplicantId)",
                 parameters);
         }
+
+        // Application number and mobile numbers for an SMS to the applicant (all null when not found)
+        public (string? ApplicationNo, string? MobileNumber, string? MobileNumber2) GetSmsContact(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.QueryFirstOrDefault<(string? ApplicationNo, string? MobileNumber, string? MobileNumber2)>(
+                "SELECT Application_No, Mobile_Number, Mobile_Number2 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId",
+                new { ApplicantId = applicantId });
+        }
     }
 }

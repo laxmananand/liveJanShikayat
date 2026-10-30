@@ -19,6 +19,7 @@ namespace janshikayat.BAL.Interfaces
         void MarkResponsesSeen(long applicantId, string adminRole);
         bool IsClosed(long applicantId);
         ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
+        (string? ApplicationNo, string? MobileNumber, string? MobileNumber2) GetSmsContact(long applicantId);
         PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);
         IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope);
         IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope);

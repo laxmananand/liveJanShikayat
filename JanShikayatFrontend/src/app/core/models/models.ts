@@ -11,6 +11,8 @@ export interface LoginResponse {
   prashakhaId?: number | null;
   officeId?: number | null;
   officeUnitCode?: number | null;
+  /** Tbl_UserLogin.MobileNo is missing: the login page asks for one (the user may skip) */
+  mobileRequired?: boolean;
 }
 
 export interface CurrentUser {

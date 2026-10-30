@@ -14,6 +14,8 @@
         // Mst_Regional_Office.Office_Id and vw_Office_Unit.Unit_Code for Commissioner / DM logins; null for everyone else
         public int? officeId { get; set; }
         public int? officeUnitCode { get; set; }
+        // True when Tbl_UserLogin.MobileNo is empty or not a 10-digit number: the login page then asks for one (skippable)
+        public bool mobileRequired { get; set; }
 
     }
 }

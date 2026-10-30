@@ -49,7 +49,20 @@
 
       <h3 class="form-title">साइन इन</h3>
 
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="mode-radios" role="radiogroup" aria-label="लॉगिन का तरीका">
+        <label class="mode-radio" [class.checked]="mode === 'password'">
+          <input type="radio" name="loginMode" value="password" [checked]="mode === 'password'"
+            [disabled]="loading" (change)="setMode('password')" />
+          <span><i class="fa-solid fa-key"></i> पासवर्ड से</span>
+        </label>
+        <label class="mode-radio" [class.checked]="mode === 'otp'">
+          <input type="radio" name="loginMode" value="otp" [checked]="mode === 'otp'"
+            [disabled]="loading" (change)="setMode('otp')" />
+          <span><i class="fa-solid fa-mobile-screen-button"></i> मोबाइल OTP से</span>
+        </label>
+      </div>
+
+      <form *ngIf="mode === 'password'" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
           <div class="field-box" [class.invalid]="form.get('email')?.touched && form.get('email')?.invalid">
             <label for="email"><i class="fa-regular fa-user"></i> यूज़र आईडी</label>
@@ -86,8 +99,66 @@
           </button>
         </div>
 
+        <ng-container *ngTemplateOutlet="captchaTpl; context: { $implicit: form.controls.captcha }"></ng-container>
+
+        <!-- While the add-mobile popup is open, its messages show inside it -->
+        <ng-container *ngIf="!showMobileModal">
+          <ng-container *ngTemplateOutlet="alertsTpl"></ng-container>
+        </ng-container>
+
+        <button type="submit" class="login-btn" [disabled]="loading">
+          <ng-container *ngIf="!loading"><i class="fa-solid fa-right-to-bracket"></i> साइन इन</ng-container>
+          <ng-container *ngIf="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> साइन इन हो रहा है…</ng-container>
+        </button>
+      </form>
+
+      <!-- OTP login: mobile → SMS, then the 6-digit OTP -->
+      <form *ngIf="mode === 'otp'" [formGroup]="otpForm" (ngSubmit)="otpSent ? verifyLoginOtp() : sendLoginOtp()" novalidate>
+        <ng-container *ngTemplateOutlet="mobileFieldTpl; context: {
+          $implicit: otpForm.controls.mobile, id: 'otp-mobile', label: 'पंजीकृत मोबाइल नंबर', flow: 'login' }"></ng-container>
+
+        <ng-container *ngIf="otpSent">
+          <ng-container *ngTemplateOutlet="otpFieldTpl; context: { $implicit: otpForm.controls.otp, id: 'otp-code' }"></ng-container>
+          <p class="resend-line">
+            <span *ngIf="resendIn > 0">{{ resendIn }} सेकंड बाद नया OTP माँग सकते हैं</span>
+            <button *ngIf="resendIn <= 0" type="button" class="link-btn" (click)="sendLoginOtp()" [disabled]="loading">
+              <i class="fa-solid fa-rotate-right"></i> OTP दोबारा भेजें
+            </button>
+          </p>
+        </ng-container>
+
+        <ng-container *ngTemplateOutlet="alertsTpl"></ng-container>
+
+        <button type="submit" class="login-btn" [disabled]="loading">
+          <ng-container *ngIf="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> कृपया प्रतीक्षा करें…</ng-container>
+          <ng-container *ngIf="!loading && !otpSent"><i class="fa-solid fa-paper-plane"></i> OTP भेजें</ng-container>
+          <ng-container *ngIf="!loading && otpSent"><i class="fa-solid fa-right-to-bracket"></i> सत्यापित करें एवं साइन इन</ng-container>
+        </button>
+      </form>
+
+      <!-- 10 one-digit boxes for a mobile number; read-only with "बदलें" once the OTP is sent -->
+      <ng-template #mobileFieldTpl let-ctrl let-id="id" let-label="label" let-flow="flow">
         <div class="field">
-          <div class="captcha-field" [class.invalid]="form.get('captcha')?.touched && form.get('captcha')?.invalid">
+          <div class="mobile-field" [class.invalid]="ctrl.touched && ctrl.invalid">
+            <div class="mobile-field-head">
+              <label [attr.for]="id"><i class="fa-solid fa-mobile-screen-button"></i> {{ label }}</label>
+              <button *ngIf="otpSent" type="button" class="change-btn"
+                (click)="flow === 'link' ? changeLinkMobile() : changeLoginMobile()">
+                <i class="fa-solid fa-pen"></i> बदलें
+              </button>
+            </div>
+            <app-digit-boxes [formControl]="ctrl" [length]="mobileLength" [inputId]="id" [ariaLabel]="label"
+              [readonly]="otpSent" [invalid]="ctrl.touched && ctrl.invalid"></app-digit-boxes>
+          </div>
+          <span class="error-text" *ngIf="ctrl.touched && ctrl.invalid">
+            कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template #captchaTpl let-ctrl>
+        <div class="field">
+          <div class="captcha-field" [class.invalid]="ctrl.touched && ctrl.invalid">
             <label for="captcha"><i class="fa-solid fa-shield-halved"></i> सुरक्षा कोड</label>
             <div class="captcha-body">
               <div class="captcha-image" [class.loading]="captchaLoading">
@@ -100,16 +171,32 @@
                 aria-label="नया कोड लाएँ" title="नया कोड लाएँ">
                 <i class="fa-solid fa-rotate-right" [class.fa-spin]="captchaLoading"></i>
               </button>
-              <input id="captcha" type="text" formControlName="captcha" placeholder="कोड लिखें"
+              <input id="captcha" type="text" [formControl]="ctrl" placeholder="कोड लिखें"
                 [attr.maxlength]="captchaLength" autocomplete="off" autocapitalize="off" autocorrect="off"
                 spellcheck="false" aria-describedby="captcha-hint" />
             </div>
           </div>
-          <span id="captcha-hint" class="error-text" *ngIf="form.get('captcha')?.touched && form.get('captcha')?.invalid">
+          <span id="captcha-hint" class="error-text" *ngIf="ctrl.touched && ctrl.invalid">
             कृपया चित्र में दिखाए गए {{ captchaLength }} अक्षर दर्ज करें।
           </span>
         </div>
+      </ng-template>
 
+      <ng-template #otpFieldTpl let-ctrl let-id="id">
+        <div class="field">
+          <div class="field-box" [class.invalid]="ctrl.touched && ctrl.invalid">
+            <label [attr.for]="id"><i class="fa-solid fa-key"></i> OTP</label>
+            <input [id]="id" type="text" inputmode="numeric" class="otp-input" [formControl]="ctrl"
+              [attr.maxlength]="otpLength" placeholder="••••••" autocomplete="one-time-code"
+              (input)="digitsOnly(ctrl, otpLength)" />
+          </div>
+          <span class="error-text" *ngIf="ctrl.touched && ctrl.invalid">
+            कृपया SMS में प्राप्त {{ otpLength }} अंकों का OTP दर्ज करें।
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template #alertsTpl>
         <div class="alert alert-error" *ngIf="errorMessage">
           <i class="fa-solid fa-circle-exclamation"></i>
           <span>{{ errorMessage }}</span>
@@ -119,15 +206,56 @@
           <i class="fa-solid fa-circle-info"></i>
           <span>{{ infoMessage }}</span>
         </div>
-
-        <button type="submit" class="login-btn" [disabled]="loading">
-          <ng-container *ngIf="!loading"><i class="fa-solid fa-right-to-bracket"></i> साइन इन</ng-container>
-          <ng-container *ngIf="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> साइन इन हो रहा है…</ng-container>
-        </button>
-      </form>
+      </ng-template>
 
       <div class="form-links">
         <a routerLink="/" class="back-home"><i class="fa-solid fa-arrow-left"></i> होम पर वापस जाएँ</a>      </div>
     </section>
+  </div>
+
+  <!-- Signed in with a password, but no mobile number on the login: add one (verified by OTP) or skip -->
+  <div class="mm-backdrop" *ngIf="showMobileModal" (keydown.escape)="skipMobile()">
+    <div class="mm-modal" role="dialog" aria-modal="true" aria-labelledby="addMobileTitle" aria-describedby="addMobileNote">
+      <div class="mm-head">
+        <span class="mm-icon" aria-hidden="true"><i class="fa-solid fa-mobile-screen-button"></i></span>
+        <div>
+          <h2 id="addMobileTitle">मोबाइल नंबर जोड़ें</h2>
+          <p id="addMobileNote">
+            आपके खाते में मोबाइल नंबर दर्ज नहीं है। नंबर जोड़ने पर आप अगली बार OTP से भी लॉगिन कर सकेंगे।
+          </p>
+        </div>
+        <button type="button" class="mm-close" (click)="skipMobile()" [disabled]="loading" aria-label="अभी छोड़ें">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form class="mm-body" [formGroup]="mobileForm" (ngSubmit)="otpSent ? verifyMobileOtp() : sendMobileOtp()" novalidate>
+        <ng-container *ngTemplateOutlet="mobileFieldTpl; context: {
+          $implicit: mobileForm.controls.mobile, id: 'link-mobile', label: 'मोबाइल नंबर', flow: 'link' }"></ng-container>
+
+        <ng-container *ngIf="otpSent">
+          <ng-container *ngTemplateOutlet="otpFieldTpl; context: { $implicit: mobileForm.controls.otp, id: 'mobile-otp' }"></ng-container>
+          <p class="resend-line">
+            <span *ngIf="resendIn > 0">{{ resendIn }} सेकंड बाद नया OTP माँग सकते हैं</span>
+            <button *ngIf="resendIn <= 0" type="button" class="link-btn" (click)="sendMobileOtp()" [disabled]="loading">
+              <i class="fa-solid fa-rotate-right"></i> OTP दोबारा भेजें
+            </button>
+          </p>
+        </ng-container>
+
+        <ng-container *ngTemplateOutlet="alertsTpl"></ng-container>
+
+        <div class="mm-actions">
+          <button type="button" class="skip-btn" (click)="skipMobile()" [disabled]="loading">
+            अभी छोड़ें <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <button type="submit" class="login-btn" [disabled]="loading">
+            <ng-container *ngIf="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> कृपया प्रतीक्षा करें…</ng-container>
+            <ng-container *ngIf="!loading && !otpSent"><i class="fa-solid fa-paper-plane"></i> OTP भेजें</ng-container>
+            <ng-container *ngIf="!loading && otpSent"><i class="fa-solid fa-circle-check"></i> सत्यापित करें एवं सहेजें</ng-container>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

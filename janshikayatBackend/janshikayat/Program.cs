@@ -1,6 +1,7 @@
 using janshikayat.BAL.Interfaces;
 using janshikayat.BAL.Services;
 using janshikayat.Data;
+using janshikayat.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.IdentityModel.Tokens;
@@ -24,6 +25,13 @@ builder.Services.AddScoped<IMasterData, MasterData>();
 builder.Services.AddScoped<IComplain, Complain>();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+// SMS through the Mobile Seva gateway (Otp:Sms in appsettings.json; the gateway's secrets in user-secrets)
+builder.Services.AddMobileSevaOtp();
+
+// OTPs waiting to be entered (OTP login and verifying a newly added mobile number)
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<OtpCodeStore>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -115,6 +123,11 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) }));
+    // OTP SMS requests: at most 10 per minute per IP (offices share one IP), then 429; each number also waits 60 s between OTPs
+    options.AddPolicy(janshikayat.Controllers.AuthController.OtpSendRateLimit, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
 });
 
 var app = builder.Build();

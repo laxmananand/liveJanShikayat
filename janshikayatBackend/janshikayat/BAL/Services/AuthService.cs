@@ -143,13 +143,7 @@ namespace janshikayat.BAL.Services
             parameters.Add("@Password", decryptedPassword);    
             // Role name comes from Mst_Role (Tbl_UserLogin.Role holds Mst_Role.Id)
             var user = conn.QueryFirstOrDefault<UserLoginRow>(
-                @"SELECT TOP 1
-                       t.AutoId, t.UserName, t.Password,
-                       t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId, t.Prashakha_Id AS PrashakhaId,
-                       t.Office_Id AS OfficeId, t.Office_Unit_Code AS OfficeUnitCode
-                  FROM Tbl_UserLogin t
-                  LEFT JOIN Mst_Role r ON t.Role = r.Id
-                  WHERE t.UserName = @UserName AND t.Password = @Password",
+                "SELECT TOP 1 " + UserLoginColumns + " WHERE t.UserName = @UserName AND t.Password = @Password",
                 parameters
 
                 );
@@ -157,9 +151,56 @@ namespace janshikayat.BAL.Services
             if (user == null)
                 return null;
 
+            return BuildLoginResponse(user);
+        }
+
+        // Logins whose Tbl_UserLogin.MobileNo is mobileNo (other than exceptUserName); OTP login needs exactly one
+        public int CountUsersWithMobile(string mobileNo, string? exceptUserName = null)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.ExecuteScalar<int>(
+                @"SELECT COUNT(*) FROM Tbl_UserLogin
+                  WHERE LTRIM(RTRIM(MobileNo)) = @MobileNo
+                    AND (@ExceptUserName IS NULL OR UserName <> @ExceptUserName)",
+                new { MobileNo = mobileNo, ExceptUserName = exceptUserName });
+        }
+
+        // OTP login: the one login with this mobile number (OTP already checked); null when none or several
+        public LoginResponse? LoginWithMobile(string mobileNo)
+        {
+            using var conn = _context.CreateConnection();
+
+            var users = conn.Query<UserLoginRow>(
+                "SELECT TOP 2 " + UserLoginColumns + " WHERE LTRIM(RTRIM(t.MobileNo)) = @MobileNo",
+                new { MobileNo = mobileNo }).ToList();
+
+            return users.Count == 1 ? BuildLoginResponse(users[0]) : null;
+        }
+
+        // Saves a mobile number (already verified by OTP) on the user's Tbl_UserLogin row
+        public bool UpdateMobile(string userName, string mobileNo)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Execute(
+                "UPDATE Tbl_UserLogin SET MobileNo = @MobileNo WHERE UserName = @UserName",
+                new { MobileNo = mobileNo, UserName = userName }) > 0;
+        }
+
+        // Role name comes from Mst_Role (Tbl_UserLogin.Role holds Mst_Role.Id)
+        private const string UserLoginColumns =
+            @"t.AutoId, t.UserName, t.Password,
+                   t.MobileNo, t.Email, t.Role AS RoleId, r.Role AS RoleName, t.IsActive, t.Branch_Id AS BranchId, t.Prashakha_Id AS PrashakhaId,
+                   t.Office_Id AS OfficeId, t.Office_Unit_Code AS OfficeUnitCode
+              FROM Tbl_UserLogin t
+              LEFT JOIN Mst_Role r ON t.Role = r.Id";
+
+        private LoginResponse BuildLoginResponse(UserLoginRow user)
+        {
             string roleStr = user.RoleName ?? "";
-            // 5) Generate JWT
             var token = GenerateJwtToken(user.UserName, roleStr, user.BranchId, user.PrashakhaId, user.OfficeId, user.OfficeUnitCode);
+            var mobile = user.MobileNo?.Trim();
             return new LoginResponse
             {
                 AuthToken = token,
@@ -169,7 +210,8 @@ namespace janshikayat.BAL.Services
                 branchId = user.BranchId,
                 prashakhaId = user.PrashakhaId,
                 officeId = user.OfficeId,
-                officeUnitCode = user.OfficeUnitCode
+                officeUnitCode = user.OfficeUnitCode,
+                mobileRequired = !(mobile is { Length: 10 } && mobile.All(char.IsAsciiDigit))
             };
         }
 

@@ -1,5 +1,6 @@
 ﻿using janshikayat.BAL.Interfaces;
 using janshikayat.BAL.Services;
+using janshikayat.Infrastructure;
 using janshikayat.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,17 @@ namespace janshikayat.Controllers
         private readonly IComplain _IComplain;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly MobileSevaOtpSender _smsSender;
+        private readonly ILogger<ApplicantController> _logger;
 
-        public ApplicantController(IConfiguration configuration, IComplain IComplain, IHttpContextAccessor httpContextAccessor)
+        public ApplicantController(IConfiguration configuration, IComplain IComplain, IHttpContextAccessor httpContextAccessor,
+            MobileSevaOtpSender smsSender, ILogger<ApplicantController> logger)
         {
             _configuration = configuration;
             _IComplain = IComplain;
             _httpContextAccessor = httpContextAccessor;
+            _smsSender = smsSender;
+            _logger = logger;
         }
         // Mst_Role.Role name carried in the JWT role claim; only this role may create or forward applications
         private const string AdminRole = "Admin";
@@ -71,6 +77,7 @@ namespace janshikayat.Controllers
 
             if (flag > 0)
             {
+                NotifyApplicant(applicant.Mobile_Number, applicant.Mobile_Number2, applicationNo, RegisteredSmsTemplate);
                 return Ok(new { Flag = flag, Message = message, ApplicationNo = applicationNo });
             }
             else
@@ -322,6 +329,9 @@ namespace janshikayat.Controllers
             {
                 return NotFound(new { status = "false", message = "Application not found or not forwarded yet." });
             }
+            var contact = _IComplain.GetSmsContact(request.ApplicantId);
+            NotifyApplicant(contact.MobileNumber, contact.MobileNumber2, contact.ApplicationNo, ClosedSmsTemplate);
+
             return Ok(new { status = "true", message = "Application closed.", data = saved });
         }
 
@@ -340,6 +350,43 @@ namespace janshikayat.Controllers
                 return NotFound(new { status = "false", message = "Application not found." });
             }
             return Ok(new { status = "true", message = "Success", data = tracked });
+        }
+
+        // SMS templates in Otp:Sms:Templates (appsettings.json), registered on DLT
+        private const string RegisteredSmsTemplate = "ApplicationRegistered";
+        private const string ClosedSmsTemplate = "ApplicationClosed";
+
+        // SMS with the application number to the applicant's mobile (the second one when the first is missing
+        // or not 10 digits). Sent in the background so a slow gateway does not hold up the response; a failed
+        // or skipped SMS is only logged, since the application itself is already saved.
+        private void NotifyApplicant(string? mobileNumber, string? mobileNumber2, string? applicationNo, string templateName)
+        {
+            var mobile = new[] { mobileNumber, mobileNumber2 }
+                .Select(m => m?.Trim())
+                .FirstOrDefault(m => m is { Length: 10 } && m.All(char.IsAsciiDigit));
+
+            if (mobile == null || string.IsNullOrEmpty(applicationNo))
+            {
+                _logger.LogInformation("No {Template} SMS for application {ApplicationNo}: no valid mobile number.", templateName, applicationNo);
+                return;
+            }
+            if (!_smsSender.CanSend)
+            {
+                _logger.LogWarning("No {Template} SMS for application {ApplicationNo}: the SMS gateway is not configured.", templateName, applicationNo);
+                return;
+            }
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _smsSender.SendMessageAsync(mobile, applicationNo, templateName, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "{Template} SMS for application {ApplicationNo} failed.", templateName, applicationNo);
+                }
+            });
         }
 
         // Policy name registered in Program.cs

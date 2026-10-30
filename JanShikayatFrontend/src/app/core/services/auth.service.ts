@@ -47,7 +47,16 @@ interface BackendLoginEnvelope {
     prashakhaId?: number | null; // Tbl_UserLogin.Prashakha_Id (Mst_Prashakha.ID) for Prashakha logins
     officeId?: number | null; // Tbl_UserLogin.Office_Id (1 = Commissionary, 2 = DM) for Commissioner / DM logins
     officeUnitCode?: number | null; // Tbl_UserLogin.Office_Unit_Code (division code / district code)
+    mobileRequired?: boolean; // Tbl_UserLogin.MobileNo missing: ask for one after login
   };
+}
+
+/** Backend OTP envelope (POST /Auth/otp/send, /Auth/mobile/send-otp, /Auth/mobile/verify). */
+export interface OtpSendResult {
+  status: boolean;
+  message: string;
+  expiresIn?: number; // seconds the OTP stays valid
+  retryAfter?: number; // seconds before another OTP may be asked for
 }
 
 interface BackendCaptchaEnvelope {
@@ -135,43 +144,72 @@ export class AuthService {
         CaptchaCode: captchaCode
       })
       .pipe(
-        map((res) => {
-          if (!res.status || !res.data) {
-            throw new Error(res.message || 'Invalid username or password.');
-          }
-          const d = res.data;
-          const expiresAt = new Date(tokenExpiry(d.authToken) ?? Date.now() + 60 * 60_000).toISOString();
-          const resp: LoginResponse = {
-            token: d.authToken,
-            expiresAt,
-            email: d.username,
-            fullName: d.username,
-            role: mapRole(d.role),
-            branchId: d.branchId ?? null,
-            departmentId: null,
-            prashakhaId: d.prashakhaId ?? null,
-            officeId: d.officeId ?? null,
-            officeUnitCode: d.officeUnitCode ?? null
-          };
-          return resp;
-        }),
-        tap((res) => {
-          localStorage.setItem(TOKEN_KEY, res.token);
-          const user: CurrentUser = {
-            email: res.email,
-            fullName: res.fullName,
-            role: res.role,
-            branchId: res.branchId,
-            departmentId: res.departmentId,
-            prashakhaId: res.prashakhaId ?? null,
-            officeId: res.officeId ?? null,
-            officeUnitCode: res.officeUnitCode ?? null
-          };
-          localStorage.setItem(USER_KEY, JSON.stringify(user));
-          this.currentUser.set(user);
-          this.scheduleExpiry();
-        })
+        map((res) => this.toLoginResponse(res, 'Invalid username or password.')),
+        tap((res) => this.startSession(res))
       );
+  }
+
+  /** API: POST /Auth/otp/send { MobileNo } → OtpSendResult (an SMS to a registered number) */
+  sendLoginOtp(mobileNo: string): Observable<OtpSendResult> {
+    return this.http.post<OtpSendResult>(`${this.authUrl}/otp/send`, { MobileNo: mobileNo });
+  }
+
+  /** API: POST /Auth/otp/verify { MobileNo, Otp } → LoginResponse (same session as a password login) */
+  loginWithOtp(mobileNo: string, otp: string): Observable<LoginResponse> {
+    return this.http
+      .post<BackendLoginEnvelope>(`${this.authUrl}/otp/verify`, { MobileNo: mobileNo, Otp: otp })
+      .pipe(
+        map((res) => this.toLoginResponse(res, 'Incorrect OTP.')),
+        tap((res) => this.startSession(res))
+      );
+  }
+
+  /** API: POST /Auth/mobile/send-otp { MobileNo } (logged in) → OtpSendResult, to verify a number before saving it */
+  sendMobileOtp(mobileNo: string): Observable<OtpSendResult> {
+    return this.http.post<OtpSendResult>(`${this.authUrl}/mobile/send-otp`, { MobileNo: mobileNo });
+  }
+
+  /** API: POST /Auth/mobile/verify { MobileNo, Otp } (logged in) → saves the number on the user's login */
+  verifyMobileOtp(mobileNo: string, otp: string): Observable<OtpSendResult> {
+    return this.http.post<OtpSendResult>(`${this.authUrl}/mobile/verify`, { MobileNo: mobileNo, Otp: otp });
+  }
+
+  private toLoginResponse(res: BackendLoginEnvelope, fallbackMessage: string): LoginResponse {
+    if (!res.status || !res.data) {
+      throw new Error(res.message || fallbackMessage);
+    }
+    const d = res.data;
+    const expiresAt = new Date(tokenExpiry(d.authToken) ?? Date.now() + 60 * 60_000).toISOString();
+    return {
+      token: d.authToken,
+      expiresAt,
+      email: d.username,
+      fullName: d.username,
+      role: mapRole(d.role),
+      branchId: d.branchId ?? null,
+      departmentId: null,
+      prashakhaId: d.prashakhaId ?? null,
+      officeId: d.officeId ?? null,
+      officeUnitCode: d.officeUnitCode ?? null,
+      mobileRequired: !!d.mobileRequired
+    };
+  }
+
+  private startSession(res: LoginResponse): void {
+    localStorage.setItem(TOKEN_KEY, res.token);
+    const user: CurrentUser = {
+      email: res.email,
+      fullName: res.fullName,
+      role: res.role,
+      branchId: res.branchId,
+      departmentId: res.departmentId,
+      prashakhaId: res.prashakhaId ?? null,
+      officeId: res.officeId ?? null,
+      officeUnitCode: res.officeUnitCode ?? null
+    };
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    this.currentUser.set(user);
+    this.scheduleExpiry();
   }
 
   /** API: POST /auth/register (SuperAdmin only) → { message } */
