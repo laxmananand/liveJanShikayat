@@ -65,13 +65,6 @@ export class LoginComponent implements OnDestroy {
     });
   }
 
-  /** Uppercase, no spaces — the server compares case-insensitively, this just reads like the image. */
-  normaliseCaptcha(): void {
-    const ctrl = this.form.get('captcha');
-    const value = (ctrl?.value ?? '').replace(/\s+/g, '').toUpperCase().slice(0, CAPTCHA_LENGTH);
-    if (ctrl && value !== ctrl.value) ctrl.setValue(value, { emitEvent: false });
-  }
-
   forgotPassword(): void {
     this.errorMessage = '';
     clearTimeout(this.infoTimer);

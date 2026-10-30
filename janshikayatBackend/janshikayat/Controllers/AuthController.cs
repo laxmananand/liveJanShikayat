@@ -73,7 +73,7 @@ namespace janshikayat.Controllers
             if (!string.Equals(
                     captchaText,
                     model.CaptchaCode,
-                    StringComparison.OrdinalIgnoreCase))
+                    StringComparison.Ordinal))
             {
                 return Ok(new
                 {
@@ -130,7 +130,7 @@ namespace janshikayat.Controllers
             if (!string.Equals(
                     captchaText,
                     model.CaptchaCode,
-                    StringComparison.OrdinalIgnoreCase))
+                    StringComparison.Ordinal))
             {
                 return Ok(new
                 {

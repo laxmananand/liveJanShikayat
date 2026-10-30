@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace janshikayat.BAL.Services
@@ -34,16 +35,24 @@ namespace janshikayat.BAL.Services
 
         public string GenerateCaptchaText(int length)
         {           
-            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            Random random = new Random();
-            StringBuilder result = new StringBuilder();
+            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const string lower = "abdefghijmnqrt";
+            const string digits = "23456789";
+            const string chars = upper + lower + digits;
+
+            var result = new char[length];
             for (int i = 0; i < length; i++)
+                result[i] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+
+            // Always a real mix: at least one capital and one small letter, at different places
+            if (length >= 2)
             {
-                result.Append(
-                    chars[random.Next(chars.Length)]
-                );
+                int u = RandomNumberGenerator.GetInt32(length);
+                int l = (u + 1 + RandomNumberGenerator.GetInt32(length - 1)) % length;
+                result[u] = upper[RandomNumberGenerator.GetInt32(upper.Length)];
+                result[l] = lower[RandomNumberGenerator.GetInt32(lower.Length)];
             }
-            return result.ToString();
+            return new string(result);
         }
 
 
@@ -58,9 +67,6 @@ namespace janshikayat.BAL.Services
                 "width=\"220\" height=\"80\" viewBox=\"0 0 220 80\">"
             );
 
-            // No background or border: the page's captcha tile supplies both
-
-            // Random lines
             for (int i = 0; i < 8; i++)
             {
                 int x1 = random.Next(0, 220);

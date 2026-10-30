@@ -208,8 +208,8 @@
                     <i class="fa-solid fa-rotate-right" [class.fa-spin]="captchaLoading"></i>
                   </button>
                   <input id="captchaCode" type="text" formControlName="captchaCode" maxlength="10"
-                         autocomplete="off" autocapitalize="characters" spellcheck="false"
-                         placeholder="चित्र में दिखे अक्षर" />
+                         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+                         placeholder="चित्र में दिखे अक्षर (A ≠ a)" />
                 </div>
                 <span class="error-text" *ngIf="invalid('captchaCode')">चित्र में दिखाया गया कोड दर्ज करें।</span>
               </div>
