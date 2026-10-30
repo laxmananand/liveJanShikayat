@@ -222,7 +222,7 @@
                   <label for="pdfUploadInput" class="form-label">
                     संबंधित दस्तावेज़ / आवेदन पत्र (PDF) <span class="req">*</span>
                   </label>
-                  <span class="file-spec-tag"><i class="fa-solid fa-file-shield"></i> केवल PDF • अधिकतम 200KB</span>
+                  <span class="file-spec-tag"><i class="fa-solid fa-file-shield"></i> केवल PDF • अधिकतम 5MB</span>
                 </div>
 
                 <div class="pdf-card-box" [class.has-file]="!!pdfFile" [class.has-error]="!!pdfError">
@@ -242,7 +242,7 @@
                     </div>
                     <div class="pdf-upload-instructions">
                       <span class="pdf-prompt"><strong>फ़ाइल चुनें</strong> या यहाँ क्लिक करें</span>
-                      <small class="pdf-limits">केवल .pdf (अधिकतम 200 KB)</small>
+                      <small class="pdf-limits">केवल .pdf (अधिकतम 5 MB)</small>
                     </div>
                     <button type="button" class="btn btn-browse-action" (click)="$event.stopPropagation(); pdfFileInput.click()">
                       <i class="fa-solid fa-folder-open"></i> ब्राउज़

@@ -124,10 +124,16 @@ public sealed partial class MobileSevaOtpSender(IConfiguration configuration, IH
         }
 
         // Hindi text goes as a Unicode message, each character written as &#code; (the gateway's
-        // format); an English OTP as an OTP message, and other English text as a single message.
+        // format); an OTP as an OTP message (priority route), and other text as a single message.
         var unicode = !Ascii.IsValid(message);
         var content = unicode ? string.Concat(message.Select(c => $"&#{(int)c};")) : message;
-        var serviceType = unicode ? "unicodemsg" : isOtp ? "otpmsg" : "singlemsg";
+        var serviceType = (unicode, isOtp) switch
+        {
+            (true, true) => "unicodeotpmsg",
+            (true, false) => "unicodemsg",
+            (false, true) => "otpmsg",
+            (false, false) => "singlemsg"
+        };
 
         // The password goes as its SHA-1, and key proves the SecureKey without sending it: the
         // SHA-512 of username, sender header, content and SecureKey written one after the other.

@@ -373,13 +373,13 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     this.availableThanas = [];
   }
 
-  // ── PDF Attachment & Validation (Max 200KB, PDF only) ──
+  // ── PDF Attachment & Validation (Max 5MB, PDF only) ──
   onPdfSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      const maxSizeBytes = 200 * 1024; // 200 KB (backend limit for Applicants_Photograph)
+      const maxSizeBytes = 5 * 1024 * 1024; // 5 MB (backend limit for Applicants_Photograph)
 
       if (!isPdf) {
         this.pdfError = 'कृपया केवल पीडीएफ (.pdf) फ़ाइल ही अपलोड करें।';
@@ -391,8 +391,8 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       }
 
       if (file.size > maxSizeBytes) {
-        const sizeInKb = (file.size / 1024).toFixed(0);
-        this.pdfError = `फ़ाइल का आकार 200KB से अधिक नहीं होना चाहिए (वर्तमान: ${sizeInKb} KB)।`;
+        const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
+        this.pdfError = `फ़ाइल का आकार 5MB से अधिक नहीं होना चाहिए (वर्तमान: ${sizeInMb} MB)।`;
         this.pdfFile = null;
         this.selectedFile = null;
         this.pdfSizeDisplay = '';

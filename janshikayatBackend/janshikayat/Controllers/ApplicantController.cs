@@ -46,13 +46,13 @@ namespace janshikayat.Controllers
             string photoPath = "";
             if (applicant.Applicants_Photograph != null)
             {
-                long maxSize = 200 * 1024;
+                long maxSize = 5 * 1024 * 1024;
                 if (applicant.Applicants_Photograph.Length > maxSize)
                 {
                     return BadRequest(new
                     {
                         status = "false",
-                        message = "Profile photo size should be less than 200 KB"
+                        message = "Document size should be less than 5 MB"
                     });
                 }
                 string folder = Path.Combine(Directory.GetCurrentDirectory(),

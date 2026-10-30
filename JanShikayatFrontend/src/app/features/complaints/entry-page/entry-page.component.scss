@@ -369,12 +369,12 @@
   gap: 4px;
 }
 
-/* Empty upload box is highlighted in saffron so the required PDF is not missed;
+/* Empty upload box is highlighted with a blue dashed border so the required PDF is not missed;
    green (attached) and red (error) states below override it. */
 .pdf-card-box {
   border: 1.5px dashed #2658f8;
   border-radius: 7px;
-  background: linear-gradient(90deg, #fff4e6 0%, #fffaf3 100%);
+  background: #ffffff;
   box-shadow: 0 0 0 3px rgba(38, 88, 248, 0.12);
   padding: 4px 10px;
   height: 35px;
