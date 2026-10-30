@@ -8,11 +8,12 @@ import { FontSizeService } from '../../core/services/font-size.service';
 import { ForwardService } from '../../core/services/forward.service';
 import { roleLabel } from '../../core/utils/labels';
 import { FEATURES } from '../../core/config/features';
+import { WatermarkComponent } from '../watermark/watermark.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, WatermarkComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })

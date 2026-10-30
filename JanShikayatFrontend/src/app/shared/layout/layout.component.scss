@@ -511,8 +511,8 @@
 }
 
 /* ───────────────────────────────────────────────
-   Watermark — faint Gautam Buddha over the content area.
-   Sits above content but is click-through (image has a transparent background).
+   Watermark — Bihar Govt identity over the content area.
+   Sits above content but is click-through; see app-watermark for the artwork.
    ─────────────────────────────────────────────── */
 .watermark {
   position: fixed;
@@ -521,32 +521,16 @@
   right: 0;
   bottom: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   z-index: 50;
   transition: left var(--transition-smooth);
 
-  img {
-    height: min(60vh, 528px); /* never upscale past the source size, keeps it crisp */
-    width: auto;
-    opacity: 0.1;
-    user-select: none;
+  app-watermark {
+    --wm-size: min(56vh, 528px); /* never upscale past the source size, keeps it crisp */
+    --wm-opacity: 0.55; /* quieter than the landing hero — officers read data over it all day */
   }
-}
-
-.watermark-text {
-  font-size: clamp(1.8rem, 5vh, 3rem);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-  color: #12398f;
-  opacity: 0.12;
-  user-select: none;
-  white-space: nowrap;
-  text-align: center;
-  margin-top: calc(min(60vh, 528px) * -0.06); /* tuck under the lotus base */
 }
 
 .sidebar-collapsed .watermark {
