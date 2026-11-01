@@ -190,7 +190,7 @@
 /* ── KPI Metric Ribbon Grid ── */
 .kpi-ribbon-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 
@@ -209,8 +209,9 @@
   border-radius: 6px;
   padding: 12px 16px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
   transition: all 0.18s ease;
@@ -234,6 +235,7 @@
 
   .kpi-info {
     flex: 1;
+    min-width: calc(100% - 54px); /* icon + gap: the trend chip takes its own line in these narrow cards */
 
     .kpi-label {
       display: block;
@@ -274,11 +276,19 @@
     }
   }
 
+  &.card-registered {
+    border-top: 3px solid #4a5a7c;
+    .kpi-icon-wrap {
+      background: #e7ecf6;
+      color: #4a5a7c;
+    }
+  }
+
   &.card-pending {
-    border-top: 3px solid #174bd9;
+    border-top: 3px solid #b45309;
     .kpi-icon-wrap {
       background: #fef3c7;
-      color: #174bd9;
+      color: #b45309;
     }
     .trend-amber {
       color: #92400e;
@@ -869,31 +879,15 @@
     border-radius: 50%;
   }
 
-  &.status-Pending {
-    background: #fef3c7;
-    color: #92400e;
+  &.status-Registered {
+    background: #e7ecf6;
+    color: #313f5e;
     .status-pulse-dot {
-      background: #174bd9;
+      background: #4a5a7c;
     }
   }
 
-  &.status-UnderReview {
-    background: #e8ecf6;
-    color: #1b3d89;
-    .status-pulse-dot {
-      background: #17284a;
-    }
-  }
-
-  &.status-ForwardedToDepartment {
-    background: #eef2f9;
-    color: #5e2b4a;
-    .status-pulse-dot {
-      background: #7b3a62;
-    }
-  }
-
-  &.status-ForwardedForFieldEnquiry {
+  &.status-Forwarded {
     background: #d7e1f6;
     color: #1c366e;
     .status-pulse-dot {
@@ -901,19 +895,19 @@
     }
   }
 
-  &.status-ActionTaken {
-    background: #d1fae5;
-    color: #065f46;
+  &.status-Pending {
+    background: #fef3c7;
+    color: #92400e;
     .status-pulse-dot {
-      background: #10b981;
+      background: #b45309;
     }
   }
 
   &.status-Disposed {
-    background: #e7ecf6;
-    color: #313f5e;
+    background: #d1fae5;
+    color: #065f46;
     .status-pulse-dot {
-      background: #4a5a7c;
+      background: #10b981;
     }
   }
 }

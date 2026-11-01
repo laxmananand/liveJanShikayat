@@ -204,7 +204,7 @@ namespace janshikayat.BAL.Services
         }
 
         // Oldest first, so the last row per application is its latest forward
-        public IEnumerable<ApplicantForwardDto> GetForwards()
+        public IEnumerable<ApplicantForwardDto> GetForwards(string adminRole)
         {
             using var conn = _context.CreateConnection();
 
@@ -212,28 +212,34 @@ namespace janshikayat.BAL.Services
                 @"SELECT f.ApplicantId, f.CategoryId, f.CategoryLabel, f.BranchId, f.BranchLabel,
                          f.ComplaintTypeId, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt,
                          f.PrashakhaId, f.PrashakhaLabel, f.OfficeId, f.OfficeLabel, f.OfficeUnitCode, f.OfficeUnitLabel,
-                         " + ClosureColumns + @"
+                         " + StatusColumns + ", " + ClosureColumns + @"
                   FROM Tbl_Applicant_Forward f
                   LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
-                  ORDER BY f.ForwardedDate, f.ID");
+                  " + FirstReplyApply + @"
+                  ORDER BY f.ForwardedDate, f.ID",
+                new { AdminRole = adminRole });
         }
 
         // Latest forward per application, newest first, limited to what the login may see (ScopeFilter)
-        public IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope)
+        public IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope, string adminRole)
         {
             using var conn = _context.CreateConnection();
+
+            var parameters = new DynamicParameters(scope);
+            parameters.Add("@AdminRole", adminRole);
 
             return conn.Query<ApplicantForwardDto>(
                 @"SELECT f.ApplicantId, f.CategoryId, f.CategoryLabel, f.BranchId, f.BranchLabel,
                          f.ComplaintTypeId, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt,
                          f.PrashakhaId, f.PrashakhaLabel, f.OfficeId, f.OfficeLabel, f.OfficeUnitCode, f.OfficeUnitLabel,
-                         " + ClosureColumns + @"
+                         " + StatusColumns + ", " + ClosureColumns + @"
                   FROM (SELECT x.*, ROW_NUMBER() OVER (PARTITION BY x.ApplicantId ORDER BY x.ForwardedDate DESC, x.ID DESC) AS rn
                         FROM Tbl_Applicant_Forward x) f
                   LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
+                  " + FirstReplyApply + @"
                   WHERE f.rn = 1 AND " + ScopeFilter + @"
                   ORDER BY f.ForwardedDate DESC, f.ID DESC",
-                scope);
+                parameters);
         }
 
         // Applications a login may see, for a query whose forward is f (Tbl_Applicant_Forward, LEFT JOINed
@@ -249,12 +255,33 @@ namespace janshikayat.BAL.Services
                                                                                   WHERE m.Division_Code = @OfficeUnitCode))))
                OR (@OfficeId = 2 AND f.OfficeId = 2 AND f.OfficeUnitCode = @OfficeUnitCode))";
 
+        // When the receiving office first replied (a remark by a role other than Admin), for a query whose forward is f.
+        // NULL when it has not replied, or when f is NULL (not forwarded). Needs the @AdminRole parameter.
+        private const string FirstReplyApply =
+            @"OUTER APPLY (SELECT MIN(m.CreatedDate) AS FirstResponseAt
+                           FROM Tbl_Applicant_Remarks m
+                           WHERE m.ApplicantId = f.ApplicantId AND ISNULL(m.RemarkByRole, '') <> @AdminRole) r";
+
+        // The one rule for an application's status (ApplicationStatus), for a query with f (forward, LEFT JOINed where
+        // unforwarded applications count), c (closure, LEFT JOIN) and r (FirstReplyApply). A new status starts here.
+        private const string StatusCase =
+            "CASE WHEN c.ID IS NOT NULL THEN '" + ApplicationStatus.Disposed + @"'
+                  WHEN f.ID IS NULL THEN '" + ApplicationStatus.Registered + @"'
+                  WHEN r.FirstResponseAt IS NOT NULL THEN '" + ApplicationStatus.Pending + @"'
+                  ELSE '" + ApplicationStatus.Forwarded + "' END";
+
+        private const string StatusColumns = StatusCase + " AS Status, r.FirstResponseAt";
+
+        private static string StatusCount(string status) =>
+            $"SUM(CASE WHEN {StatusCase} = '{status}' THEN 1 ELSE 0 END) AS {status}";
+
         // Pendency Report: shared FROM / WHERE. An application is forwarded once (UX_Applicant_Forward_ApplicantId),
         // so f is its forward or NULL; c is its closure or NULL. Village / thana / panchayat may be 0 (not selected).
         private const string PendencySource =
             @"FROM Tbl_Applicant_Details d
               LEFT JOIN Tbl_Applicant_Forward f ON f.ApplicantId = d.ID
               LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = d.ID
+              " + FirstReplyApply + @"
               LEFT JOIN mst_Commissionary_Districts dist ON dist.DISTRICTCODE = d.District
               LEFT JOIN Blocks b ON b.BlockCode = d.Block AND b.DistCode = d.District
               LEFT JOIN mst_Panchayats pt ON pt.PanchayatCode = d.Panchayat AND pt.BlockCode = d.Block AND pt.DistrictCode = d.District
@@ -269,9 +296,10 @@ namespace janshikayat.BAL.Services
                 AND (@ToDate IS NULL OR d.Application_Date < DATEADD(DAY, 1, @ToDate))
                 AND ";
 
-        private static DynamicParameters PendencyParameters(PendencyReportRequest request, AccessScope scope)
+        private static DynamicParameters PendencyParameters(PendencyReportRequest request, AccessScope scope, string adminRole)
         {
             var parameters = new DynamicParameters(scope);
+            parameters.Add("@AdminRole", adminRole);
             parameters.Add("@District", request.District);
             parameters.Add("@Block", request.Block);
             parameters.Add("@Thana", request.Thana);
@@ -282,7 +310,7 @@ namespace janshikayat.BAL.Services
         }
 
         // Counts per district / block / thana / panchayat; the grouping columns come from this fixed list, never the request
-        public IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope)
+        public IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope, string adminRole)
         {
             var (code, name) = (request.Level ?? "").ToLowerInvariant() switch
             {
@@ -297,19 +325,20 @@ namespace janshikayat.BAL.Services
             return conn.Query<PendencyRowDto>(
                 $@"SELECT {code} AS Code, ISNULL(MAX({name}), '') AS Name,
                           COUNT(*) AS Total,
-                          SUM(CASE WHEN f.ID IS NULL THEN 1 ELSE 0 END) AS Unforwarded,
-                          SUM(CASE WHEN f.ID IS NOT NULL AND c.ID IS NULL THEN 1 ELSE 0 END) AS Pending,
-                          SUM(CASE WHEN c.ID IS NOT NULL THEN 1 ELSE 0 END) AS Disposed
+                          {StatusCount(ApplicationStatus.Registered)},
+                          {StatusCount(ApplicationStatus.Forwarded)},
+                          {StatusCount(ApplicationStatus.Pending)},
+                          {StatusCount(ApplicationStatus.Disposed)}
                    " + PendencySource + ScopeFilter + $@"
                    GROUP BY {code}
                    ORDER BY CASE WHEN {code} = 0 THEN 1 ELSE 0 END, Name",
-                PendencyParameters(request, scope));
+                PendencyParameters(request, scope, adminRole));
         }
 
-        // The applications behind a count, pending ones first and the oldest of them on top
-        public IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope)
+        // The applications behind a count, undisposed ones first and the oldest of them on top
+        public IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope, string adminRole)
         {
-            var parameters = PendencyParameters(request, scope);
+            var parameters = PendencyParameters(request, scope, adminRole);
             parameters.Add("@Status", (request.Status ?? "").ToLowerInvariant());
 
             using var conn = _context.CreateConnection();
@@ -323,13 +352,10 @@ namespace janshikayat.BAL.Services
                          ISNULL(th.Police_Station, '') AS PoliceStation,
                          f.CategoryLabel, f.BranchLabel, f.ComplaintTypeLabel, f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel,
                          f.ForwardedDate AS ForwardedAt, c.ClosedDate AS ClosedAt,
-                         CASE WHEN c.ID IS NOT NULL THEN 'Disposed' WHEN f.ID IS NOT NULL THEN 'Pending' ELSE 'Unforwarded' END AS Status,
+                         " + StatusCase + @" AS Status,
                          DATEDIFF(DAY, ISNULL(d.Application_Date, d.CreatedDate), ISNULL(c.ClosedDate, GETDATE())) AS PendingDays
                   " + PendencySource + ScopeFilter + @"
-                    AND (@Status = ''
-                         OR (@Status = 'unforwarded' AND f.ID IS NULL)
-                         OR (@Status = 'pending' AND f.ID IS NOT NULL AND c.ID IS NULL)
-                         OR (@Status = 'disposed' AND c.ID IS NOT NULL))
+                    AND (@Status = '' OR LOWER(" + StatusCase + @") = @Status)
                   ORDER BY CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END, ISNULL(d.Application_Date, d.CreatedDate), d.ID",
                 parameters);
         }
@@ -393,9 +419,7 @@ namespace janshikayat.BAL.Services
                          r.FirstResponseAt, c.ClosedDate
                   FROM Tbl_Applicant_Details d
                   LEFT JOIN Tbl_Applicant_Forward f ON f.ApplicantId = d.ID
-                  OUTER APPLY (SELECT MIN(m.CreatedDate) AS FirstResponseAt
-                               FROM Tbl_Applicant_Remarks m
-                               WHERE m.ApplicantId = d.ID AND ISNULL(m.RemarkByRole, '') <> @AdminRole) r
+                  " + FirstReplyApply + @"
                   LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = d.ID
                   WHERE d.Application_No = @ApplicationNo AND d.Is_Active = 1",
                 new { ApplicationNo = applicationNo, AdminRole = adminRole });
@@ -403,13 +427,13 @@ namespace janshikayat.BAL.Services
                 return null;
 
             var registeredAt = row.CreatedDate ?? DateTime.Now;
-            var timeline = new List<PublicTimelineEntryDto> { new() { Status = "Pending", At = registeredAt } };
+            var timeline = new List<PublicTimelineEntryDto> { new() { Status = ApplicationStatus.Registered, At = registeredAt } };
             if (row.ForwardedDate != null)
-                timeline.Add(new() { Status = "ForwardedToDepartment", At = row.ForwardedDate.Value });
-            if (row.ForwardedDate != null && row.FirstResponseAt != null)
-                timeline.Add(new() { Status = "ActionTaken", At = row.FirstResponseAt.Value });
+                timeline.Add(new() { Status = ApplicationStatus.Forwarded, At = row.ForwardedDate.Value });
+            if (row.FirstResponseAt != null)
+                timeline.Add(new() { Status = ApplicationStatus.Pending, At = row.FirstResponseAt.Value });
             if (row.ClosedDate != null)
-                timeline.Add(new() { Status = "Disposed", At = row.ClosedDate.Value });
+                timeline.Add(new() { Status = ApplicationStatus.Disposed, At = row.ClosedDate.Value });
 
             var office = row.OfficeUnitLabel ?? row.OfficeLabel ?? row.PrashakhaLabel;
             return new PublicTrackingDto

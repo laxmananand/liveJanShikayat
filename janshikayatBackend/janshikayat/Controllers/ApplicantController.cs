@@ -157,7 +157,7 @@ namespace janshikayat.Controllers
         [HttpGet("get-forwards")]
         public IActionResult GetForwards()
         {
-            return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwards() });
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwards(AdminRole) });
         }
 
         // Forwarded Applications page: Admin sees every forwarded application; any other login those forwarded to
@@ -170,7 +170,7 @@ namespace janshikayat.Controllers
             if (scope.IsEmpty)
                 return Ok(new { status = "true", message = "Success", data = Array.Empty<ApplicantForwardDto>() });
 
-            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(scope) });
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetLatestForwards(scope, AdminRole) });
         }
 
         // Pendency Report: counts per district / block / thana / panchayat, each login within its own hierarchy
@@ -179,7 +179,7 @@ namespace janshikayat.Controllers
         public IActionResult GetPendencyReport([FromQuery] PendencyReportRequest request)
         {
             var scope = CurrentScope();
-            var data = scope.IsEmpty ? Enumerable.Empty<PendencyRowDto>() : _IComplain.GetPendencyReport(request, scope);
+            var data = scope.IsEmpty ? Enumerable.Empty<PendencyRowDto>() : _IComplain.GetPendencyReport(request, scope, AdminRole);
             return Ok(new { status = "true", message = "Success", data });
         }
 
@@ -189,7 +189,7 @@ namespace janshikayat.Controllers
         public IActionResult GetPendencyApplications([FromQuery] PendencyReportRequest request)
         {
             var scope = CurrentScope();
-            var data = scope.IsEmpty ? Enumerable.Empty<PendencyApplicationDto>() : _IComplain.GetPendencyApplications(request, scope);
+            var data = scope.IsEmpty ? Enumerable.Empty<PendencyApplicationDto>() : _IComplain.GetPendencyApplications(request, scope, AdminRole);
             return Ok(new { status = "true", message = "Success", data });
         }
 

@@ -28,15 +28,17 @@ const LEVELS: { level: PendencyLevel; code: string; name: string; label: string;
 ];
 
 const STATUS_TEXT: Record<PendencyApplication['status'], string> = {
-  Unforwarded: 'अग्रसारण हेतु लंबित',
-  Pending: 'कार्यालय स्तर पर लंबित',
+  Registered: 'पंजीकृत',
+  Forwarded: 'अग्रेषित',
+  Pending: 'लंबित',
   Disposed: 'निष्पादित'
 };
 
 const STATUS_FILTER_TEXT: Record<PendencyStatus, string> = {
   '': 'सभी आवेदन',
-  unforwarded: 'अग्रसारण हेतु लंबित',
-  pending: 'कार्यालय स्तर पर लंबित',
+  registered: 'पंजीकृत',
+  forwarded: 'अग्रेषित',
+  pending: 'लंबित',
   disposed: 'निष्पादित'
 };
 
@@ -125,11 +127,12 @@ export class PendencyReportComponent {
     return this.rows.reduce(
       (t, r) => ({
         total: t.total + r.total,
-        unforwarded: t.unforwarded + r.unforwarded,
+        registered: t.registered + r.registered,
+        forwarded: t.forwarded + r.forwarded,
         pending: t.pending + r.pending,
         disposed: t.disposed + r.disposed
       }),
-      { total: 0, unforwarded: 0, pending: 0, disposed: 0 }
+      { total: 0, registered: 0, forwarded: 0, pending: 0, disposed: 0 }
     );
   }
 
@@ -294,7 +297,7 @@ export class PendencyReportComponent {
     const header = this.listView
       ? ['क्रम सं.', 'आवेदन संख्या', 'आवेदक का नाम', 'पिता/पति का नाम', 'मोबाइल', 'जिला', 'प्रखंड', 'पंचायत', 'गाँव', 'थाना',
          'आवेदन प्राप्ति की तिथि', 'अग्रेषित', 'शिकायत का प्रकार', 'अग्रेषित दिनांक', 'स्थिति', 'निष्पादन दिनांक', 'दिन']
-      : ['क्रम सं.', this.level.label, 'कुल आवेदन', ...(this.isAdmin ? ['अग्रसारण हेतु लंबित'] : []), 'कार्यालय स्तर पर लंबित', 'निष्पादित'];
+      : ['क्रम सं.', this.level.label, 'कुल आवेदन', ...(this.isAdmin ? ['पंजीकृत'] : []), 'अग्रेषित', 'लंबित', 'निष्पादित'];
 
     const day = (v: string | null) => (v ? v.slice(0, 10).split('-').reverse().join('/') : '');
     const body: (string | number)[][] = this.listView
@@ -304,8 +307,8 @@ export class PendencyReportComponent {
           a.complaintTypeLabel ?? '', day(a.forwardedAt), this.statusText(a.status), day(a.closedAt), a.pendingDays
         ])
       : [
-          ...this.rows.map((r, i) => [i + 1, this.rowName(r), r.total, ...(this.isAdmin ? [r.unforwarded] : []), r.pending, r.disposed]),
-          ['', 'कुल', this.totals.total, ...(this.isAdmin ? [this.totals.unforwarded] : []), this.totals.pending, this.totals.disposed]
+          ...this.rows.map((r, i) => [i + 1, this.rowName(r), r.total, ...(this.isAdmin ? [r.registered] : []), r.forwarded, r.pending, r.disposed]),
+          ['', 'कुल', this.totals.total, ...(this.isAdmin ? [this.totals.registered] : []), this.totals.forwarded, this.totals.pending, this.totals.disposed]
         ];
 
     const title = ['पेंडेंसी रिपोर्ट', ...this.trail.map((t) => `${t.label}: ${t.name}`), this.listView ? this.statusFilterText : ''].filter(Boolean);

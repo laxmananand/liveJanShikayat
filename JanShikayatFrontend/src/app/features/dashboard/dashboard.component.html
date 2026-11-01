@@ -23,7 +23,7 @@
 
 <!-- Loading Skeleton -->
 <div class="summary-grid" *ngIf="loading">
-  <div class="stat-card skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+  <div class="stat-card skeleton" *ngFor="let i of [1,2,3,4]">
     <div class="skeleton-line wide"></div>
     <div class="skeleton-line narrow"></div>
   </div>
@@ -81,11 +81,14 @@
         <button type="button" class="pendency-chip" (click)="openPendencyList('')">
           <span>कुल आवेदन</span><b>{{ pendencyTotals.total }}</b>
         </button>
-        <button type="button" class="pendency-chip warn" *ngIf="isAdmin" (click)="openPendencyList('unforwarded')">
-          <span>अग्रसारण हेतु लंबित</span><b>{{ pendencyTotals.unforwarded }}</b>
+        <button type="button" class="pendency-chip" *ngIf="isAdmin" (click)="openPendencyList('registered')">
+          <span>पंजीकृत</span><b>{{ pendencyTotals.registered }}</b>
+        </button>
+        <button type="button" class="pendency-chip warn" (click)="openPendencyList('forwarded')">
+          <span>अग्रेषित</span><b>{{ pendencyTotals.forwarded }}</b>
         </button>
         <button type="button" class="pendency-chip danger" (click)="openPendencyList('pending')">
-          <span>कार्यालय स्तर पर लंबित</span><b>{{ pendencyTotals.pending }}</b>
+          <span>लंबित</span><b>{{ pendencyTotals.pending }}</b>
         </button>
         <button type="button" class="pendency-chip ok" (click)="openPendencyList('disposed')">
           <span>निष्पादित</span><b>{{ pendencyTotals.disposed }}</b>
@@ -98,8 +101,9 @@
             <tr>
               <th>जिला</th>
               <th class="num">कुल</th>
-              <th class="num" *ngIf="isAdmin">अग्रसारण हेतु लंबित</th>
-              <th class="num">कार्यालय स्तर पर लंबित</th>
+              <th class="num" *ngIf="isAdmin">पंजीकृत</th>
+              <th class="num">अग्रेषित</th>
+              <th class="num">लंबित</th>
               <th class="num">निष्पादित</th>
             </tr>
           </thead>
@@ -107,7 +111,8 @@
             <tr *ngFor="let r of pendencyRows | slice: 0 : pendencyLimit">
               <td><button type="button" class="link" (click)="openPendencyDistrict(r)">{{ r.name || r.code }}</button></td>
               <td class="num"><button type="button" class="link" (click)="openPendencyList('', r)">{{ r.total }}</button></td>
-              <td class="num" *ngIf="isAdmin"><button type="button" class="link warn" (click)="openPendencyList('unforwarded', r)">{{ r.unforwarded }}</button></td>
+              <td class="num" *ngIf="isAdmin"><button type="button" class="link" (click)="openPendencyList('registered', r)">{{ r.registered }}</button></td>
+              <td class="num"><button type="button" class="link warn" (click)="openPendencyList('forwarded', r)">{{ r.forwarded }}</button></td>
               <td class="num"><button type="button" class="link danger" (click)="openPendencyList('pending', r)">{{ r.pending }}</button></td>
               <td class="num"><button type="button" class="link ok" (click)="openPendencyList('disposed', r)">{{ r.disposed }}</button></td>
             </tr>

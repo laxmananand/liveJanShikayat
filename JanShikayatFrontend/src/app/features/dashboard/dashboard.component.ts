@@ -7,7 +7,7 @@ import { ForwardRecord, ForwardService } from '../../core/services/forward.servi
 import { AuthService } from '../../core/services/auth.service';
 import { ApplicantRecord, DashboardSummary } from '../../core/models/models';
 import { PendencyRow, PendencyStatus, ReportService } from '../../core/services/report.service';
-import { roleLabel } from '../../core/utils/labels';
+import { applicationStatus, roleLabel } from '../../core/utils/labels';
 import { ApplicantDetailsModalComponent } from '../../shared/applicant-details/applicant-details-modal.component';
 
 interface StatusTile {
@@ -47,11 +47,10 @@ export class DashboardComponent implements OnInit {
   roleLabel = roleLabel;
 
   flowSteps = [
-    { title: 'शिकायत प्राप्त', sub: 'शाखा / ऑनलाइन पोर्टल' },
-    { title: 'समीक्षा', sub: 'जांच टिप्पणी' },
-    { title: 'अग्रेषण', sub: 'विभाग / सक्षम प्राधिकारी' },
-    { title: 'कार्रवाई', sub: 'Field Enquiry व रिपोर्ट' },
-    { title: 'निस्तारण', sub: 'समापन टिप्पणी' }
+    { title: 'पंजीकृत', sub: 'आवेदन दर्ज एवं आवेदन संख्या जारी' },
+    { title: 'अग्रेषित', sub: 'शाखा / प्रशाखा / कार्यालय को भेजा गया' },
+    { title: 'लंबित', sub: 'प्रतिवेदन प्राप्त, निष्पादन शेष' },
+    { title: 'निष्पादित', sub: 'एडमिन द्वारा आवेदन बंद' }
   ];
 
   constructor(
@@ -81,15 +80,12 @@ export class DashboardComponent implements OnInit {
         const s = this.summarise(list);
         this.summary = s;
         this.tiles = [
-          { status: 'Pending', label: 'लंबित', icon: 'fa-hourglass-half', tone: 'amber', value: s.pending },
-          { status: 'UnderReview', label: 'समीक्षाधीन', icon: 'fa-magnifying-glass', tone: 'navy', value: s.underReview },
-          // Forwarding is Admin-only, so only Admin sees these two stages
+          // Other logins only receive forwarded applications, so only Admin has Registered ones
           ...(this.isAdmin
-            ? [
-                { status: 'ForwardedToDepartment', label: 'विभाग को अग्रेषित', icon: 'fa-share-nodes', tone: 'violet', value: s.forwarded },
-                { status: 'ForwardedForFieldEnquiry', label: 'क्षेत्रीय जांच / कार्रवाई में', icon: 'fa-magnifying-glass-location', tone: 'red', value: s.underFieldEnquiry }
-              ]
+            ? [{ status: 'Registered', label: 'पंजीकृत', icon: 'fa-file-circle-check', tone: 'navy', value: s.registered }]
             : []),
+          { status: 'Forwarded', label: 'अग्रेषित', icon: 'fa-share-nodes', tone: 'violet', value: s.forwarded },
+          { status: 'Pending', label: 'लंबित', icon: 'fa-hourglass-half', tone: 'amber', value: s.pending },
           { status: 'Disposed', label: 'निष्पादित', icon: 'fa-circle-check', tone: 'green', value: s.disposed }
         ];
         this.loading = false;
@@ -102,8 +98,8 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * Build the counts from GET /Applicant/get-all. An application closed by Admin counts as disposed,
-   * every other one as pending; the API has no source yet, so none is an online (citizen) submission.
+   * Build the counts from GET /Applicant/get-all and each application's status from its forward;
+   * the API has no source yet, so none is an online (citizen) submission.
    */
   private summarise(list: ApplicantRecord[]): DashboardSummary {
     const now = new Date();
@@ -126,15 +122,14 @@ export class DashboardComponent implements OnInit {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
-    const disposed = list.filter((r) => this.forwards.get(r.id)?.isDisposed).length;
+    const count = (status: string) => list.filter((r) => applicationStatus(this.forwards.get(r.id)) === status).length;
 
     return {
       totalComplaints: list.length,
-      pending: list.length - disposed,
-      underReview: 0,
-      forwarded: 0,
-      underFieldEnquiry: 0,
-      disposed,
+      registered: count('Registered'),
+      forwarded: count('Forwarded'),
+      pending: count('Pending'),
+      disposed: count('Disposed'),
       onlineSubmissions: 0
     };
   }
@@ -145,9 +140,9 @@ export class DashboardComponent implements OnInit {
     this.pendencyError = false;
     this.reportService.pendency('district', {}).subscribe({
       next: (rows) => {
-        // Most pending first, so the card shows where action is needed
+        // Most undisposed first, so the card shows where action is needed
         this.pendencyRows = [...rows].sort(
-          (a, b) => b.pending + b.unforwarded - (a.pending + a.unforwarded) || a.name.localeCompare(b.name)
+          (a, b) => b.total - b.disposed - (a.total - a.disposed) || a.name.localeCompare(b.name)
         );
         this.pendencyLoading = false;
       },
@@ -163,11 +158,12 @@ export class DashboardComponent implements OnInit {
     return this.pendencyRows.reduce(
       (t, r) => ({
         total: t.total + r.total,
-        unforwarded: t.unforwarded + r.unforwarded,
+        registered: t.registered + r.registered,
+        forwarded: t.forwarded + r.forwarded,
         pending: t.pending + r.pending,
         disposed: t.disposed + r.disposed
       }),
-      { total: 0, unforwarded: 0, pending: 0, disposed: 0 }
+      { total: 0, registered: 0, forwarded: 0, pending: 0, disposed: 0 }
     );
   }
 

@@ -86,12 +86,12 @@ export class PublicService {
         branchId: null,
         departmentId: payload.departmentId ?? null,
         competentAuthorityDesignationId: null,
-        status: 'Pending',
+        status: 'Registered',
         createdAt: now,
         documents: [],
         remarks: [],
         history: [
-          { fromStatus: 'Pending', toStatus: 'Pending', reason: 'Complaint registered online by citizen.', actionByName: '', actionAt: now }
+          { fromStatus: 'Registered', toStatus: 'Registered', reason: 'Complaint registered online by citizen.', actionByName: '', actionAt: now }
         ]
       });
 

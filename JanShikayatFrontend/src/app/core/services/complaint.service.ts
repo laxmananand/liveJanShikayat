@@ -75,12 +75,12 @@ export class ComplaintService {
         branchId: payload.branchId,
         departmentId: payload.departmentId ?? null,
         competentAuthorityDesignationId: null,
-        status: 'Pending',
+        status: 'Registered',
         createdAt: now,
         documents: [],
         remarks: [],
         history: [
-          { fromStatus: 'Pending', toStatus: 'Pending', reason: 'Complaint registered.', actionByName: this.userName(), actionAt: now }
+          { fromStatus: 'Registered', toStatus: 'Registered', reason: 'Complaint registered.', actionByName: this.userName(), actionAt: now }
         ]
       });
       return this.toDetail(record);
@@ -112,8 +112,6 @@ export class ComplaintService {
       this.requireRole('DepartmentHead', 'CompetentAuthority', 'SuperAdmin');
       const complaint = this.find(complaintId);
       const remark = this.pushRemark(complaint, remarkType, text);
-      // Same as the old backend: the first remark moves a new complaint into review (no history row).
-      if (complaint.status === 'Pending') complaint.status = 'UnderReview';
       this.db.save();
       return remark;
     });
@@ -131,10 +129,10 @@ export class ComplaintService {
 
       if (payload.departmentId) {
         complaint.departmentId = payload.departmentId;
-        complaint.status = 'ForwardedToDepartment';
+        complaint.status = 'Forwarded';
       } else if (payload.competentAuthorityDesignationId) {
         complaint.competentAuthorityDesignationId = payload.competentAuthorityDesignationId;
-        complaint.status = 'ForwardedForFieldEnquiry';
+        complaint.status = 'Forwarded';
       } else {
         throw mockError(400, { message: 'Specify either a department or a competent authority to forward to.' });
       }
@@ -151,7 +149,7 @@ export class ComplaintService {
       this.requireRole('CompetentAuthority', 'DepartmentHead', 'SuperAdmin');
       const complaint = this.find(complaintId);
       const from = complaint.status;
-      complaint.status = 'ActionTaken';
+      complaint.status = 'Pending';
       this.pushRemark(complaint, 'Official', text);
       this.pushHistory(complaint, from, 'Action taken; report submitted.');
       this.db.save();
@@ -208,10 +206,9 @@ export class ComplaintService {
       const count = (...statuses: ComplaintStatus[]) => all.filter((c) => statuses.includes(c.status)).length;
       return {
         totalComplaints: all.length,
+        registered: count('Registered'),
+        forwarded: count('Forwarded'),
         pending: count('Pending'),
-        underReview: count('UnderReview'),
-        forwarded: count('ForwardedToDepartment'),
-        underFieldEnquiry: count('ForwardedForFieldEnquiry', 'ActionTaken'),
         disposed: count('Disposed'),
         onlineSubmissions: all.filter((c) => c.source === 'Online').length
       };
@@ -234,7 +231,7 @@ export class ComplaintService {
       case 'DepartmentHead':
         return user.departmentId ? all.filter((c) => c.departmentId === user.departmentId) : [];
       case 'CompetentAuthority':
-        return all.filter((c) => ['ForwardedForFieldEnquiry', 'ActionTaken', 'Disposed'].includes(c.status));
+        return all.filter((c) => ['Forwarded', 'Pending', 'Disposed'].includes(c.status));
       default:
         return [];
     }

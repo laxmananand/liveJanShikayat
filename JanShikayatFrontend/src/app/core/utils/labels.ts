@@ -1,11 +1,17 @@
-export const STATUS_LABELS: Record<string, string> = {
-  Pending: 'लंबित',
-  UnderReview: 'समीक्षाधीन',
-  ForwardedToDepartment: 'विभाग को अग्रेषित',
-  ForwardedForFieldEnquiry: 'क्षेत्रीय जांच हेतु अग्रेषित',
-  ActionTaken: 'कार्रवाई की गई',
-  Disposed: 'निष्पादित'
-};
+import { ComplaintStatus } from '../models/models';
+
+/**
+ * The application statuses, in workflow order. The server works them out (Complain.StatusCase);
+ * every label, stage bar, filter and progress bar comes from this list, so a new status is added here.
+ */
+export const STATUS_STAGES: readonly { key: ComplaintStatus; label: string; icon: string }[] = [
+  { key: 'Registered', label: 'पंजीकृत', icon: 'fa-file-circle-check' },
+  { key: 'Forwarded', label: 'अग्रेषित', icon: 'fa-share-nodes' },
+  { key: 'Pending', label: 'लंबित', icon: 'fa-hourglass-half' },
+  { key: 'Disposed', label: 'निष्पादित', icon: 'fa-flag-checkered' }
+];
+
+export const STATUS_LABELS: Record<string, string> = Object.fromEntries(STATUS_STAGES.map((s) => [s.key, s.label]));
 
 export const ROLE_LABELS: Record<string, string> = {
   SuperAdmin: 'सुपर एडमिन',
@@ -50,33 +56,16 @@ export function remarkTypeLabel(type: string | null | undefined): string {
   return REMARK_TYPE_LABELS[type] ?? type;
 }
 
-/**
- * The five citizen-facing stages shown in the design's status flow
- * (प्राप्त → समीक्षा → अग्रेषित → कार्रवाई → निस्तारित), and which stage each
- * backend status falls in.
- */
-export const STATUS_STAGES = [
-  { key: 'received', label: 'प्राप्त', icon: 'fa-inbox' },
-  { key: 'review', label: 'समीक्षा', icon: 'fa-magnifying-glass' },
-  { key: 'forwarded', label: 'अग्रेषित', icon: 'fa-share-nodes' },
-  { key: 'action', label: 'कार्रवाई', icon: 'fa-gavel' },
-  { key: 'disposed', label: 'निस्तारित', icon: 'fa-flag-checkered' }
-] as const;
-
-const STATUS_STAGE_INDEX: Record<string, number> = {
-  Pending: 0,
-  UnderReview: 1,
-  ForwardedToDepartment: 2,
-  ForwardedForFieldEnquiry: 2,
-  ActionTaken: 3,
-  Disposed: 4
-};
-
-export function statusStageIndex(status: string | null | undefined): number {
-  return status ? STATUS_STAGE_INDEX[status] ?? 0 : 0;
+/** An application's status from its forward: the server sets it on every forward; no forward = Registered. */
+export function applicationStatus(forward: { status?: ComplaintStatus } | null | undefined): ComplaintStatus {
+  return forward ? forward.status ?? 'Forwarded' : 'Registered';
 }
 
-/** Rough completion percentage used by progress bars (20% per stage). */
+export function statusStageIndex(status: string | null | undefined): number {
+  return Math.max(STATUS_STAGES.findIndex((s) => s.key === status), 0);
+}
+
+/** Completion percentage used by progress bars (an equal share per stage). */
 export function statusProgress(status: string | null | undefined): number {
-  return (statusStageIndex(status) + 1) * 20;
+  return ((statusStageIndex(status) + 1) * 100) / STATUS_STAGES.length;
 }

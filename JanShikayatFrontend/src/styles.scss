@@ -432,12 +432,10 @@ button {
   background: currentColor;
 }
 
-.status-Pending { background: #fdf0e1; color: #123eaf; }
-.status-UnderReview { background: #e7ecf6; color: #17284a; }
-.status-ForwardedToDepartment { background: #f3e6ee; color: #7b3a62; }
-.status-ForwardedForFieldEnquiry { background: #fde8e8; color: #b42318; }
-.status-ActionTaken { background: #e3f6ec; color: #147a47; }
-.status-Disposed { background: #eaedf3; color: #26324a; }
+.status-Registered { background: #e7ecf6; color: #17284a; }
+.status-Forwarded { background: #f3e6ee; color: #7b3a62; }
+.status-Pending { background: #fdf0e1; color: #92400e; }
+.status-Disposed { background: #e3f6ec; color: #147a47; }
 
 .source-chip {
   display: inline-flex;

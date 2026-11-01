@@ -2,6 +2,20 @@
 
 namespace janshikayat.Models
 {
+    // The statuses of an application, in workflow order. They are not stored: each one follows from the rows
+    // the workflow writes, so a status can never disagree with them (Complain.StatusCase):
+    //   Registered: saved in Tbl_Applicant_Details, not forwarded yet
+    //   Forwarded : has a Tbl_Applicant_Forward row, the receiving office has not replied
+    //   Pending   : the office replied (a Tbl_Applicant_Remarks row by a non-Admin role), waiting for Admin to close it
+    //   Disposed  : closed by Admin (a Tbl_Applicant_Closure row)
+    public static class ApplicationStatus
+    {
+        public const string Registered = "Registered";
+        public const string Forwarded = "Forwarded";
+        public const string Pending = "Pending";
+        public const string Disposed = "Disposed";
+    }
+
     // Admin only: forward an application (category → branch → complaint type)
     public class ApplicantForwardRequest
     {
@@ -51,7 +65,11 @@ namespace janshikayat.Models
         public string? OfficeLabel { get; set; }
         public int? OfficeUnitCode { get; set; }
         public string? OfficeUnitLabel { get; set; }
-        // Closed by Admin (Tbl_Applicant_Closure): status Disposed instead of Pending
+        // Forwarded, Pending or Disposed (a forward just saved has no reply yet)
+        public string Status { get; set; } = ApplicationStatus.Forwarded;
+        // When the receiving office first replied, which moved it from Forwarded to Pending
+        public DateTime? FirstResponseAt { get; set; }
+        // Closed by Admin (Tbl_Applicant_Closure): status Disposed
         public bool IsDisposed { get; set; }
         public DateTime? ClosedAt { get; set; }
         public string? ClosedBy { get; set; }
@@ -102,7 +120,7 @@ namespace janshikayat.Models
     public class PublicTrackingDto
     {
         public string ComplaintNumber { get; set; } = string.Empty;
-        // Pending -> ForwardedToDepartment -> ActionTaken (office replied) -> Disposed (closed by Admin)
+        // ApplicationStatus: Registered -> Forwarded -> Pending (office replied) -> Disposed (closed by Admin)
         public string Status { get; set; } = string.Empty;
         public DateTime RegisteredAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }

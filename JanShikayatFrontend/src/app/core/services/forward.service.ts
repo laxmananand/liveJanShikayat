@@ -4,6 +4,7 @@ import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CachedRequest } from '../utils/cached-request';
 import { AuthService } from './auth.service';
+import { ComplaintStatus } from '../models/models';
 
 /** One forwarding of an application (the latest one is what the list shows). */
 export interface ForwardRecord {
@@ -25,7 +26,11 @@ export interface ForwardRecord {
   officeLabel?: string | null;
   officeUnitCode?: number | null;
   officeUnitLabel?: string | null;
-  /** Closed by Admin: the application is Disposed (otherwise Pending) */
+  /** Forwarded, Pending or Disposed, worked out by the server */
+  status?: ComplaintStatus;
+  /** When the receiving office first replied: Forwarded → Pending */
+  firstResponseAt?: string | null;
+  /** Closed by Admin: the application is Disposed */
   isDisposed?: boolean;
   closedAt?: string | null;
   closedBy?: string | null;
@@ -33,7 +38,7 @@ export interface ForwardRecord {
 }
 
 /** Fields the client sends; the server fills in who forwarded it and when. */
-export type ForwardPayload = Omit<ForwardRecord, 'forwardedBy' | 'forwardedAt' | 'isDisposed' | 'closedAt' | 'closedBy' | 'closureRemarks'>;
+export type ForwardPayload = Omit<ForwardRecord, 'forwardedBy' | 'forwardedAt' | 'status' | 'firstResponseAt' | 'isDisposed' | 'closedAt' | 'closedBy' | 'closureRemarks'>;
 
 /** Admin's Responses page: a forwarded application the receiving office has replied to. */
 export interface ForwardResponse {
@@ -161,6 +166,12 @@ export class ForwardService {
           this.refreshUnseenResponses();
         })
       );
+  }
+
+  /** A remark by the receiving office can change the status, so the cached forwards are stale after one. */
+  invalidate(): void {
+    this.latestCache.invalidate();
+    this.mineCache.invalidate();
   }
 
   private fetchLatest(): Observable<Map<number, ForwardRecord>> {

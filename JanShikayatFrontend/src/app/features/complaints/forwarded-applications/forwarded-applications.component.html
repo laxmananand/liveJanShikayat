@@ -74,8 +74,8 @@
             <small class="sub" *ngIf="row.forward.remarks" [title]="row.forward.remarks"><i class="fa-solid fa-comment"></i> {{ row.forward.remarks }}</small>
           </td>
           <td class="col-center" data-label="स्थिति">
-            <span class="status-badge" [class.yes]="row.forward.isDisposed" [title]="row.forward.closureRemarks || ''">
-              {{ row.forward.isDisposed ? 'निष्पादित' : 'लंबित' }}
+            <span class="status-badge" [class.yes]="row.forward.isDisposed" [class.pending]="applicationStatus(row.forward) === 'Pending'" [title]="row.forward.closureRemarks || ''">
+              {{ statusLabel(applicationStatus(row.forward)) }}
             </span>
           </td>
           <td class="col-center" data-label="देखें">
@@ -107,5 +107,5 @@
 
   <app-applicant-details-modal [record]="selected" [allowRemark]="allowRemark"
                                [closure]="selectedForward?.isDisposed ? selectedForward : null"
-                               (closed)="selected = null; selectedForward = null"></app-applicant-details-modal>
+                               (closed)="selected = null; selectedForward = null; load()"></app-applicant-details-modal>
 </section>

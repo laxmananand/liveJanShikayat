@@ -176,7 +176,10 @@
     background: var(--color-danger);
     white-space: nowrap;
 
-    &.unforwarded {
+    &.registered {
+      background: #17284a;
+    }
+    &.forwarded {
       background: #b45309;
     }
   }

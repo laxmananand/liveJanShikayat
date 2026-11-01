@@ -150,13 +150,7 @@ export interface CompetentAuthorityDesignation {
   title: string;
 }
 
-export type ComplaintStatus =
-  | 'Pending'
-  | 'UnderReview'
-  | 'ForwardedToDepartment'
-  | 'ForwardedForFieldEnquiry'
-  | 'ActionTaken'
-  | 'Disposed';
+export type ComplaintStatus = 'Registered' | 'Forwarded' | 'Pending' | 'Disposed';
 
 export interface ComplaintListItem {
   id: number;
@@ -237,10 +231,9 @@ export interface CreateComplaintPayload {
 
 export interface DashboardSummary {
   totalComplaints: number;
-  pending: number;
-  underReview: number;
+  registered: number;
   forwarded: number;
-  underFieldEnquiry: number;
+  pending: number;
   disposed: number;
   onlineSubmissions: number;
 }

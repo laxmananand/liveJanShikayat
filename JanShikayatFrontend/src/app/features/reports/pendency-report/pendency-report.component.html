@@ -63,8 +63,9 @@
             <th class="col-sn">क्रम सं.<small>Sl. No.</small></th>
             <th>{{ level.label }}<small>{{ level.heading }}</small></th>
             <th class="col-num">कुल आवेदन<small>Total</small></th>
-            <th class="col-num" *ngIf="isAdmin">अग्रसारण हेतु लंबित<small>Not Forwarded</small></th>
-            <th class="col-num">कार्यालय स्तर पर लंबित<small>Pending</small></th>
+            <th class="col-num" *ngIf="isAdmin">पंजीकृत<small>Registered</small></th>
+            <th class="col-num">अग्रेषित<small>Forwarded</small></th>
+            <th class="col-num">लंबित<small>Pending</small></th>
             <th class="col-num">निष्पादित<small>Disposed</small></th>
           </tr>
         </thead>
@@ -73,7 +74,8 @@
             <td class="col-sn">{{ i + 1 }}</td>
             <td><button type="button" class="link" (click)="drill(row)">{{ rowName(row) }}</button></td>
             <td class="col-num"><button type="button" class="link" (click)="openList('', row)">{{ row.total }}</button></td>
-            <td class="col-num" *ngIf="isAdmin"><button type="button" class="link warn" (click)="openList('unforwarded', row)">{{ row.unforwarded }}</button></td>
+            <td class="col-num" *ngIf="isAdmin"><button type="button" class="link" (click)="openList('registered', row)">{{ row.registered }}</button></td>
+            <td class="col-num"><button type="button" class="link warn" (click)="openList('forwarded', row)">{{ row.forwarded }}</button></td>
             <td class="col-num"><button type="button" class="link danger" (click)="openList('pending', row)">{{ row.pending }}</button></td>
             <td class="col-num"><button type="button" class="link ok" (click)="openList('disposed', row)">{{ row.disposed }}</button></td>
           </tr>
@@ -83,7 +85,8 @@
             <td></td>
             <td>कुल (Total) :</td>
             <td class="col-num"><button type="button" class="link" (click)="openList('', null)">{{ totals.total }}</button></td>
-            <td class="col-num" *ngIf="isAdmin"><button type="button" class="link" (click)="openList('unforwarded', null)">{{ totals.unforwarded }}</button></td>
+            <td class="col-num" *ngIf="isAdmin"><button type="button" class="link" (click)="openList('registered', null)">{{ totals.registered }}</button></td>
+            <td class="col-num"><button type="button" class="link" (click)="openList('forwarded', null)">{{ totals.forwarded }}</button></td>
             <td class="col-num"><button type="button" class="link" (click)="openList('pending', null)">{{ totals.pending }}</button></td>
             <td class="col-num"><button type="button" class="link" (click)="openList('disposed', null)">{{ totals.disposed }}</button></td>
           </tr>
@@ -135,7 +138,7 @@
             <td data-label="शिकायत का प्रकार">{{ a.complaintTypeLabel || '—' }}</td>
             <td class="nowrap" data-label="अग्रेषित दिनांक">{{ a.forwardedAt ? (a.forwardedAt | date: 'dd/MM/yyyy') : '—' }}</td>
             <td class="col-center" data-label="स्थिति">
-              <span class="status-badge" [class.yes]="a.status === 'Disposed'" [class.unforwarded]="a.status === 'Unforwarded'"
+              <span class="status-badge" [class.yes]="a.status === 'Disposed'" [class.registered]="a.status === 'Registered'" [class.forwarded]="a.status === 'Forwarded'"
                     [title]="a.closedAt ? 'निष्पादन दिनांक: ' + (a.closedAt | date: 'dd/MM/yyyy') : ''">
                 {{ statusText(a.status) }}
               </span>

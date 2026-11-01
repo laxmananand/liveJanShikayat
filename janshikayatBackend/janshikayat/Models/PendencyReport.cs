@@ -27,7 +27,7 @@
         // Application_Date range, both ends inclusive
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        // Application list only: '' = all, unforwarded | pending | disposed
+        // Application list only: '' = all, registered | forwarded | pending | disposed
         public string? Status { get; set; }
     }
 
@@ -36,11 +36,10 @@
         public long Code { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Total { get; set; }
-        // Not forwarded yet (only Admin can have these)
-        public int Unforwarded { get; set; }
-        // Forwarded, not closed
+        // ApplicationStatus counts. Registered: not forwarded yet, so only Admin can have these
+        public int Registered { get; set; }
+        public int Forwarded { get; set; }
         public int Pending { get; set; }
-        // Closed by Admin (Tbl_Applicant_Closure)
         public int Disposed { get; set; }
     }
 
@@ -65,7 +64,7 @@
         public string? OfficeUnitLabel { get; set; }
         public DateTime? ForwardedAt { get; set; }
         public DateTime? ClosedAt { get; set; }
-        // Unforwarded | Pending | Disposed
+        // ApplicationStatus
         public string Status { get; set; } = string.Empty;
         // Days since the application was received, up to today or its closure
         public int PendingDays { get; set; }

@@ -7,7 +7,7 @@ import { buildSeedComplaints, ComplaintRecord } from './mock-data';
 /** Simulated network latency for every mock call (ms). */
 export const MOCK_LATENCY_MS = 350;
 
-const STORAGE_KEY = 'js_mock_db_v1';
+const STORAGE_KEY = 'js_mock_db_v2';
 
 interface MockDbState {
   complaints: ComplaintRecord[];
@@ -26,7 +26,7 @@ interface MockDbState {
  * memory only (lost on reload); missing files are replaced by a generated
  * sample PDF so the viewers always have something to show.
  *
- * Run `localStorage.removeItem('js_mock_db_v1')` in the browser console (or
+ * Run `localStorage.removeItem('js_mock_db_v2')` in the browser console (or
  * call `reset()`) to go back to the seed data.
  *
  * TODO (API integration): delete the whole `core/mock` folder once every

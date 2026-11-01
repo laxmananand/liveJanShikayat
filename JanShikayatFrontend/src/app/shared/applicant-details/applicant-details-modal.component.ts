@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApplicantRecord, ApplicantRemark } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
+import { ForwardService } from '../../core/services/forward.service';
 import { openBase64Document, openBlobDocument } from '../../core/utils/document';
 
 /** Closure details of a Disposed application (from ForwardRecord / ForwardResponse). */
@@ -25,6 +26,7 @@ const MAX_REMARK_PDF_BYTES = 5 * 1024 * 1024;
 })
 export class ApplicantDetailsModalComponent implements OnChanges {
   private applicantService = inject(ApplicantService);
+  private forwardService = inject(ForwardService);
 
   /** The application to show; null keeps the popup closed. */
   @Input() record: ApplicantRecord | null = null;
@@ -75,6 +77,7 @@ export class ApplicantDetailsModalComponent implements OnChanges {
     this.applicantService.addRemark(this.record.id, text, this.remarkFile).subscribe({
       next: (saved) => {
         this.remarks = [...this.remarks, saved];
+        this.forwardService.invalidate();
         this.remarkText = '';
         this.remarkFile = null;
         this.savingRemark = false;

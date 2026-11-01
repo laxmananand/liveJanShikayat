@@ -151,7 +151,7 @@
 /* ── Status tiles ── */
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 16px;
   margin-bottom: 22px;
 }
@@ -254,7 +254,7 @@
 /* ── Workflow card ── */
 .flow-steps {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 

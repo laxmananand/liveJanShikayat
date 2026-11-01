@@ -6,6 +6,7 @@ import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { applicationStatus, statusLabel } from '../../../core/utils/labels';
 import { openBase64Document } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 import { DateRange, inDateRange, isRangeActive } from '../../../core/utils/date-range';
@@ -46,6 +47,9 @@ export class ForwardedApplicationsComponent implements OnInit {
   /** Forward of the open record: carries its closure when Admin has disposed of it */
   selectedForward: ForwardRecord | null = null;
   allowRemark = false;
+
+  applicationStatus = applicationStatus;
+  statusLabel = statusLabel;
 
   get isAdmin(): boolean {
     return this.auth.hasRole('SuperAdmin');

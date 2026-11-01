@@ -6,16 +6,13 @@ import { forkJoin } from 'rxjs';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { ApplicantRecord } from '../../../core/models/models';
-import { statusLabel } from '../../../core/utils/labels';
+import { STATUS_STAGES, applicationStatus, statusLabel } from '../../../core/utils/labels';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 
 /**
- * Real complaints from GET /Applicant/get-all. An application is "Disposed" once Admin has closed it
- * after the receiving office replied (ForwardRecord.isDisposed), otherwise "Pending".
+ * Real complaints from GET /Applicant/get-all, each with the status of its forward (applicationStatus).
  * The API has no source yet, so every application counts as an offline (department) entry.
  */
-const DEFAULT_STATUS = 'Pending';
-
 @Component({
   selector: 'app-complaint-list',
   standalone: true,
@@ -39,12 +36,7 @@ export class ComplaintListComponent implements OnInit {
 
   statuses = [
     { value: '', label: 'सभी स्थितियां' },
-    { value: 'Pending', label: 'लंबित' },
-    { value: 'UnderReview', label: 'समीक्षाधीन' },
-    { value: 'ForwardedToDepartment', label: 'विभाग को अग्रेषित' },
-    { value: 'ForwardedForFieldEnquiry', label: 'क्षेत्रीय जांच हेतु अग्रेषित' },
-    { value: 'ActionTaken', label: 'कार्रवाई की गई' },
-    { value: 'Disposed', label: 'निष्पादित' }
+    ...STATUS_STAGES.map((s) => ({ value: s.key as string, label: s.label }))
   ];
 
   statusLabel = statusLabel;
@@ -135,7 +127,7 @@ export class ComplaintListComponent implements OnInit {
   }
 
   statusOf(r: ApplicantRecord): string {
-    return this.forwards.get(r.id)?.isDisposed ? 'Disposed' : DEFAULT_STATUS;
+    return applicationStatus(this.forwards.get(r.id));
   }
 
   /** Closure of a Disposed application (locks its remarks), else null */

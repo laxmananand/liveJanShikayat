@@ -8,9 +8,9 @@ namespace janshikayat.BAL.Interfaces
         IEnumerable<ApplicantDetailsDto> GetApplicants();
         IEnumerable<ApplicantDetailsDto> GetApplicantstatus(ApplicantDetailsDtoRequestParam request);
         ApplicantForwardDto? ForwardApplicant(ApplicantForwardRequest request, string forwardedBy, string? ip);
-        IEnumerable<ApplicantForwardDto> GetForwards();
+        IEnumerable<ApplicantForwardDto> GetForwards(string adminRole);
         bool IsForwarded(long applicantId);
-        IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope);
+        IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope, string adminRole);
         ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
         string? GetRemarkDocumentPath(long remarkId);
@@ -21,7 +21,7 @@ namespace janshikayat.BAL.Interfaces
         ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
         (string? ApplicationNo, string? MobileNumber, string? MobileNumber2) GetSmsContact(long applicantId);
         PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);
-        IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope);
-        IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope);
+        IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope, string adminRole);
+        IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope, string adminRole);
     }
 }

@@ -12,10 +12,9 @@ import {
   ApplicantRecord,
   ApplicantRemark,
   ComplaintDetail,
-  ComplaintListItem,
-  ComplaintStatus
+  ComplaintListItem
 } from '../../../core/models/models';
-import { statusLabel, sourceLabel, statusProgress } from '../../../core/utils/labels';
+import { STATUS_STAGES, applicationStatus, statusLabel, statusStageIndex, sourceLabel, statusProgress } from '../../../core/utils/labels';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 
 /** One live application (Tbl_Applicant_Details) plus its latest forward (Tbl_Applicant_Forward). */
@@ -31,7 +30,7 @@ export interface TrackedGrievanceItem extends ComplaintListItem {
   category?: string;
   currentCustody: string;
   custodyOfficer: string;
-  lifecycleStage: number; // 1 to 5
+  lifecycleStage: number; // 1 to 4
   hasPdf: boolean;
   pdfFileName?: string;
   pdfFileSize?: string;
@@ -99,9 +98,10 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
   // KPI Metrics
   totalCount = 0;
+  registeredCount = 0;
+  forwardedCount = 0;
   pendingCount = 0;
-  underEnquiryCount = 0;
-  approvedCount = 0;
+  disposedCount = 0;
 
   // PDF Viewer Modal State
   showPdfModal = false;
@@ -124,25 +124,10 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   /** Latest forward of detailsRecord; its closure (Disposed) locks the remarks */
   detailsForward: ForwardRecord | null = null;
 
-  /** Card / chip filters that cover several statuses — each matches what its KPI card counts */
-  private readonly statusGroups: Record<string, string[]> = {
-    PendingOrReview: ['Pending', 'UnderReview'],
-    ForwardedOrEnquiry: ['ForwardedToDepartment', 'ForwardedForFieldEnquiry'],
-    ActionTakenOrDisposed: ['ActionTaken', 'Disposed']
-  };
-
   // Status mapping options
   statusOptions = [
     { value: '', label: 'सभी स्थितियां (All Statuses)' },
-    { value: 'Pending', label: 'लंबित (Pending)' },
-    { value: 'UnderReview', label: 'समीक्षाधीन (Under Review)' },
-    { value: 'ForwardedToDepartment', label: 'विभाग को अग्रेषित (Forwarded)' },
-    { value: 'ForwardedForFieldEnquiry', label: 'स्थलीय जांच (Field Enquiry)' },
-    { value: 'ActionTaken', label: 'कार्रवाई संपन्न / स्वीकृत (Approved)' },
-    { value: 'Disposed', label: 'निस्तारित (Disposed)' },
-    { value: 'PendingOrReview', label: 'लंबित + समीक्षाधीन' },
-    { value: 'ForwardedOrEnquiry', label: 'अग्रेषित + स्थलीय जांच' },
-    { value: 'ActionTakenOrDisposed', label: 'स्वीकृत + निस्तारित' }
+    ...STATUS_STAGES.map((s) => ({ value: s.key as string, label: `${s.label} (${s.key})` }))
   ];
 
   statusLabel = statusLabel;
@@ -219,12 +204,12 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Workflow data recorded so far: not forwarded = लंबित at the entry desk, forwarded = अग्रेषित to the
-   * chosen branch / section, closed by Admin after the reply = निस्तारित (Disposed).
+   * Workflow data recorded so far: not forwarded = पंजीकृत at the entry desk, forwarded = अग्रेषित to the
+   * chosen branch / section, replied by that office = लंबित with Admin, closed by Admin = निष्पादित.
    */
   private toTracked(r: ApplicantRecord, forward: ForwardRecord | null): TrackedGrievanceItem {
-    const disposed = !!forward?.isDisposed;
-    const status: ComplaintStatus = disposed ? 'Disposed' : forward ? 'ForwardedToDepartment' : 'Pending';
+    const status = applicationStatus(forward);
+    const day = (at: string) => new Date(at).toLocaleDateString('en-GB').replace(/\//g, '-');
     const place = [r.villageName, r.panchayatName].filter((n) => !!n?.trim()).join(', ');
 
     return {
@@ -245,18 +230,20 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       block: r.blockName,
       area: place,
       policeStation: r.policeStation,
-      category: forward?.categoryLabel || 'अग्रेषण हेतु लंबित',
+      category: forward?.categoryLabel || 'अग्रेषण शेष',
       currentCustody: forward
         ? forward.branchLabel +
           (forward.prashakhaLabel ? ` → ${forward.prashakhaLabel}` : '') +
           (forward.officeUnitLabel || forward.officeLabel ? ` → ${forward.officeUnitLabel || forward.officeLabel}` : '')
-        : 'प्रविष्टि कोषांग (अग्रेषण हेतु लंबित)',
+        : 'प्रविष्टि कोषांग (अग्रेषण शेष)',
       custodyOfficer: forward?.isDisposed && forward.closedAt
-        ? `निस्तारित: ${new Date(forward.closedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
-        : forward
-          ? `अग्रेषित: ${new Date(forward.forwardedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}`
-          : 'एडमिन / प्रविष्टि सहायक',
-      lifecycleStage: disposed ? 5 : forward ? 3 : 1,
+        ? `निष्पादित: ${day(forward.closedAt)}`
+        : forward?.firstResponseAt
+          ? `प्रतिवेदन प्राप्त: ${day(forward.firstResponseAt)}`
+          : forward
+            ? `अग्रेषित: ${day(forward.forwardedAt)}`
+            : 'एडमिन / प्रविष्टि सहायक',
+      lifecycleStage: statusStageIndex(status) + 1,
       hasPdf: !!r.documentBase64,
       pdfFileName: `Aavedan_${(r.applicationNo || String(r.id)).replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
       pdfFileSize: r.documentBase64 ? base64Size(r.documentBase64) : 'दस्तावेज़ नहीं'
@@ -317,8 +304,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
     // Status filter
     if (this.selectedStatus) {
-      const statuses = this.statusGroups[this.selectedStatus] ?? [this.selectedStatus];
-      result = result.filter((item) => statuses.includes(item.status));
+      result = result.filter((item) => item.status === this.selectedStatus);
     }
 
     // District filter
@@ -336,10 +322,11 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
 
   private updateMetrics(): void {
     this.totalCount = this.trackedList.length;
-    const count = (group: string) => this.trackedList.filter((c) => this.statusGroups[group].includes(c.status)).length;
-    this.pendingCount = count('PendingOrReview');
-    this.underEnquiryCount = count('ForwardedOrEnquiry');
-    this.approvedCount = count('ActionTakenOrDisposed');
+    const count = (status: string) => this.trackedList.filter((c) => c.status === status).length;
+    this.registeredCount = count('Registered');
+    this.forwardedCount = count('Forwarded');
+    this.pendingCount = count('Pending');
+    this.disposedCount = count('Disposed');
   }
 
   // ── PDF Popup Modal (the document saved with the application) ──
@@ -420,7 +407,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
     const history = [
       {
         fromStatus: '',
-        toStatus: 'Pending',
+        toStatus: 'Registered',
         reason: 'आवेदन पंजीकृत एवं अंतिम रूप से दर्ज किया गया।',
         actionByName: 'प्रविष्टि कोषांग',
         actionAt: r.applicationDate ?? ''
@@ -428,8 +415,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       ...(f
         ? [
             {
-              fromStatus: 'Pending',
-              toStatus: 'ForwardedToDepartment',
+              fromStatus: 'Registered',
+              toStatus: 'Forwarded',
               reason:
                 [f.categoryLabel, f.officeUnitLabel || f.officeLabel, f.branchLabel, f.prashakhaLabel, f.complaintTypeLabel].filter(Boolean).join(' → ') +
                 (f.remarks ? ` — ${f.remarks}` : ''),
@@ -438,10 +425,21 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
             }
           ]
         : []),
+      ...(f?.firstResponseAt
+        ? [
+            {
+              fromStatus: 'Forwarded',
+              toStatus: 'Pending',
+              reason: 'संबंधित कार्यालय से प्रतिवेदन प्राप्त हुआ; एडमिन द्वारा निष्पादन शेष।',
+              actionByName: f.officeUnitLabel || f.officeLabel || f.prashakhaLabel || f.branchLabel,
+              actionAt: f.firstResponseAt
+            }
+          ]
+        : []),
       ...(f?.isDisposed && f.closedAt
         ? [
             {
-              fromStatus: 'ForwardedToDepartment',
+              fromStatus: f.firstResponseAt ? 'Pending' : 'Forwarded',
               toStatus: 'Disposed',
               reason: f.closureRemarks || 'प्रतिवेदन प्राप्त होने के बाद आवेदन बंद किया गया।',
               actionByName: f.closedBy ?? '',
@@ -480,6 +478,13 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       })),
       history
     };
+  }
+
+  /** A remark added in the popup can move the application to Pending. */
+  onDetailsClosed(): void {
+    this.detailsRecord = null;
+    this.detailsForward = null;
+    this.loadComplaints();
   }
 
   closeDetailDrawer(): void {

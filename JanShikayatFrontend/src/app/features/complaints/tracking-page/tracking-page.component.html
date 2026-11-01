@@ -56,42 +56,56 @@
       </div>
     </div>
 
-    <div class="kpi-card card-pending" (click)="quickFilter('PendingOrReview')" title="लंबित / समीक्षाधीन शिकायतें देखें">
+    <!-- Other logins only receive forwarded applications, so only Admin has Registered ones -->
+    <div class="kpi-card card-registered" *ngIf="isAdmin" (click)="quickFilter('Registered')" title="पंजीकृत शिकायतें देखें">
       <div class="kpi-icon-wrap">
-        <i class="fa-solid fa-clock-rotate-left"></i>
+        <i class="fa-solid fa-file-circle-check"></i>
       </div>
       <div class="kpi-info">
-        <span class="kpi-label">लंबित / समीक्षाधीन</span>
+        <span class="kpi-label">पंजीकृत</span>
+        <div class="kpi-number">{{ registeredCount }}</div>
+      </div>
+      <div class="kpi-trend">
+        <i class="fa-solid fa-inbox"></i> अग्रेषण शेष
+      </div>
+    </div>
+
+    <div class="kpi-card card-enquiry" (click)="quickFilter('Forwarded')" title="अग्रेषित शिकायतें देखें">
+      <div class="kpi-icon-wrap">
+        <i class="fa-solid fa-share-nodes"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">अग्रेषित</span>
+        <div class="kpi-number">{{ forwardedCount }}</div>
+      </div>
+      <div class="kpi-trend trend-blue">
+        <i class="fa-solid fa-building-flag"></i> कार्यालय के पास
+      </div>
+    </div>
+
+    <div class="kpi-card card-pending" (click)="quickFilter('Pending')" title="लंबित शिकायतें देखें">
+      <div class="kpi-icon-wrap">
+        <i class="fa-solid fa-hourglass-half"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">लंबित</span>
         <div class="kpi-number">{{ pendingCount }}</div>
       </div>
       <div class="kpi-trend trend-amber">
-        <i class="fa-solid fa-hourglass-half"></i> प्रारंभिक स्तर
+        <i class="fa-solid fa-file-circle-exclamation"></i> निष्पादन शेष
       </div>
     </div>
 
-    <div class="kpi-card card-enquiry" (click)="quickFilter('ForwardedOrEnquiry')" title="अग्रेषित / स्थलीय जांच शिकायतें देखें">
-      <div class="kpi-icon-wrap">
-        <i class="fa-solid fa-person-military-pointing"></i>
-      </div>
-      <div class="kpi-info">
-        <span class="kpi-label">अग्रेषित / स्थलीय जांच</span>
-        <div class="kpi-number">{{ underEnquiryCount }}</div>
-      </div>
-      <div class="kpi-trend trend-blue">
-        <i class="fa-solid fa-share-nodes"></i> जांच दल के पास
-      </div>
-    </div>
-
-    <div class="kpi-card card-approved" (click)="quickFilter('ActionTakenOrDisposed')" title="स्वीकृत एवं निस्तारित देखें">
+    <div class="kpi-card card-approved" (click)="quickFilter('Disposed')" title="निष्पादित शिकायतें देखें">
       <div class="kpi-icon-wrap">
         <i class="fa-solid fa-circle-check"></i>
       </div>
       <div class="kpi-info">
-        <span class="kpi-label">कार्रवाई संपन्न / स्वीकृत</span>
-        <div class="kpi-number">{{ approvedCount }}</div>
+        <span class="kpi-label">निष्पादित</span>
+        <div class="kpi-number">{{ disposedCount }}</div>
       </div>
       <div class="kpi-trend trend-green">
-        <i class="fa-solid fa-shield-halved"></i> अनुमोदित / निष्पादित
+        <i class="fa-solid fa-shield-halved"></i> आवेदन बंद
       </div>
     </div>
   </div>
@@ -191,6 +205,23 @@
         </button>
         <button
           type="button"
+          class="filter-chip chip-review"
+          *ngIf="isAdmin"
+          [class.active]="selectedStatus === 'Registered'"
+          (click)="quickFilter('Registered')"
+        >
+          <i class="fa-solid fa-file-circle-check"></i> पंजीकृत (Registered)
+        </button>
+        <button
+          type="button"
+          class="filter-chip chip-enquiry"
+          [class.active]="selectedStatus === 'Forwarded'"
+          (click)="quickFilter('Forwarded')"
+        >
+          <i class="fa-solid fa-share-nodes"></i> अग्रेषित (Forwarded)
+        </button>
+        <button
+          type="button"
           class="filter-chip chip-pending"
           [class.active]="selectedStatus === 'Pending'"
           (click)="quickFilter('Pending')"
@@ -199,35 +230,11 @@
         </button>
         <button
           type="button"
-          class="filter-chip chip-review"
-          [class.active]="selectedStatus === 'UnderReview'"
-          (click)="quickFilter('UnderReview')"
-        >
-          <i class="fa-solid fa-spinner"></i> समीक्षाधीन (Under Review)
-        </button>
-        <button
-          type="button"
-          class="filter-chip chip-enquiry"
-          [class.active]="selectedStatus === 'ForwardedOrEnquiry'"
-          (click)="quickFilter('ForwardedOrEnquiry')"
-        >
-          <i class="fa-solid fa-person-military-pointing"></i> अग्रेषित / स्थलीय जांच (Forwarded)
-        </button>
-        <button
-          type="button"
-          class="filter-chip chip-approved"
-          [class.active]="selectedStatus === 'ActionTaken'"
-          (click)="quickFilter('ActionTaken')"
-        >
-          <i class="fa-solid fa-circle-check"></i> स्वीकृत / कार्रवाई संपन्न
-        </button>
-        <button
-          type="button"
           class="filter-chip chip-closed"
           [class.active]="selectedStatus === 'Disposed'"
           (click)="quickFilter('Disposed')"
         >
-          <i class="fa-solid fa-archive"></i> निस्तारित (Disposed)
+          <i class="fa-solid fa-archive"></i> निष्पादित (Disposed)
         </button>
       </div>
     </div>
@@ -381,26 +388,22 @@
 
             <!-- 7. Progress Stepper -->
             <td class="td-stepper" *ngIf="showProgressTracker">
-              <div class="mini-stepper-wrap" [title]="'प्रगति स्तर ' + item.lifecycleStage + '/5'">
+              <div class="mini-stepper-wrap" [title]="'प्रगति स्तर ' + item.lifecycleStage + '/4'">
                 <div class="stepper-dots">
                   <span class="dot done" title="1. पंजीकरण"><i class="fa-solid fa-check"></i></span>
                   <span class="line" [class.done]="item.lifecycleStage >= 2"></span>
-                  <span class="dot" [class.done]="item.lifecycleStage >= 2" [class.active]="item.lifecycleStage === 2" title="2. समीक्षा">
+                  <span class="dot" [class.done]="item.lifecycleStage >= 2" [class.active]="item.lifecycleStage === 2" title="2. अग्रेषित">
                     <i class="fa-solid" [ngClass]="item.lifecycleStage >= 2 ? 'fa-check' : 'fa-circle'"></i>
                   </span>
                   <span class="line" [class.done]="item.lifecycleStage >= 3"></span>
-                  <span class="dot" [class.done]="item.lifecycleStage >= 3" [class.active]="item.lifecycleStage === 3" title="3. अग्रेषित">
+                  <span class="dot" [class.done]="item.lifecycleStage >= 3" [class.active]="item.lifecycleStage === 3" title="3. लंबित">
                     <i class="fa-solid" [ngClass]="item.lifecycleStage >= 3 ? 'fa-check' : 'fa-circle'"></i>
                   </span>
                   <span class="line" [class.done]="item.lifecycleStage >= 4"></span>
-                  <span class="dot" [class.done]="item.lifecycleStage >= 4" [class.active]="item.lifecycleStage === 4" title="4. जांच">
-                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 4 ? 'fa-check' : 'fa-circle'"></i>
+                  <span class="dot" [class.done]="item.lifecycleStage >= 4" [class.active]="item.lifecycleStage === 4" title="4. निष्पादित">
+                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 4 ? 'fa-check' : 'fa-flag-checkered'"></i>
                   </span>
-                  <span class="line" [class.done]="item.lifecycleStage >= 5"></span>
-                  <span class="dot" [class.done]="item.lifecycleStage >= 5" [class.active]="item.lifecycleStage === 5" title="5. निस्तारित">
-                    <i class="fa-solid" [ngClass]="item.lifecycleStage >= 5 ? 'fa-check' : 'fa-flag-checkered'"></i>
-                  </span>
-                </div>
+                                  </div>
                 <span class="stepper-caption">{{ statusProgress(item.status) }}% पूर्ण</span>
               </div>
             </td>
@@ -502,13 +505,9 @@
             </span>
             <span class="line" [class.done]="item.lifecycleStage >= 4"></span>
             <span class="dot" [class.done]="item.lifecycleStage >= 4">
-              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 4 ? 'fa-check' : 'fa-circle'"></i>
+              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 4 ? 'fa-check' : 'fa-flag-checkered'"></i>
             </span>
-            <span class="line" [class.done]="item.lifecycleStage >= 5"></span>
-            <span class="dot" [class.done]="item.lifecycleStage >= 5">
-              <i class="fa-solid" [ngClass]="item.lifecycleStage >= 5 ? 'fa-check' : 'fa-flag-checkered'"></i>
-            </span>
-          </div>
+                      </div>
           <span class="card-step-text">{{ statusLabel(item.status) }} ({{ statusProgress(item.status) }}%)</span>
         </div>
       </div>
@@ -807,5 +806,5 @@
   </div>
 
   <app-applicant-details-modal [record]="detailsRecord" [closure]="detailsForward?.isDisposed ? detailsForward : null"
-                               (closed)="detailsRecord = null; detailsForward = null"></app-applicant-details-modal>
+                               (closed)="onDetailsClosed()"></app-applicant-details-modal>
 </div>

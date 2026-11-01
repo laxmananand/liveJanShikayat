@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { STATUS_STAGES, statusStageIndex } from '../../core/utils/labels';
 
 /**
- * प्राप्त → समीक्षा → अग्रेषित → कार्रवाई → निस्तारित pill bar from the portal
- * design, driven by a real complaint status.
+ * पंजीकृत → अग्रेषित → लंबित → निष्पादित pill bar from the portal design,
+ * driven by a real application status.
  */
 @Component({
   selector: 'app-status-flow',
