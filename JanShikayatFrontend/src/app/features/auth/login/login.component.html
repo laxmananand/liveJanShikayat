@@ -8,7 +8,7 @@
         <span class="topbar-divider" aria-hidden="true"></span>
         <span class="topbar-text">
           <strong>जन शिकायत निदान पोर्टल</strong>
-          <small>गृह विभाग, बिहार सरकार</small>
+          <small>अधिकृत गृह विभाग, बिहार सरकार</small>
         </span>
       </a>
       <nav class="topbar-nav">
@@ -212,6 +212,8 @@
         <a routerLink="/" class="back-home"><i class="fa-solid fa-arrow-left"></i> होम पर वापस जाएँ</a>      </div>
     </section>
   </div>
+
+  <app-site-footer></app-site-footer>
 
   <!-- Signed in with a password, but no mobile number on the login: add one (verified by OTP) or skip -->
   <div class="mm-backdrop" *ngIf="showMobileModal" (keydown.escape)="skipMobile()">

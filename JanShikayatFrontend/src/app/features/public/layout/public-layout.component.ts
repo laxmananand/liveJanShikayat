@@ -3,18 +3,20 @@ import { ViewportScroller } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { PublicHeaderComponent } from '../header/header.component';
 import { PublicFooterComponent } from '../footer/footer.component';
+import { SiteFooterComponent } from '../../../shared/site-footer/site-footer.component';
 
 /** Shell for the citizen-facing pages: landing page and online complaint form. */
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterOutlet, PublicHeaderComponent, PublicFooterComponent],
+  imports: [RouterOutlet, PublicHeaderComponent, PublicFooterComponent, SiteFooterComponent],
   template: `
     <app-public-header></app-public-header>
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>
     <app-public-footer></app-public-footer>
+    <app-site-footer></app-site-footer>
 
     <button
       class="back-top"

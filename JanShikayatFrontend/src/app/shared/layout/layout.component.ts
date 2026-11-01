@@ -9,11 +9,12 @@ import { ForwardService } from '../../core/services/forward.service';
 import { roleLabel } from '../../core/utils/labels';
 import { FEATURES } from '../../core/config/features';
 import { WatermarkComponent } from '../watermark/watermark.component';
+import { SiteFooterComponent } from '../site-footer/site-footer.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, WatermarkComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, WatermarkComponent, SiteFooterComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })

@@ -8,6 +8,4 @@ import { RouterLink } from '@angular/router';
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.css'
 })
-export class PublicFooterComponent {
-  year = new Date().getFullYear();
-}
+export class PublicFooterComponent {}

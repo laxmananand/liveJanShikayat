@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { AuthService, OtpSendResult } from '../../../core/services/auth.service';
 import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { DigitBoxesComponent } from '../../../shared/digit-boxes/digit-boxes.component';
+import { SiteFooterComponent } from '../../../shared/site-footer/site-footer.component';
 
 const REMEMBER_KEY = 'js_login_email';
 /** Matches AuthController.GenerateCaptcha (6 characters) */
@@ -20,7 +21,7 @@ type LoginMode = 'password' | 'otp';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, DigitBoxesComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, DigitBoxesComponent, SiteFooterComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })

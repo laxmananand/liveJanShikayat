@@ -6,7 +6,7 @@
 .back-top {
   position: fixed;
   right: 28px;
-  bottom: 28px;
+  bottom: 72px; /* clears the NIC logo in the footer strip */
   width: 48px;
   height: 48px;
   border: 0;

@@ -717,6 +717,10 @@
   &:hover { border-color: #174bd9; color: #174bd9; }
 }
 
+app-site-footer {
+  flex: none;
+}
+
 /* ── Responsive ── */
 /* Short desktop screens: tighten further so it still fits */
 @media (max-height: 760px) and (min-width: 992px) {
@@ -732,12 +736,15 @@
     height: auto;
     min-height: 100vh;
     overflow: visible;
-    padding-bottom: 24px;
+  }
+
+  app-site-footer {
+    margin-top: auto;
   }
 
   .login-card {
     grid-template-columns: 1fr;
-    margin: 20px auto 0;
+    margin: 20px auto 24px;
     width: calc(100% - 32px);
     border-radius: 16px;
   }
