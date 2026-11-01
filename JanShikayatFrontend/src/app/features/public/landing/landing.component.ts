@@ -34,11 +34,14 @@ import { WatermarkComponent } from '../../../shared/watermark/watermark.componen
       justify-content: center;
       pointer-events: none;
       z-index: 50;
+      mix-blend-mode: multiply; /* tints the light backgrounds only, so text on top stays dark */
     }
 
     app-watermark {
-      --wm-size: min(450px, 58vh);
-      --wm-opacity: 0.7;
+      --wm-size: min(640px, calc(100vh - 140px), 130vw); /* 130vw keeps the width inside narrow phones */
+      --wm-opacity: 0.95;
+      --wm-image-opacity: 0.55;
+      --wm-face-opacity: 0.75;
     }
   `
 })

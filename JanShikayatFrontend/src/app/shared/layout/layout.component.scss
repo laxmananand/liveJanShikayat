@@ -528,7 +528,7 @@
   transition: left var(--transition-smooth);
 
   app-watermark {
-    --wm-size: min(56vh, 528px); /* never upscale past the source size, keeps it crisp */
+    --wm-size: min(calc(100vh - var(--topbar-height) - 40px), 600px, 130vw);
     --wm-opacity: 0.55; /* quieter than the landing hero — officers read data over it all day */
   }
 }
