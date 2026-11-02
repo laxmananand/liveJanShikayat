@@ -109,7 +109,6 @@
   </div>
 
   <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
-    <i class="fa-solid fa-folder-open"></i>
     <p *ngIf="!records.length">अभी तक कोई आवेदन अंतिम रूप से दर्ज नहीं हुआ है।</p>
     <p *ngIf="records.length">खोज / चयनित दिनांक से मेल खाता कोई आवेदन नहीं मिला।</p>
     <a *ngIf="isAdmin && !records.length"routerLink="/complaints/entry" class="btn btn-primary-accent">

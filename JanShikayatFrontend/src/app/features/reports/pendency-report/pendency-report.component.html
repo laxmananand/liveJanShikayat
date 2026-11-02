@@ -155,7 +155,6 @@
     </div>
 
     <div class="empty-state" *ngIf="!loading && !errorMessage && (listView ? !applications.length : !rows.length)">
-      <i class="fa-solid fa-folder-open"></i>
       <p>{{ isAdmin ? 'चयनित मानदंड के अनुसार कोई आवेदन नहीं मिला।' : 'आपके क्षेत्राधिकार में चयनित मानदंड के अनुसार कोई आवेदन नहीं मिला।' }}</p>
     </div>
   </div>
