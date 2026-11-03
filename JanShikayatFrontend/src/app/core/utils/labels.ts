@@ -19,7 +19,10 @@ export const ROLE_LABELS: Record<string, string> = {
   DepartmentHead: 'विभागाध्यक्ष',
   CompetentAuthority: 'सक्षम प्राधिकारी',
   Commissioner: 'प्रमंडलीय आयुक्त',
-  DistrictMagistrate: 'जिलाधिकारी'
+  DistrictMagistrate: 'जिलाधिकारी',
+  InspectorGeneral: 'पुलिस महानिरीक्षक',
+  DeputyInspectorGeneral: 'पुलिस उप-महानिरीक्षक',
+  SuperintendentOfPolice: 'पुलिस अधीक्षक'
 };
 
 export const SOURCE_LABELS: Record<string, string> = {

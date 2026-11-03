@@ -71,5 +71,8 @@ export const DEMO_ROLE_LABELS: Record<AppRole, string> = {
   DepartmentHead: 'विभागाध्यक्ष',
   CompetentAuthority: 'सक्षम प्राधिकारी (एसडीओ)',
   Commissioner: 'प्रमंडलीय आयुक्त',
-  DistrictMagistrate: 'जिलाधिकारी'
+  DistrictMagistrate: 'जिलाधिकारी',
+  InspectorGeneral: 'पुलिस महानिरीक्षक',
+  DeputyInspectorGeneral: 'पुलिस उप-महानिरीक्षक',
+  SuperintendentOfPolice: 'पुलिस अधीक्षक'
 };

@@ -11,8 +11,8 @@ import { AuthService } from '../../core/services/auth.service';
  * Forward popup: category → branch → complaint type (+ optional remark).
  * "Section" first asks for a Prashakha (Mst_Prashakha); that Prashakha's login receives the application.
  * "District Administration" (DM, SP) and "Regional Office" (Commissioner, IG, DIG) first ask for an office of that
- * category (Mst_Regional_Office) and then one unit of it (vw_Office_Unit: 9 Commissioners / 38 DM offices); an office
- * without a list (IG, DIG, SP for now) skips that step and goes straight to the branch.
+ * category (Mst_Regional_Office) and then one unit of it (vw_Office_Unit: 9 Commissioners / 38 DM offices / 4 IG / 8 DIG / 40 SP);
+ * an office without a list skips that step and goes straight to the branch.
  * Options come from Mst_Category → Mst_Branch (Home/Section/District/Regional_Categ) → Mst_Complain_Sub_Type.
  * The "Department" category instead lists Mst_Departments and shows that department's email in step 3;
  * sending it by email is not built yet, so that forward is a frontend-only demo (nothing is saved).
@@ -80,7 +80,7 @@ export class ForwardDialogComponent implements OnChanges {
     return ['district administration', 'regional office'].includes(c?.label.trim().toLowerCase() ?? '');
   }
 
-  /** The officer step is hidden once the chosen office turns out to have no list (IG, DIG, SP). */
+  /** The officer step is hidden once the chosen office turns out to have no list. */
   get showOfficeUnit(): boolean {
     return !this.form.controls.officeId.value || this.loadingOfficeUnits || this.officeUnits.length > 0;
   }

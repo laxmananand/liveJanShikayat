@@ -175,7 +175,7 @@ namespace janshikayat.BAL.Services
                               ELSE CASE WHEN @PrashakhaId IS NULL THEN 1 ELSE 0 END
                          END) = 1
                     -- District Administration / Regional Office need a regional office of that category, plus one of its
-                    -- offices when it has a list (IG / DIG / SP have none yet); other categories must not carry either
+                    -- offices when it has a list; other categories must not carry either
                     AND (CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
                                            WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT)
                                              AND c.Category IN ('District Administration', 'Regional Office'))
@@ -245,7 +245,7 @@ namespace janshikayat.BAL.Services
         // Applications a login may see, for a query whose forward is f (Tbl_Applicant_Forward, LEFT JOINed
         // where unforwarded applications count) and whose parameters are an AccessScope:
         //   Admin all; Branch / Prashakha their forwards; Commissioner its own forwards and those to the DM offices
-        //   of its division; DM its own forwards
+        //   of its division; DM / IG / DIG / SP their own forwards
         private const string ScopeFilter =
             @"(@All = 1
                OR (@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
@@ -253,7 +253,7 @@ namespace janshikayat.BAL.Services
                OR (@OfficeId = 1 AND ((f.OfficeId = 1 AND f.OfficeUnitCode = @OfficeUnitCode)
                                       OR (f.OfficeId = 2 AND f.OfficeUnitCode IN (SELECT m.Dist_Code FROM Mst_DM_Office m
                                                                                   WHERE m.Division_Code = @OfficeUnitCode))))
-               OR (@OfficeId = 2 AND f.OfficeId = 2 AND f.OfficeUnitCode = @OfficeUnitCode))";
+               OR (@OfficeId IN (2, 3, 4, 5) AND f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode))";
 
         // When the receiving office first replied (a remark by a role other than Admin), for a query whose forward is f.
         // NULL when it has not replied, or when f is NULL (not forwarded). Needs the @AdminRole parameter.

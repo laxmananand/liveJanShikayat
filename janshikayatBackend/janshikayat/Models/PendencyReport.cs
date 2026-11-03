@@ -1,13 +1,13 @@
 ﻿namespace janshikayat.Models
 {
     // Which applications a login may see, built from its JWT claims (Tbl_UserLogin mappings).
-    // Admin: all. Branch / Prashakha / Commissioner / DM: only the applications forwarded to that office.
+    // Admin: all. Branch / Prashakha / Commissioner / DM / IG / DIG / SP: only the applications forwarded to that office.
     public class AccessScope
     {
         public bool All { get; set; }
         public long? BranchId { get; set; }
         public int? PrashakhaId { get; set; }
-        // Mst_Regional_Office.Office_Id (1 = Commissionary, 2 = District Magistrate) and its vw_Office_Unit.Unit_Code
+        // Mst_Regional_Office.Office_Id (1 = Commissionary, 2 = District Magistrate, 3 = IG, 4 = DIG, 5 = SP) and its vw_Office_Unit.Unit_Code
         public int? OfficeId { get; set; }
         public int? OfficeUnitCode { get; set; }
 

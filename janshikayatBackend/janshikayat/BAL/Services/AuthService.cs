@@ -244,7 +244,7 @@ namespace janshikayat.BAL.Services
             if (prashakhaId.HasValue)
                 claims.Add(new Claim("PrashakhaId", prashakhaId.Value.ToString()));
 
-            // Tbl_UserLogin.Office_Id / Office_Unit_Code -> vw_Office_Unit; Commissioner / DM logins see their office's forwards
+            // Tbl_UserLogin.Office_Id / Office_Unit_Code -> vw_Office_Unit; Commissioner / DM / IG / DIG / SP logins see their office's forwards
             if (officeId.HasValue && officeUnitCode.HasValue)
             {
                 claims.Add(new Claim("OfficeId", officeId.Value.ToString()));

@@ -158,7 +158,7 @@ namespace janshikayat.BAL.Services
             return conn.Query<MstRegionalOffice>(sql, new { CategoryId = categoryId }).ToList();
         }
 
-        // Empty for an office whose list is not loaded yet (IG / DIG / SP)
+        // Empty for an office whose list is not loaded yet
         public List<MstOfficeUnit> GetOfficeUnits(int officeId)
         {
             using var conn = _context.CreateConnection();
