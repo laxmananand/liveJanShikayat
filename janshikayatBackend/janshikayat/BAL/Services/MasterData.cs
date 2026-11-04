@@ -179,7 +179,7 @@ namespace janshikayat.BAL.Services
             }
             if (a==2)
             {
-                sql = "SELECT  [DepartmentId] as Id,[DepartmentName] as Name FROM [Jansikayat_DB].[dbo].[Mst_Departments] order by DepartmentName";
+                sql = "SELECT  [DepartmentId] as Id,[DepartmentName] as Name FROM [dbo].[Mst_Departments] order by DepartmentName";
             }
             if (a == 3)
             {
