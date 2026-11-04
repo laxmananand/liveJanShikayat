@@ -19,7 +19,7 @@
       <div class="desktop-menu-wrap">
         <ul class="nav-links-list">
           <li class="nav-item" *ngFor="let link of navLinks">
-            <a class="nav-link" [class.active]="activeNav===link.id" (click)="setActive(link.id)" routerLink="/" [fragment]="link.id">
+            <a class="nav-link" [class.active]="activeNav===link.id" (click)="setActive(link.id)" [routerLink]="link.path ?? '/'" [fragment]="link.path ? undefined : link.id">
               <i class="fa-solid" [ngClass]="link.icon"></i>
               <span>{{ link.label }}</span>
             </a>
@@ -89,7 +89,7 @@
     <div class="drawer-body">
       <ul class="drawer-nav-list">
         <li *ngFor="let link of navLinks">
-          <a class="drawer-nav-link" [class.active]="activeNav===link.id" (click)="setActive(link.id)" routerLink="/" [fragment]="link.id">
+          <a class="drawer-nav-link" [class.active]="activeNav===link.id" (click)="setActive(link.id)" [routerLink]="link.path ?? '/'" [fragment]="link.path ? undefined : link.id">
             <span class="link-icon"><i class="fa-solid" [ngClass]="link.icon"></i></span>
             <span class="link-title">{{ link.drawerLabel }}</span>
             <i class="fa-solid fa-chevron-right link-arrow"></i>

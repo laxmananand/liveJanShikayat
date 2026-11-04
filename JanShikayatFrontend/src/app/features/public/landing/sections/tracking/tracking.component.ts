@@ -6,12 +6,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PublicService } from '../../../../../core/services/public.service';
 import { PublicTracking } from '../../../../../core/models/models';
 import { statusLabel, statusProgress } from '../../../../../core/utils/labels';
-import { StatusFlowComponent } from '../../../../../shared/status-flow/status-flow.component';
 
 @Component({
   selector: 'app-tracking',
   standalone: true,
-  imports: [CommonModule, FormsModule, StatusFlowComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './tracking.component.html',
   styleUrl: './tracking.component.css'
 })

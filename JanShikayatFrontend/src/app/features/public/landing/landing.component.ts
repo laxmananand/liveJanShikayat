@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { HeroComponent } from './sections/hero/hero.component';
-import { QuickActionsComponent } from './sections/quick-actions/quick-actions.component';
 import { TrackingComponent } from './sections/tracking/tracking.component';
 import { WatermarkComponent } from '../../../shared/watermark/watermark.component';
 
@@ -10,13 +9,11 @@ import { WatermarkComponent } from '../../../shared/watermark/watermark.componen
   standalone: true,
   imports: [
     HeroComponent,
-    QuickActionsComponent,
     TrackingComponent,
     WatermarkComponent
   ],
   template: `
     <app-hero></app-hero>
-    <app-quick-actions></app-quick-actions>
     <app-tracking></app-tracking>
 
     <!-- Bihar Govt identity watermark: pinned to the viewport so it stays put while scrolling -->

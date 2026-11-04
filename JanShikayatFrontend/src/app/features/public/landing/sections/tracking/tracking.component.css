@@ -30,11 +30,6 @@
   font-size: 0.95rem;
 }
 
-.flow-wrap {
-  display: block;
-  margin-top: 28px;
-}
-
 .tracking-form-wrap {
   background: #f3f5fb;
   border-radius: 10px;
@@ -330,9 +325,6 @@
   .tracking-copy h2 {
     font-size: 1.8rem;
     margin: 10px 0;
-  }
-  .flow-wrap {
-    margin-top: 20px;
   }
   .tracking-form-wrap {
     padding: 18px 14px;

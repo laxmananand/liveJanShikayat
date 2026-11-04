@@ -10,6 +10,8 @@ interface NavLink {
   icon: string;
   label: string;
   drawerLabel: string;
+  /** Separate page to open; links without one scroll to the landing section named by id. */
+  path?: string;
 }
 
 @Component({
@@ -30,7 +32,7 @@ export class PublicHeaderComponent {
 
   navLinks: NavLink[] = [
     { id: 'home', icon: 'fa-house-chimney', label: 'होम', drawerLabel: 'होम (Home)' },
-    { id: 'register', icon: 'fa-pen-to-square', label: 'शिकायत दर्ज करें', drawerLabel: 'शिकायत दर्ज करें (Register)' },
+    // { id: 'register', icon: 'fa-pen-to-square', label: 'शिकायत दर्ज करें', drawerLabel: 'शिकायत दर्ज करें (Register)', path: '/register' },
     { id: 'track', icon: 'fa-magnifying-glass', label: 'शिकायत ट्रैक करें', drawerLabel: 'शिकायत ट्रैक करें (Track)' }
   ];
 
