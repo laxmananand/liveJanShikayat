@@ -12,7 +12,10 @@ import { Component } from '@angular/core';
         <span>अधिकृत गृह विभाग, बिहार सरकार</span>
         <span>सर्वाधिकार सुरक्षित</span>
       </p>
-      <img src="assets/images/NIC-Logo.png" alt="National Informatics Centre" class="nic-logo" />
+      <div class="nic-credit">
+        <span>Designed and Developed by NIC, Patna, Bihar</span>
+        <img src="assets/images/NIC-Logo.png" alt="National Informatics Centre" class="nic-logo" />
+      </div>
     </footer>
   `,
   styles: `
@@ -41,6 +44,13 @@ import { Component } from '@angular/core';
       content: ' | ';
     }
 
+    .nic-credit {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
     .nic-logo {
       height: 28px;
       width: auto;
@@ -53,6 +63,11 @@ import { Component } from '@angular/core';
         padding: 12px 14px;
         text-align: center;
         font-size: 0.74rem;
+      }
+
+      .nic-credit {
+        flex-wrap: wrap;
+        justify-content: center;
       }
     }
 

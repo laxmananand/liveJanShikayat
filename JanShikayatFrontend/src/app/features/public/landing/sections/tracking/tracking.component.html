@@ -56,6 +56,10 @@
             </div>
 
             <div class="tr-grid">
+              <div class="tr-cell" *ngIf="result.applicantName">
+                <span>आवेदक का नाम</span>
+                <b>{{ result.applicantName }}</b>
+              </div>
               <div class="tr-cell">
                 <span>आवंटित विभाग</span>
                 <b>{{ result.departmentNameHindi || result.departmentName || 'आवंटन प्रक्रियाधीन' }}</b>
@@ -96,7 +100,7 @@
           </div>
 
           <small class="form-note">
-            <i class="fa-solid fa-circle-info"></i> स्थिति सीधे विभागीय डेटाबेस से प्राप्त होती है। गोपनीयता हेतु व्यक्तिगत विवरण प्रदर्शित नहीं किए जाते।
+            <i class="fa-solid fa-circle-info"></i> स्थिति सीधे विभागीय डेटाबेस से प्राप्त होती है। गोपनीयता हेतु आवेदक के नाम के अतिरिक्त अन्य व्यक्तिगत विवरण प्रदर्शित नहीं किए जाते।
           </small>
         </form>
       </div>

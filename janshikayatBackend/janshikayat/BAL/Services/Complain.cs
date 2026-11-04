@@ -414,7 +414,7 @@ namespace janshikayat.BAL.Services
             using var conn = _context.CreateConnection();
 
             var row = conn.QueryFirstOrDefault<PublicTrackingRow>(
-                @"SELECT d.Application_No, d.CreatedDate,
+                @"SELECT d.Application_No, d.Applicant_Name, d.CreatedDate,
                          f.ForwardedDate, f.BranchLabel, f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel,
                          r.FirstResponseAt, c.ClosedDate
                   FROM Tbl_Applicant_Details d
@@ -439,6 +439,7 @@ namespace janshikayat.BAL.Services
             return new PublicTrackingDto
             {
                 ComplaintNumber = row.Application_No,
+                ApplicantName = row.Applicant_Name,
                 Status = timeline[^1].Status,
                 RegisteredAt = registeredAt,
                 LastUpdatedAt = timeline[^1].At,
@@ -451,6 +452,7 @@ namespace janshikayat.BAL.Services
         private class PublicTrackingRow
         {
             public string Application_No { get; set; } = string.Empty;
+            public string? Applicant_Name { get; set; }
             public DateTime? CreatedDate { get; set; }
             public DateTime? ForwardedDate { get; set; }
             public string? BranchLabel { get; set; }

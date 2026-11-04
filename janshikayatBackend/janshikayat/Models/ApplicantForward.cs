@@ -116,10 +116,11 @@ namespace janshikayat.Models
         public string? ClosureRemarks { get; set; }
     }
 
-    // Public (citizen) tracking by Application_No: workflow status only, never personal details
+    // Public (citizen) tracking by Application_No: workflow status and applicant name, no other personal details
     public class PublicTrackingDto
     {
         public string ComplaintNumber { get; set; } = string.Empty;
+        public string? ApplicantName { get; set; }
         // ApplicationStatus: Registered -> Forwarded -> Pending (office replied) -> Disposed (closed by Admin)
         public string Status { get; set; } = string.Empty;
         public DateTime RegisteredAt { get; set; }

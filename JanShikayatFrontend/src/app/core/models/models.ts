@@ -280,6 +280,7 @@ export interface PublicTimelineEntry {
 
 export interface PublicTracking {
   complaintNumber: string;
+  applicantName: string | null;
   status: ComplaintStatus;
   registeredAt: string;
   lastUpdatedAt: string;

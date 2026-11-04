@@ -336,7 +336,7 @@ namespace janshikayat.Controllers
         }
 
         // Citizen portal (landing page): live status of an application by its number. No login needed, so it
-        // returns workflow status only (no name, mobile or address) and is rate limited per IP against number guessing.
+        // returns workflow status and applicant name only (no mobile or address) and is rate limited per IP against number guessing.
         [AllowAnonymous]
         [EnableRateLimiting(PublicTrackRateLimit)]
         [HttpGet("track/{applicationNo}")]
