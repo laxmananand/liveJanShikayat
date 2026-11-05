@@ -50,14 +50,14 @@ namespace janshikayat.Models
     public class ApplicantForwardDto
     {
         public long ApplicantId { get; set; }
-        public string CategoryId { get; set; }
-        public string CategoryLabel { get; set; }
-        public string BranchId { get; set; }
-        public string BranchLabel { get; set; }
-        public string ComplaintTypeId { get; set; }
-        public string ComplaintTypeLabel { get; set; }
+        public string CategoryId { get; set; } = string.Empty;
+        public string CategoryLabel { get; set; } = string.Empty;
+        public string BranchId { get; set; } = string.Empty;
+        public string BranchLabel { get; set; } = string.Empty;
+        public string ComplaintTypeId { get; set; } = string.Empty;
+        public string ComplaintTypeLabel { get; set; } = string.Empty;
         public string? Remarks { get; set; }
-        public string ForwardedBy { get; set; }
+        public string ForwardedBy { get; set; } = string.Empty;
         public DateTime ForwardedAt { get; set; }
         public int? PrashakhaId { get; set; }
         public string? PrashakhaLabel { get; set; }
@@ -88,7 +88,7 @@ namespace janshikayat.Models
     {
         public long ApplicantId { get; set; }
         public string? ClosureRemarks { get; set; }
-        public string ClosedBy { get; set; }
+        public string ClosedBy { get; set; } = string.Empty;
         public DateTime ClosedAt { get; set; }
     }
 
@@ -96,9 +96,9 @@ namespace janshikayat.Models
     public class ApplicationResponseDto
     {
         public long ApplicantId { get; set; }
-        public string CategoryLabel { get; set; }
-        public string BranchLabel { get; set; }
-        public string ComplaintTypeLabel { get; set; }
+        public string CategoryLabel { get; set; } = string.Empty;
+        public string BranchLabel { get; set; } = string.Empty;
+        public string ComplaintTypeLabel { get; set; } = string.Empty;
         public string? PrashakhaLabel { get; set; }
         public string? OfficeLabel { get; set; }
         public string? OfficeUnitLabel { get; set; }
@@ -107,8 +107,8 @@ namespace janshikayat.Models
         public int ResponseCount { get; set; }
         public int UnseenCount { get; set; }
         public DateTime LastResponseAt { get; set; }
-        public string LastRemark { get; set; }
-        public string LastRemarkBy { get; set; }
+        public string LastRemark { get; set; } = string.Empty;
+        public string LastRemarkBy { get; set; } = string.Empty;
         public string? LastRemarkByRole { get; set; }
         public bool IsDisposed { get; set; }
         public DateTime? ClosedAt { get; set; }
@@ -150,8 +150,8 @@ namespace janshikayat.Models
     {
         public long ID { get; set; }
         public long ApplicantId { get; set; }
-        public string Remark { get; set; }
-        public string RemarkBy { get; set; }
+        public string Remark { get; set; } = string.Empty;
+        public string RemarkBy { get; set; } = string.Empty;
         public string? RemarkByRole { get; set; }
         public DateTime CreatedDate { get; set; }
         // True when a PDF is attached; fetch it from get-remark-document/{ID}

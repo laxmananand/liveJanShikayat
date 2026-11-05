@@ -6,7 +6,7 @@ namespace janshikayat.BAL.Interfaces
         string GenerateCaptchaText(int length);
         string GenerateCaptchaSvg(string captchaText);
         //LoginResponse Login(string userid, string password);
-        LoginResponse Login(LoginParam param);
+        LoginResponse? Login(LoginParam param);
         int CountUsersWithMobile(string mobileNo, string? exceptUserName = null);
         LoginResponse? LoginWithMobile(string mobileNo);
         bool UpdateMobile(string userName, string mobileNo);

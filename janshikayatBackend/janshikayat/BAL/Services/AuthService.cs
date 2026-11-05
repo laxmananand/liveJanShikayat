@@ -126,7 +126,7 @@ namespace janshikayat.BAL.Services
             try { return ipAddress.MapToIPv4().ToString(); }
             catch { return ipAddress.ToString(); }
         }
-        public LoginResponse Login(LoginParam param)
+        public LoginResponse? Login(LoginParam param)
         {
             if (param == null ||
                 string.IsNullOrWhiteSpace(param.UserName) ||
@@ -223,7 +223,7 @@ namespace janshikayat.BAL.Services
         }
 
      
-        private string GenerateJwtToken(string LOGIN_ID, string role = null, long? branchId = null, int? prashakhaId = null,
+        private string GenerateJwtToken(string LOGIN_ID, string role = "", long? branchId = null, int? prashakhaId = null,
                                         int? officeId = null, int? officeUnitCode = null)
         {
             var claims = new List<Claim>
@@ -252,7 +252,7 @@ namespace janshikayat.BAL.Services
             }
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+                Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.")));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -272,10 +272,10 @@ namespace janshikayat.BAL.Services
         private class UserLoginRow
         {
             public long AutoId { get; set; }
-            public string UserName { get; set; }
-            public string Password { get; set; }
-            public string MobileNo { get; set; }
-            public string Email { get; set; }
+            public string UserName { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+            public string? MobileNo { get; set; }
+            public string? Email { get; set; }
             public int? RoleId { get; set; }
             public string? RoleName { get; set; }
             public bool? IsActive { get; set; }

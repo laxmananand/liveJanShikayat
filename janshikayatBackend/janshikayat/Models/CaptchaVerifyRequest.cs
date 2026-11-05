@@ -2,8 +2,8 @@
 {
     public class CaptchaResponse
     {
-        public string CaptchaId { get; set; }
-        public string CaptchaImage { get; set; }
+        public string CaptchaId { get; set; } = string.Empty;
+        public string CaptchaImage { get; set; } = string.Empty;
     }
     public class CaptchaVerifyRequest
     {
