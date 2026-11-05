@@ -11,8 +11,9 @@
     </div>
 
     <div class="details-body">
+      <div class="pane pane-main">
       <h3><i class="fa-solid fa-user"></i> शिकायतकर्ता की जानकारी</h3>
-      <dl class="details-grid">
+      <dl class="details-grid cols-3">
         <div><dt>आवेदक का नाम</dt><dd>{{ s.applicantName || '—' }}</dd></div>
         <div><dt>पिता / पति का नाम</dt><dd>{{ s.fatherHusbandName || '—' }}</dd></div>
         <div><dt>मोबाइल नंबर</dt><dd>{{ s.mobileNumber || '—' }}</dd></div>
@@ -23,7 +24,7 @@
       </dl>
 
       <h3><i class="fa-solid fa-map-location-dot"></i> स्थान</h3>
-      <dl class="details-grid">
+      <dl class="details-grid cols-3">
         <div><dt>जिला</dt><dd>{{ s.districtName || '—' }}</dd></div>
         <div><dt>अनुमंडल</dt><dd>{{ s.subDivisionName || '—' }}</dd></div>
         <div><dt>अंचल</dt><dd>{{ s.blockName || '—' }}</dd></div>
@@ -35,6 +36,58 @@
         <div *ngIf="s.areaType === 'U'"><dt>मोहल्ला</dt><dd>{{ s.mohalla || '—' }}</dd></div>
         <div><dt>पिन कोड</dt><dd>{{ s.pinCode || '—' }}</dd></div>
       </dl>
+      </div>
+
+      <div class="pane pane-side">
+      <ng-container *ngIf="forward as f">
+        <h3><i class="fa-solid fa-share-from-square"></i> अग्रेषण विवरण / Forwarding Details</h3>
+        <section class="fw-card" [attr.data-status]="applicationStatus(f)">
+          <div class="fw-card-head">
+            <span class="fw-avatar" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
+            <div class="fw-to">
+              <small>अग्रेषित किया गया / Forwarded to</small>
+              <strong>{{ recipient(f) }}</strong>
+            </div>
+            <span class="fw-status">
+              <i class="fa-solid" [ngClass]="applicationStatus(f) === 'Disposed' ? 'fa-circle-check' : applicationStatus(f) === 'Pending' ? 'fa-hourglass-half' : 'fa-paper-plane'"></i>
+              {{ statusLabel(applicationStatus(f)) }} / {{ applicationStatus(f) }}
+            </span>
+          </div>
+
+          <ol class="fw-route" aria-label="अग्रेषण मार्ग / Forwarding route">
+            <ng-container *ngFor="let step of route(f); let last = last">
+              <li>
+                <i class="fa-solid" [ngClass]="step.icon" aria-hidden="true"></i>
+                <span>
+                  <small>{{ step.label }}</small>
+                  {{ step.value }}
+                </span>
+              </li>
+              <li *ngIf="!last" class="sep" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></li>
+            </ng-container>
+          </ol>
+
+          <dl class="details-grid fw-grid">
+            <div class="full">
+              <dt>{{ isEmailForward(f) ? 'ईमेल / Email' : 'शिकायत का प्रकार / Complaint Type' }}</dt>
+              <dd>
+                <i class="fa-solid" [ngClass]="isEmailForward(f) ? 'fa-envelope' : 'fa-tag'"></i>
+                {{ f.complaintTypeLabel || '—' }}
+              </dd>
+            </div>
+            <div><dt>अग्रेषित दिनांक / Forwarded on</dt><dd>{{ f.forwardedAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
+            <div><dt>अग्रेषणकर्ता / Forwarded by</dt><dd>{{ f.forwardedBy || '—' }}</dd></div>
+            <div *ngIf="f.firstResponseAt"><dt>प्रथम प्रतिवेदन / First response</dt><dd>{{ f.firstResponseAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
+            <div *ngIf="f.closedAt"><dt>निष्पादन दिनांक / Disposed on</dt><dd>{{ f.closedAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
+          </dl>
+
+          <div class="fw-remarks">
+            <small><i class="fa-solid fa-quote-left"></i> अग्रेषण टिप्पणी / Forwarding remarks</small>
+            <p *ngIf="f.remarks?.trim(); else noFwRemarks">{{ f.remarks }}</p>
+            <ng-template #noFwRemarks><p class="muted">कोई टिप्पणी नहीं दी गई / No remarks given</p></ng-template>
+          </div>
+        </section>
+      </ng-container>
 
       <h3><i class="fa-solid fa-file-pdf"></i> संलग्न दस्तावेज़</h3>
       <div class="doc-row">
@@ -90,6 +143,7 @@
           </div>
         </ng-container>
         <span class="remark-error" *ngIf="remarkError">{{ remarkError }}</span>
+      </div>
       </div>
     </div>
 

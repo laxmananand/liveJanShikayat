@@ -798,6 +798,6 @@
     </div>
   </div>
 
-  <app-applicant-details-modal [record]="detailsRecord" [closure]="detailsForward?.isDisposed ? detailsForward : null"
+  <app-applicant-details-modal [record]="detailsRecord" [forward]="detailsForward" [closure]="detailsForward?.isDisposed ? detailsForward : null"
                                (closed)="onDetailsClosed()"></app-applicant-details-modal>
 </div>

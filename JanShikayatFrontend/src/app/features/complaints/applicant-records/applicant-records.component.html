@@ -63,12 +63,7 @@
           <td class="nowrap" data-label="आवेदन प्राप्ति की तिथि">{{ r.applicationDate ? (r.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ forwards.get(r.id)?.forwardedAt ? (forwards.get(r.id)!.forwardedAt | date: 'dd/MM/yyyy') : '' }}</td>
           <td data-label="अग्रेषित">
-            <ng-container *ngIf="forwards.get(r.id) as f">
-              <span [title]="f.categoryLabel + ' → ' + f.branchLabel + ' → ' + f.complaintTypeLabel + (f.remarks ? ' — ' + f.remarks : '')">{{ f.branchLabel }}</span>
-              <small class="sub" *ngIf="f.prashakhaLabel"><i class="fa-solid fa-sitemap"></i> {{ f.prashakhaLabel }}</small>
-              <small class="sub" *ngIf="f.officeUnitLabel || f.officeLabel"><i class="fa-solid fa-building-columns"></i> {{ f.officeUnitLabel || f.officeLabel }}</small>
-              <small class="sub">{{ f.complaintTypeLabel }}</small>
-            </ng-container>
+            <span *ngIf="forwards.get(r.id) as f" class="recipient" title="पूरा अग्रेषण विवरण देखने हेतु 'देखें' दबाएँ / Use View for full forwarding details">{{ recipient(f) }}</span>
           </td>
           <td class="col-center" data-label="अग्रेषित स्थिति">
             <span class="status-badge" [class.yes]="forwards.has(r.id)">{{ forwards.has(r.id) ? 'Yes' : 'No' }}</span>
@@ -93,7 +88,7 @@
                 <i class="fa-solid fa-lock"></i> Forwarded
               </button>
             </ng-container>
-            <button *ngIf="!isAdmin" type="button" class="btn-send" (click)="openDetails(r)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+            <button *ngIf="!isAdmin" type="button" class="btn-send" (click)="openDetails(r, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
               <i class="fa-solid fa-comment-dots"></i> Remarks
             </button>
           </td>
@@ -112,6 +107,7 @@
 
   <app-forward-dialog *ngIf="isAdmin" [record]="forwarding" (closed)="forwarding = null" (forwarded)="onForwarded($event)"></app-forward-dialog>
 
-  <app-applicant-details-modal [record]="selected" [closure]="selected && forwards.get(selected.id)?.isDisposed ? forwards.get(selected.id)! : null"
+  <app-applicant-details-modal [record]="selected" [forward]="selected ? forwards.get(selected.id) ?? null : null" [allowRemark]="remarkMode"
+                               [closure]="selected && forwards.get(selected.id)?.isDisposed ? forwards.get(selected.id)! : null"
                                (closed)="selected = null"></app-applicant-details-modal>
 </section>

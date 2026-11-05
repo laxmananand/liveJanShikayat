@@ -529,3 +529,11 @@
     }
   }
 }
+
+/* Forwarded To: only the receiving office; the rest is in the View popup */
+.recipient {
+  font-weight: 600;
+  color: #17284a;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}

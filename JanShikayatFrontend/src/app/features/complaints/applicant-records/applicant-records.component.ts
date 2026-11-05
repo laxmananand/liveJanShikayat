@@ -8,7 +8,7 @@ import { ApplicantRecord } from '../../../core/models/models';
 import { openBase64Document } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 import { ForwardDialogComponent } from '../../../shared/forward-dialog/forward-dialog.component';
-import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
+import { ForwardRecord, ForwardService, forwardRecipient } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { DateRange, inDateRange, isRangeActive } from '../../../core/utils/date-range';
 import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
@@ -116,7 +116,13 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
     return names.filter((n) => !!n?.trim()).join(', ') || '—';
   }
 
-  openDetails(r: ApplicantRecord): void {
+  readonly recipient = forwardRecipient;
+
+  /** true only when opened from the Remarks button; the View (eye) popup is read-only. */
+  remarkMode = false;
+
+  openDetails(r: ApplicantRecord, allowRemark = false): void {
+    this.remarkMode = allowRemark;
     this.selected = r;
   }
 

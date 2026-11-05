@@ -647,11 +647,20 @@
   white-space: nowrap;
 }
 
+/* Mirrors .entry-grid (columns, breakpoints, spans) so the preview matches the form's layout */
 .preview-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 16px;
   margin-bottom: 6px;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
   .preview-item {
     display: flex;
@@ -662,6 +671,10 @@
     border: 1px solid #d4dbec;
     border-radius: 6px;
     min-width: 0;
+
+    &.span-2 {
+      grid-column: span 2;
+    }
 
     &.full {
       grid-column: 1 / -1;
@@ -704,12 +717,6 @@
 
   &:hover {
     background: #e7ecf6;
-  }
-}
-
-@media (max-width: 860px) {
-  .preview-grid {
-    grid-template-columns: 1fr;
   }
 }
 

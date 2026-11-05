@@ -99,6 +99,7 @@
   </div>
 
   <app-applicant-details-modal [record]="selected" [allowRemark]="allowRemark"
+                               [forward]="selectedForward"
                                [closure]="selectedForward?.isDisposed ? selectedForward : null"
                                (closed)="selected = null; selectedForward = null; load()"></app-applicant-details-modal>
 </section>

@@ -3,8 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApplicantRecord, ApplicantRemark } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
-import { ForwardService } from '../../core/services/forward.service';
+import { ForwardRecord, ForwardService, forwardRecipient } from '../../core/services/forward.service';
 import { openBase64Document, openBlobDocument } from '../../core/utils/document';
+import { applicationStatus, statusLabel } from '../../core/utils/labels';
+
+/** One hop of the forwarding route shown as a chip (Category → Office → Officer → Branch). */
+interface RouteStep {
+  label: string;
+  value: string;
+  icon: string;
+}
 
 /** Closure details of a Disposed application (from ForwardRecord / ForwardResponse). */
 export interface ApplicationClosureInfo {
@@ -34,7 +42,34 @@ export class ApplicantDetailsModalComponent implements OnChanges {
   @Input() allowRemark = true;
   /** Set when Admin has closed the application: it is shown as Disposed and no remark can be added. */
   @Input() closure: ApplicationClosureInfo | null = null;
+  /** The latest forward of this application, when there is one: shown as "Forwarding details". */
+  @Input() forward: ForwardRecord | null = null;
   @Output() closed = new EventEmitter<void>();
+
+  readonly recipient = forwardRecipient;
+  readonly statusLabel = statusLabel;
+  readonly applicationStatus = applicationStatus;
+
+  /** Department forwards go by email: the "complaint type" then holds the address. */
+  isEmailForward(f: ForwardRecord): boolean {
+    return f.complaintTypeId === 'email';
+  }
+
+  /** The path the application took, skipping levels this kind of forward doesn't have. */
+  route(f: ForwardRecord): RouteStep[] {
+    const steps: RouteStep[] = [
+      { label: 'श्रेणी / Category', value: f.categoryLabel, icon: 'fa-layer-group' },
+      { label: 'प्रशाखा / Prashakha', value: f.prashakhaLabel ?? '', icon: 'fa-sitemap' },
+      { label: 'कार्यालय / Office', value: f.officeLabel ?? '', icon: 'fa-building' },
+      { label: 'अधिकारी / Officer', value: f.officeUnitLabel ?? '', icon: 'fa-user-tie' },
+      {
+        label: this.isEmailForward(f) ? 'विभाग / Department' : 'शाखा / Branch',
+        value: f.branchLabel,
+        icon: this.isEmailForward(f) ? 'fa-landmark' : 'fa-code-branch'
+      }
+    ];
+    return steps.filter((s) => !!s.value?.trim());
+  }
 
   remarks: ApplicantRemark[] = [];
   remarksLoading = false;

@@ -528,7 +528,9 @@
         </div>
 
         <div class="card-body-content">
+          <!-- Same order and grid as the entry form (.entry-grid), so each value sits where it was entered -->
           <div class="preview-grid">
+            <!-- Applicant details -->
             <div class="preview-item">
               <span class="lbl">आवेदक का नाम</span>
               <strong class="val">{{ draft.values.applicantName }}</strong>
@@ -545,18 +547,7 @@
               <span class="lbl">ईमेल आईडी</span>
               <strong class="val">{{ draft.values.email || '—' }}</strong>
             </div>
-            <div class="preview-item">
-              <span class="lbl">आवेदन प्राप्ति की तिथि</span>
-              <strong class="val">{{ draft.values.applicationDate | date: 'dd-MM-yyyy' }}</strong>
-            </div>
-            <div class="preview-item full">
-              <span class="lbl">पता</span>
-              <strong class="val">{{ draft.values.address }}</strong>
-            </div>
-            <div class="preview-item">
-              <span class="lbl">पिन कोड</span>
-              <strong class="val">{{ draft.values.pinCode }}</strong>
-            </div>
+            <!-- Location: जिला → अनुमंडल → अंचल → थाना -->
             <div class="preview-item">
               <span class="lbl">जिला</span>
               <strong class="val">{{ draft.locationNames.district }}</strong>
@@ -573,6 +564,7 @@
               <span class="lbl">थाना</span>
               <strong class="val">{{ draft.locationNames.thana }}</strong>
             </div>
+            <!-- Rural = पंचायत, राजस्व ग्राम, वार्ड • Urban = नगर निकाय, वार्ड, मोहल्ला -->
             <div class="preview-item">
               <span class="lbl">क्षेत्र का प्रकार</span>
               <strong class="val">{{ draft.locationNames.areaType || '—' }}</strong>
@@ -593,11 +585,16 @@
               <span class="lbl">मोहल्ला</span>
               <strong class="val">{{ draft.values.mohalla }}</strong>
             </div>
+            <!-- PIN, application date, document, then the full-width address -->
             <div class="preview-item">
-              <span class="lbl">आवेदन स्रोत</span>
-              <strong class="val">{{ draft.values.applicationSource }}</strong>
+              <span class="lbl">पिन कोड</span>
+              <strong class="val">{{ draft.values.pinCode }}</strong>
             </div>
-            <div class="preview-item full" *ngIf="draft.pdf">
+            <div class="preview-item">
+              <span class="lbl">आवेदन प्राप्ति की तिथि</span>
+              <strong class="val">{{ draft.values.applicationDate | date: 'dd-MM-yyyy' }}</strong>
+            </div>
+            <div class="preview-item span-2" *ngIf="draft.pdf">
               <span class="lbl">संलग्न दस्तावेज़</span>
               <strong class="val">
                 <i class="fa-solid fa-file-pdf pdf-icon"></i> {{ draft.pdf.name }} ({{ draft.pdf.size }})
@@ -605,6 +602,15 @@
                   <i class="fa-solid fa-arrow-up-right-from-square"></i> देखें
                 </button>
               </strong>
+            </div>
+            <div class="preview-item full">
+              <span class="lbl">पता</span>
+              <strong class="val">{{ draft.values.address }}</strong>
+            </div>
+            <!-- Application source sits below the grid on the form -->
+            <div class="preview-item full">
+              <span class="lbl">आवेदन स्रोत</span>
+              <strong class="val">{{ draft.values.applicationSource }}</strong>
             </div>
           </div>
 

@@ -37,6 +37,14 @@ export interface ForwardRecord {
   closureRemarks?: string | null;
 }
 
+/**
+ * Who actually receives a forward: the officer / office (District Administration), else the
+ * Prashakha (Section), else the branch / department itself.
+ */
+export function forwardRecipient(f: Pick<ForwardRecord, 'branchLabel' | 'prashakhaLabel' | 'officeLabel' | 'officeUnitLabel'>): string {
+  return f.officeUnitLabel || f.officeLabel || f.prashakhaLabel || f.branchLabel || '—';
+}
+
 /** Fields the client sends; the server fills in who forwarded it and when. */
 export type ForwardPayload = Omit<ForwardRecord, 'forwardedBy' | 'forwardedAt' | 'status' | 'firstResponseAt' | 'isDisposed' | 'closedAt' | 'closedBy' | 'closureRemarks'>;
 
