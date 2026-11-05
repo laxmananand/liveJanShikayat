@@ -16,31 +16,6 @@
   justify-content: center;
 }
 
-/* Flat peach discs (decorative) */
-.hero-section::before,
-.hero-section::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.hero-section::before {
-  width: 520px;
-  height: 520px;
-  top: -170px;
-  right: -140px;
-  background: #ccd5ea;
-}
-
-.hero-section::after {
-  width: 300px;
-  height: 300px;
-  bottom: -90px;
-  left: -60px;
-  background: #eff3fb;
-}
-
 /* Hero Container */
 .hero-container {
   position: relative;

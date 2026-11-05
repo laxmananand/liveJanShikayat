@@ -1,17 +1,17 @@
 .tracking-section {
-  background: #e7ecf6;
+  background: #ffffff;
   padding: 100px 0;
 }
 
+/* Hairline frame in the portal's theme; no fill, so it stays on the section background */
 .tracking-card {
-  background: #ffffff;
-  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 60px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 60px;
-  box-shadow: 0 6px 16px rgba(16, 29, 59, 0.10);
-  border: 1px solid rgba(16, 29, 59, 0.08);
   align-items: center;
 }
 
@@ -31,10 +31,7 @@
 }
 
 .tracking-form-wrap {
-  background: #f3f5fb;
-  border-radius: 10px;
   padding: 36px;
-  border: 1px solid rgba(16, 29, 59, 0.08);
 }
 
 .form-label {
@@ -296,31 +293,17 @@
   color: #4a5a7c;
 }
 
-.form-note {
-  display: block;
-  color: #7a89aa;
-  font-size: 0.72rem;
-  margin-top: 14px;
-}
-
-.form-note i {
-  color: #174bd9;
-  margin-right: 4px;
-}
-
 @media (max-width: 991.98px) {
   .tracking-card {
     grid-template-columns: 1fr;
     padding: 36px;
     gap: 32px;
-    border-radius: 10px;
   }
 }
 
 @media (max-width: 575.98px) {
   .tracking-card {
     padding: 20px 16px;
-    border-radius: 8px;
   }
   .tracking-copy h2 {
     font-size: 1.8rem;
@@ -328,7 +311,6 @@
   }
   .tracking-form-wrap {
     padding: 18px 14px;
-    border-radius: 8px;
   }
   .input-wrap {
     flex-direction: column;
