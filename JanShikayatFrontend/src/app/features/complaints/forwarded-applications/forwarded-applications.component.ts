@@ -1,10 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
-import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
+import { ForwardRecord, ForwardService, ReforwardRecord, forwardRecipient, isRegionalOffice } from '../../../core/services/forward.service';
+import { ReforwardDialogComponent } from '../../../shared/reforward-dialog/reforward-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { applicationStatus, statusLabel } from '../../../core/utils/labels';
 import { openBase64Document } from '../../../core/utils/document';
@@ -24,11 +26,11 @@ interface ForwardedRow {
 @Component({
   selector: 'app-forwarded-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, ReforwardDialogComponent],
   templateUrl: './forwarded-applications.component.html',
   styleUrl: '../applicant-records/applicant-records.component.scss'
 })
-export class ForwardedApplicationsComponent implements OnInit {
+export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   private applicantService = inject(ApplicantService);
   private forwardService = inject(ForwardService);
   private auth = inject(AuthService);
@@ -50,6 +52,46 @@ export class ForwardedApplicationsComponent implements OnInit {
 
   applicationStatus = applicationStatus;
   statusLabel = statusLabel;
+  readonly recipient = forwardRecipient;
+
+  /** Row whose "Forward to DM / SP" popup is open */
+  reforwarding: ForwardedRow | null = null;
+  infoMessage = '';
+  private infoTimer?: ReturnType<typeof setTimeout>;
+
+  /** Commissioner / IG / DIG logins forward what they received onward to DM / SP. */
+  get isRegional(): boolean {
+    return !this.isAdmin && isRegionalOffice(this.auth.currentUser()?.officeId);
+  }
+
+  sentCount(f: ForwardRecord): number {
+    return f.reforwards?.length ?? 0;
+  }
+
+  hasSent(f: ForwardRecord, officeId: number): boolean {
+    return !!f.reforwards?.some((r) => r.toOfficeId === officeId);
+  }
+
+  openReforward(row: ForwardedRow): void {
+    if (row.forward.isDisposed) return;
+    this.reforwarding = row;
+  }
+
+  onReforwarded(saved: ReforwardRecord[]): void {
+    const row = this.reforwarding;
+    this.reforwarding = null;
+    if (!row) return;
+    row.forward = { ...row.forward, reforwards: [...(row.forward.reforwards ?? []), ...saved] };
+    this.infoMessage = `आवेदन संख्या ${row.record.applicationNo || row.record.id} (${row.record.applicantName}) ${saved
+      .map((r) => `"${r.toOfficeLabel}"`)
+      .join(' व ')} को अग्रेषित किया गया। / Forwarded successfully.`;
+    clearTimeout(this.infoTimer);
+    this.infoTimer = setTimeout(() => (this.infoMessage = ''), MESSAGE_DURATION_MS);
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.infoTimer);
+  }
 
   get isAdmin(): boolean {
     return this.auth.hasRole('SuperAdmin');

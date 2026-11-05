@@ -3,7 +3,7 @@
     <div>
       <span class="section-kicker"><i class="fa-solid fa-share-from-square"></i> अग्रेषित आवेदन / Forwarded Applications</span>
       <h1>अग्रेषित आवेदन</h1>
-      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।' : 'आपकी शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
+      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।' : isRegional ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) को आगे भेज सकते हैं।' : 'आपकी शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
     </div>
   </header>
 
@@ -15,6 +15,10 @@
   </div>
 
   <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
+
+  <div class="alert alert-info" *ngIf="infoMessage">
+    <i class="fa-solid fa-circle-info"></i> {{ infoMessage }}
+  </div>
 
   <div class="alert alert-error" *ngIf="errorMessage">
     <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
@@ -43,6 +47,7 @@
           <th>शिकायत का प्रकार<small>(Complaint Type)</small></th>
           <th class="col-center">स्थिति<small>(Status)</small></th>
           <th class="col-center">देखें<small>(View)</small></th>
+          <th class="col-center" *ngIf="isRegional">DM / SP को भेजें<small>(Forward)</small></th>
           <th class="col-center col-remarks">टिप्पणी<small>(Remarks)</small></th>
         </tr>
       </thead>
@@ -59,9 +64,9 @@
           <td class="nowrap" data-label="मोबाइल नंबर">{{ row.record.mobileNumber || '—' }}</td>
           <td class="nowrap" data-label="आवेदन प्राप्ति की तिथि">{{ row.record.applicationDate ? (row.record.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.forward.forwardedAt | date: 'dd/MM/yyyy' }}</td>
-          <td data-label="अग्रेषित" [title]="row.forward.categoryLabel + ' → ' + row.forward.branchLabel + ' • ' + row.forward.forwardedBy">
-            {{ row.forward.branchLabel }}
-            <small class="sub">{{ row.forward.categoryLabel }}<ng-container *ngIf="row.forward.prashakhaLabel"> • {{ row.forward.prashakhaLabel }}</ng-container><ng-container *ngIf="row.forward.officeUnitLabel || row.forward.officeLabel"> • {{ row.forward.officeUnitLabel || row.forward.officeLabel }}</ng-container></small>
+          <td data-label="अग्रेषित" title="पूरा अग्रेषण विवरण देखने हेतु 'देखें' दबाएँ / Use View for full forwarding details">
+            <span class="recipient">{{ recipient(row.forward) }}</span>
+            <small class="sub onward" *ngFor="let rf of row.forward.reforwards"><i class="fa-solid fa-arrow-right"></i> {{ rf.toOfficeLabel }}</small>
           </td>
           <td data-label="शिकायत का प्रकार">
             {{ row.forward.complaintTypeLabel }}
@@ -81,6 +86,16 @@
                 <i class="fa-solid fa-file-pdf"></i>
               </button>
             </div>
+          </td>
+          <td class="col-center" data-label="DM / SP को भेजें" *ngIf="isRegional">
+            <button *ngIf="!row.forward.isDisposed && sentCount(row.forward) < 2" type="button" class="btn-send" (click)="openReforward(row)"
+                    [title]="sentCount(row.forward) ? 'शेष DM / SP को भेजें / Forward to the remaining DM / SP' : 'जिलाधिकारी / पुलिस अधीक्षक को अग्रेषित करें / Forward to DM / SP'">
+              <i class="fa-solid fa-share-nodes"></i> {{ sentCount(row.forward) ? (hasSent(row.forward, 2) ? 'SP' : 'DM') : 'DM / SP' }}
+            </button>
+            <button *ngIf="row.forward.isDisposed || sentCount(row.forward) >= 2" type="button" class="btn-send locked" (click)="openReforward(row)"
+                    [disabled]="row.forward.isDisposed" [title]="row.forward.isDisposed ? 'निष्पादित / Disposed' : 'DM और SP दोनों को भेजा गया / Sent to DM and SP'">
+              <i class="fa-solid fa-lock"></i> {{ row.forward.isDisposed ? 'Disposed' : 'Forwarded' }}
+            </button>
           </td>
           <td class="col-center col-remarks" data-label="टिप्पणी">
             <button type="button" class="btn-send" (click)="openDetails(row, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
@@ -102,4 +117,7 @@
                                [forward]="selectedForward"
                                [closure]="selectedForward?.isDisposed ? selectedForward : null"
                                (closed)="selected = null; selectedForward = null; load()"></app-applicant-details-modal>
+
+  <app-reforward-dialog *ngIf="isRegional" [record]="reforwarding?.record ?? null" [forward]="reforwarding?.forward ?? null"
+                        (closed)="reforwarding = null" (reforwarded)="onReforwarded($event)"></app-reforward-dialog>
 </section>

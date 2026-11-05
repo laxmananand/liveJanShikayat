@@ -74,6 +74,58 @@ namespace janshikayat.Models
         public DateTime? ClosedAt { get; set; }
         public string? ClosedBy { get; set; }
         public string? ClosureRemarks { get; set; }
+        // Onward forwards by the receiving Commissioner / IG / DIG to a DM and / or SP (Tbl_Applicant_Reforward)
+        public List<ReforwardDto> Reforwards { get; set; } = new();
+    }
+
+    // Regional office kinds (Mst_Regional_Office.Office_Id)
+    public static class OfficeKind
+    {
+        public const int Commissioner = 1;
+        public const int DistrictMagistrate = 2;
+        public const int InspectorGeneral = 3;
+        public const int DeputyInspectorGeneral = 4;
+        public const int SuperintendentOfPolice = 5;
+
+        // Logins that may forward what they received onward to DM / SP
+        public static bool IsRegional(int? officeId) =>
+            officeId is Commissioner or InspectorGeneral or DeputyInspectorGeneral;
+    }
+
+    // Commissioner / IG / DIG: forward a received application onward to a DM and / or SP of its jurisdiction
+    public class ReforwardRequest
+    {
+        [Range(1, long.MaxValue)]
+        public long ApplicantId { get; set; }
+        // Dist_Code of the DM office (null = not sent to a DM now)
+        public int? DmUnitCode { get; set; }
+        // SP_Code of the SP office (null = not sent to an SP now)
+        public int? SpUnitCode { get; set; }
+        [StringLength(500)]
+        public string? Remarks { get; set; }
+    }
+    public class ReforwardDto
+    {
+        public long ID { get; set; }
+        public long ApplicantId { get; set; }
+        public int FromOfficeId { get; set; }
+        public int FromOfficeUnitCode { get; set; }
+        public string FromOfficeLabel { get; set; } = string.Empty;
+        public int ToOfficeId { get; set; }
+        public int ToOfficeUnitCode { get; set; }
+        public string ToOfficeLabel { get; set; } = string.Empty;
+        public string? Remarks { get; set; }
+        public string ForwardedBy { get; set; } = string.Empty;
+        public DateTime ForwardedAt { get; set; }
+    }
+    // A DM / SP office the logged-in Commissioner / IG / DIG may forward to
+    public class ReforwardTargetDto
+    {
+        public int OfficeId { get; set; }
+        public int UnitCode { get; set; }
+        public string UnitLabel { get; set; } = string.Empty;
+        // The office of the application's own district (preselected in the popup)
+        public bool IsApplicantDistrict { get; set; }
     }
 
     // Admin only: close a forwarded application, which moves it from Pending to Disposed

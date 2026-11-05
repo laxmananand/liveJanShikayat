@@ -81,6 +81,20 @@
             <div *ngIf="f.closedAt"><dt>निष्पादन दिनांक / Disposed on</dt><dd>{{ f.closedAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
           </dl>
 
+          <div class="fw-onward" *ngIf="f.reforwards?.length">
+            <small class="fw-onward-title"><i class="fa-solid fa-share-nodes"></i> आगे अग्रेषित / Onward forwarded to</small>
+            <ul>
+              <li *ngFor="let rf of f.reforwards">
+                <span class="fw-onward-icon"><i class="fa-solid" [ngClass]="rf.toOfficeId === 5 ? 'fa-shield-halved' : 'fa-landmark'"></i></span>
+                <div>
+                  <strong>{{ rf.toOfficeLabel }}</strong>
+                  <small>{{ rf.fromOfficeLabel }} द्वारा • {{ rf.forwardedAt | date: 'dd-MM-yyyy, hh:mm a' }}</small>
+                  <p *ngIf="rf.remarks">{{ rf.remarks }}</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
           <div class="fw-remarks">
             <small><i class="fa-solid fa-quote-left"></i> अग्रेषण टिप्पणी / Forwarding remarks</small>
             <p *ngIf="f.remarks?.trim(); else noFwRemarks">{{ f.remarks }}</p>

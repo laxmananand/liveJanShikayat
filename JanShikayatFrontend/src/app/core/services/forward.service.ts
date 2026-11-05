@@ -35,6 +35,47 @@ export interface ForwardRecord {
   closedAt?: string | null;
   closedBy?: string | null;
   closureRemarks?: string | null;
+  /** Onward forwards by the receiving Commissioner / IG / DIG to a DM and / or SP */
+  reforwards?: ReforwardRecord[];
+}
+
+/** Mst_Regional_Office.Office_Id */
+export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5 } as const;
+
+/** Commissioner / IG / DIG logins can forward what they received onward to DM / SP. */
+export function isRegionalOffice(officeId: number | null | undefined): boolean {
+  return officeId === OFFICE_KIND.Commissioner || officeId === OFFICE_KIND.IG || officeId === OFFICE_KIND.DIG;
+}
+
+/** One onward forward (Tbl_Applicant_Reforward): regional office → DM (2) or SP (5). */
+export interface ReforwardRecord {
+  id: number;
+  applicantId: number;
+  fromOfficeId: number;
+  fromOfficeUnitCode: number;
+  fromOfficeLabel: string;
+  toOfficeId: number;
+  toOfficeUnitCode: number;
+  toOfficeLabel: string;
+  remarks: string | null;
+  forwardedBy: string;
+  forwardedAt: string;
+}
+
+/** A DM / SP office in the logged-in regional officer's division / range. */
+export interface ReforwardTarget {
+  officeId: number; // 2 = DM, 5 = SP
+  unitCode: number;
+  unitLabel: string;
+  /** The office of the application's own district */
+  isApplicantDistrict: boolean;
+}
+
+export interface ReforwardPayload {
+  applicantId: number;
+  dmUnitCode: number | null;
+  spUnitCode: number | null;
+  remarks: string | null;
 }
 
 /**
@@ -124,6 +165,23 @@ export class ForwardService {
           this.latestCache.invalidate();
           this.mineCache.invalidate();
         })
+      );
+  }
+
+  /** API: GET /Applicant/reforward-targets/{id} (Commissioner / IG / DIG) → DM / SP offices of its jurisdiction */
+  reforwardTargets(applicantId: number): Observable<ReforwardTarget[]> {
+    return this.http
+      .get<ApiEnvelope<ReforwardTarget[]>>(`${this.baseUrl}/reforward-targets/${applicantId}`)
+      .pipe(map((res) => res.data ?? []));
+  }
+
+  /** API: POST /Applicant/reforward-applicant (Commissioner / IG / DIG) → the onward forwards saved */
+  reforward(payload: ReforwardPayload): Observable<ReforwardRecord[]> {
+    return this.http
+      .post<ApiEnvelope<ReforwardRecord[]>>(`${this.baseUrl}/reforward-applicant`, payload)
+      .pipe(
+        map((res) => res.data ?? []),
+        tap(() => this.invalidate())
       );
   }
 

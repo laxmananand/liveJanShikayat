@@ -212,7 +212,7 @@ namespace janshikayat.BAL.Services
         {
             using var conn = _context.CreateConnection();
 
-            return conn.Query<ApplicantForwardDto>(
+            var forwards = conn.Query<ApplicantForwardDto>(
                 @"SELECT f.ApplicantId, f.CategoryId, f.CategoryLabel, f.BranchId, f.BranchLabel,
                          f.ComplaintTypeId, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt,
                          f.PrashakhaId, f.PrashakhaLabel, f.OfficeId, f.OfficeLabel, f.OfficeUnitCode, f.OfficeUnitLabel,
@@ -221,7 +221,9 @@ namespace janshikayat.BAL.Services
                   LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
                   " + FirstReplyApply + @"
                   ORDER BY f.ForwardedDate, f.ID",
-                new { AdminRole = adminRole });
+                new { AdminRole = adminRole }).ToList();
+            AttachReforwards(conn, forwards);
+            return forwards;
         }
 
         // Latest forward per application, newest first, limited to what the login may see (ScopeFilter)
@@ -232,7 +234,7 @@ namespace janshikayat.BAL.Services
             var parameters = new DynamicParameters(scope);
             parameters.Add("@AdminRole", adminRole);
 
-            return conn.Query<ApplicantForwardDto>(
+            var forwards = conn.Query<ApplicantForwardDto>(
                 @"SELECT f.ApplicantId, f.CategoryId, f.CategoryLabel, f.BranchId, f.BranchLabel,
                          f.ComplaintTypeId, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt,
                          f.PrashakhaId, f.PrashakhaLabel, f.OfficeId, f.OfficeLabel, f.OfficeUnitCode, f.OfficeUnitLabel,
@@ -243,13 +245,132 @@ namespace janshikayat.BAL.Services
                   " + FirstReplyApply + @"
                   WHERE f.rn = 1 AND " + ScopeFilter + @"
                   ORDER BY f.ForwardedDate DESC, f.ID DESC",
-                parameters);
+                parameters).ToList();
+            AttachReforwards(conn, forwards);
+            return forwards;
+        }
+
+        // Fills ApplicantForwardDto.Reforwards (onward forwards by the Commissioner / IG / DIG to DM / SP)
+        private static void AttachReforwards(IDbConnection conn, List<ApplicantForwardDto> forwards)
+        {
+            if (forwards.Count == 0)
+                return;
+
+            var byApplicant = conn.Query<ReforwardDto>(
+                    @"SELECT " + ReforwardColumns + @"
+                      FROM Tbl_Applicant_Reforward rf
+                      WHERE rf.ApplicantId IN @Ids
+                      ORDER BY rf.ForwardedDate, rf.ID",
+                    new { Ids = forwards.Select(f => f.ApplicantId).Distinct().ToArray() })
+                .ToLookup(r => r.ApplicantId);
+
+            foreach (var f in forwards)
+                f.Reforwards = byApplicant[f.ApplicantId].ToList();
+        }
+
+        private const string ReforwardColumns =
+            @"rf.ID, rf.ApplicantId, rf.FromOfficeId, rf.FromOfficeUnitCode, rf.FromOfficeLabel,
+              rf.ToOfficeId, rf.ToOfficeUnitCode, rf.ToOfficeLabel, rf.Remarks, rf.ForwardedBy, rf.ForwardedDate AS ForwardedAt";
+
+        // DM (Office_Id 2) and SP (Office_Id 5) offices, aliased t, with the division / range they fall under
+        private const string JurisdictionOffices =
+            @"(SELECT 2 AS OfficeId, m.Dist_Code AS UnitCode, m.Head AS UnitLabel, m.Division_Code, m.Range_Code
+               FROM Mst_DM_Office m
+               UNION ALL
+               SELECT 5, s.SP_Code, s.Head, s.Division_Code, s.Range_Code
+               FROM Mst_SP_Office s) t";
+
+        // t is under the sender: a Commissioner's division, or an IG / DIG's range (@FromOfficeId / @FromUnitCode)
+        private const string InJurisdiction =
+            @"((@FromOfficeId = 1 AND t.Division_Code = @FromUnitCode)
+               OR (@FromOfficeId IN (3, 4) AND t.Range_Code = @FromUnitCode))";
+
+        // DM / SP offices the logged-in Commissioner / IG / DIG may forward this application to. The office of the
+        // application's own district comes first and is marked (for SP its main office, e.g. not SP Bagaha).
+        public IEnumerable<ReforwardTargetDto> GetReforwardTargets(long applicantId, int fromOfficeId, int fromUnitCode)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<ReforwardTargetDto>(
+                @"SELECT t.OfficeId, t.UnitCode, t.UnitLabel,
+                         CAST(CASE WHEN t.UnitCode = d.District THEN 1 ELSE 0 END AS BIT) AS IsApplicantDistrict
+                  FROM " + JurisdictionOffices + @"
+                  CROSS JOIN (SELECT District FROM Tbl_Applicant_Details WHERE ID = @ApplicantId) d
+                  WHERE " + InJurisdiction + @"
+                  ORDER BY t.OfficeId, CASE WHEN t.UnitCode = d.District THEN 0 ELSE 1 END, t.UnitLabel",
+                new { ApplicantId = applicantId, FromOfficeId = fromOfficeId, FromUnitCode = fromUnitCode });
+        }
+
+        // Office kinds (2 = DM, 5 = SP) this application was already forwarded onward to
+        public IReadOnlyList<int> GetReforwardedKinds(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<int>(
+                "SELECT ToOfficeId FROM Tbl_Applicant_Reforward WHERE ApplicantId = @ApplicantId",
+                new { ApplicantId = applicantId }).ToList();
+        }
+
+        // Saves one onward forward per requested office (DM and / or SP) in one transaction. Returns null when the
+        // application was not forwarded to this Commissioner / IG / DIG, is closed, or an office is outside its jurisdiction.
+        public IReadOnlyList<ReforwardDto>? Reforward(ReforwardRequest request, int fromOfficeId, int fromUnitCode, string forwardedBy, string? ip)
+        {
+            var targets = new List<(int OfficeId, int UnitCode)>();
+            if (request.DmUnitCode is int dm) targets.Add((OfficeKind.DistrictMagistrate, dm));
+            if (request.SpUnitCode is int sp) targets.Add((OfficeKind.SuperintendentOfPolice, sp));
+
+            using var conn = _context.CreateConnection();
+            conn.Open();
+            using var tx = conn.BeginTransaction();
+
+            var saved = new List<ReforwardDto>();
+            foreach (var (officeId, unitCode) in targets)
+            {
+                var row = conn.QueryFirstOrDefault<ReforwardDto>(
+                    @"INSERT INTO Tbl_Applicant_Reforward
+                           (ApplicantId, ForwardId, FromOfficeId, FromOfficeUnitCode, FromOfficeLabel,
+                            ToOfficeId, ToOfficeUnitCode, ToOfficeLabel, Remarks, ForwardedBy, ForwardedIp)
+                      OUTPUT inserted.ID, inserted.ApplicantId, inserted.FromOfficeId, inserted.FromOfficeUnitCode,
+                             inserted.FromOfficeLabel, inserted.ToOfficeId, inserted.ToOfficeUnitCode, inserted.ToOfficeLabel,
+                             inserted.Remarks, inserted.ForwardedBy, inserted.ForwardedDate AS ForwardedAt
+                      SELECT f.ApplicantId, f.ID, f.OfficeId, f.OfficeUnitCode, COALESCE(f.OfficeUnitLabel, f.OfficeLabel, ''),
+                             t.OfficeId, t.UnitCode, t.UnitLabel, @Remarks, @ForwardedBy, @ForwardedIp
+                      FROM Tbl_Applicant_Forward f
+                      JOIN " + JurisdictionOffices + @"
+                        ON t.OfficeId = @ToOfficeId AND t.UnitCode = @ToUnitCode AND " + InJurisdiction + @"
+                      WHERE f.ApplicantId = @ApplicantId
+                        AND f.OfficeId = @FromOfficeId AND f.OfficeUnitCode = @FromUnitCode
+                        AND EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
+                        AND NOT EXISTS (SELECT 1 FROM Tbl_Applicant_Closure WHERE ApplicantId = @ApplicantId)",
+                    new
+                    {
+                        request.ApplicantId,
+                        FromOfficeId = fromOfficeId,
+                        FromUnitCode = fromUnitCode,
+                        ToOfficeId = officeId,
+                        ToUnitCode = unitCode,
+                        Remarks = string.IsNullOrWhiteSpace(request.Remarks) ? null : request.Remarks.Trim(),
+                        ForwardedBy = forwardedBy,
+                        ForwardedIp = ip
+                    },
+                    tx);
+                if (row == null)
+                {
+                    tx.Rollback();
+                    return null;
+                }
+                saved.Add(row);
+            }
+
+            tx.Commit();
+            return saved;
         }
 
         // Applications a login may see, for a query whose forward is f (Tbl_Applicant_Forward, LEFT JOINed
         // where unforwarded applications count) and whose parameters are an AccessScope:
         //   Admin all; Branch / Prashakha their forwards; Commissioner its own forwards and those to the DM offices
-        //   of its division; DM / IG / DIG / SP their own forwards
+        //   of its division; DM / IG / DIG / SP their own forwards; DM / SP also those a Commissioner / IG / DIG
+        //   forwarded onward to them (Tbl_Applicant_Reforward)
         private const string ScopeFilter =
             @"(@All = 1
                OR (@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
@@ -257,7 +378,10 @@ namespace janshikayat.BAL.Services
                OR (@OfficeId = 1 AND ((f.OfficeId = 1 AND f.OfficeUnitCode = @OfficeUnitCode)
                                       OR (f.OfficeId = 2 AND f.OfficeUnitCode IN (SELECT m.Dist_Code FROM Mst_DM_Office m
                                                                                   WHERE m.Division_Code = @OfficeUnitCode))))
-               OR (@OfficeId IN (2, 3, 4, 5) AND f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode))";
+               OR (@OfficeId IN (2, 3, 4, 5) AND f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode)
+               OR (@OfficeId IN (2, 5) AND EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward rf
+                                                   WHERE rf.ApplicantId = f.ApplicantId
+                                                     AND rf.ToOfficeId = @OfficeId AND rf.ToOfficeUnitCode = @OfficeUnitCode)))";
 
         // When the receiving office first replied (a remark by a role other than Admin), for a query whose forward is f.
         // NULL when it has not replied, or when f is NULL (not forwarded). Needs the @AdminRole parameter.

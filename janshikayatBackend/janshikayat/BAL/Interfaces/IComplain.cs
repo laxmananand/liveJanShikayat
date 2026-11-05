@@ -22,6 +22,9 @@ namespace janshikayat.BAL.Interfaces
         (string? ApplicationNo, string? MobileNumber, string? MobileNumber2) GetSmsContact(long applicantId);
         PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);
         IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope, string adminRole);
+        IEnumerable<ReforwardTargetDto> GetReforwardTargets(long applicantId, int fromOfficeId, int fromUnitCode);
+        IReadOnlyList<int> GetReforwardedKinds(long applicantId);
+        IReadOnlyList<ReforwardDto>? Reforward(ReforwardRequest request, int fromOfficeId, int fromUnitCode, string forwardedBy, string? ip);
         IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope, string adminRole);
     }
 }

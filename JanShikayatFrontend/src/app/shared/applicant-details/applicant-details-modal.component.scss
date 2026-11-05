@@ -505,3 +505,59 @@
     }
   }
 }
+
+/* Onward forwards by the Commissioner / IG / DIG to DM / SP */
+.fw-onward {
+  .fw-onward-title {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--fw-accent);
+    margin-bottom: 0.3rem;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.4rem;
+  }
+  li {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid #dfe4f1;
+    border-radius: 6px;
+    background: #f7f9ff;
+    min-width: 0;
+  }
+  strong {
+    display: block;
+    font-size: 0.84rem;
+    color: #101d3b;
+  }
+  small {
+    display: block;
+    font-size: 0.68rem;
+    color: #707b9d;
+  }
+  p {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    color: #26324a;
+  }
+}
+.fw-onward-icon {
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--fw-tint);
+  color: var(--fw-accent);
+  font-size: 0.75rem;
+}

@@ -1,0 +1,89 @@
+<div class="fw-backdrop" *ngIf="record as r" (click)="close()">
+  <div class="fw-modal rf-modal" role="dialog" aria-modal="true" aria-labelledby="reforwardTitle" (click)="$event.stopPropagation()">
+    <div class="fw-head">
+      <div>
+        <span class="fw-kicker"><i class="fa-solid fa-share-nodes"></i> DM / SP को अग्रेषित करें / Forward to DM / SP</span>
+        <h2 id="reforwardTitle">{{ r.applicantName }}</h2>
+        <small class="fw-sub">आवेदन संख्या {{ r.applicationNo || r.id }} • {{ r.districtName }}<ng-container *ngIf="r.blockName">, {{ r.blockName }}</ng-container><span *ngIf="r.policeStation"> • थाना {{ r.policeStation }}</span></small>
+      </div>
+      <button type="button" class="fw-close" (click)="close()" aria-label="बंद करें">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form class="fw-body" (ngSubmit)="submit()" novalidate>
+      <!-- Where it came from -->
+      <div class="rf-origin" *ngIf="forward as f">
+        <i class="fa-solid fa-inbox"></i>
+        <span>
+          <small>प्राप्त / Received</small>
+          {{ f.complaintTypeLabel }}<ng-container *ngIf="f.branchLabel"> • {{ f.branchLabel }}</ng-container>
+          <em>{{ f.forwardedAt | date: 'dd-MM-yyyy' }}</em>
+        </span>
+      </div>
+
+      <p class="rf-hint">
+        <i class="fa-solid fa-circle-info"></i>
+        आवेदन किसे भेजना है चुनें — जिलाधिकारी, पुलिस अधीक्षक या दोनों। सूची में केवल आपके क्षेत्राधिकार के कार्यालय हैं।
+        <span>Choose the DM, the SP, or both. Only offices in your jurisdiction are listed.</span>
+      </p>
+
+      <div class="rf-loading" *ngIf="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है… / Loading…</div>
+
+      <div class="rf-targets" *ngIf="!loading">
+        <div *ngFor="let g of groups" class="rf-target" [class.on]="g.selected && !g.sent" [class.sent]="!!g.sent" [class.empty]="!g.sent && !g.options.length">
+          <!-- Already sent: locked -->
+          <ng-container *ngIf="g.sent as s; else pickTpl">
+            <div class="rf-target-head">
+              <span class="rf-icon"><i class="fa-solid" [ngClass]="g.icon"></i></span>
+              <span class="rf-title">{{ g.title }}<small>{{ g.subtitle }}</small></span>
+              <span class="rf-lock"><i class="fa-solid fa-lock"></i> भेजा गया</span>
+            </div>
+            <div class="rf-sent">
+              <strong><i class="fa-solid fa-circle-check"></i> {{ s.toOfficeLabel }}</strong>
+              <small>{{ s.forwardedAt | date: 'dd-MM-yyyy, hh:mm a' }}</small>
+            </div>
+          </ng-container>
+
+          <ng-template #pickTpl>
+            <label class="rf-target-head" [attr.for]="'rf-chk-' + g.officeId">
+              <input type="checkbox" [id]="'rf-chk-' + g.officeId" [checked]="g.selected" [disabled]="!g.options.length || submitting"
+                     (change)="toggle(g)" />
+              <span class="rf-icon"><i class="fa-solid" [ngClass]="g.icon"></i></span>
+              <span class="rf-title">{{ g.title }}<small>{{ g.subtitle }}</small></span>
+            </label>
+            <select [name]="'rf-unit-' + g.officeId" [(ngModel)]="g.unitCode" [disabled]="!g.selected || submitting"
+                    [class.has-error]="g.selected && g.unitCode == null" [attr.aria-label]="g.subtitle + ' office'">
+              <option [ngValue]="null" disabled>{{ g.options.length ? '-- कार्यालय चुनें / Select office --' : '-- कोई कार्यालय उपलब्ध नहीं / None available --' }}</option>
+              <option *ngFor="let o of g.options" [ngValue]="o.unitCode">{{ o.unitLabel }}{{ o.isApplicantDistrict ? '  ★ आवेदन का जिला' : '' }}</option>
+            </select>
+          </ng-template>
+        </div>
+      </div>
+
+      <span class="fw-error" *ngIf="missingOffice">कृपया चुने गए DM / SP का कार्यालय चुनें। / Select an office for each ticked receiver.</span>
+
+      <div class="fw-field" *ngIf="!allSent">
+        <label for="rfRemarks">निर्देश / टिप्पणी <small>(वैकल्पिक / optional)</small></label>
+        <textarea id="rfRemarks" name="remarks" rows="3" maxlength="500" [(ngModel)]="remarks" [disabled]="submitting"
+                  placeholder="DM / SP के लिए निर्देश लिखें / Instructions for the DM / SP"></textarea>
+      </div>
+
+      <p class="rf-all-sent" *ngIf="allSent && !loading">
+        <i class="fa-solid fa-circle-check"></i> यह आवेदन DM और SP दोनों को भेजा जा चुका है। / Already forwarded to both DM and SP.
+      </p>
+
+      <span class="fw-error" *ngIf="errorMessage">{{ errorMessage }}</span>
+
+      <div class="fw-foot">
+        <button type="button" class="fw-btn fw-btn-ghost" (click)="close()" [disabled]="submitting">
+          {{ allSent ? 'बंद करें / Close' : 'रद्द करें / Cancel' }}
+        </button>
+        <button *ngIf="!allSent" type="submit" class="fw-btn fw-btn-primary" [disabled]="!canSubmit">
+          <i class="fa-solid" [ngClass]="submitting ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i>
+          अग्रेषित करें / Forward
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
