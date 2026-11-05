@@ -11,15 +11,16 @@
   color: #101d3b;
 }
 
-/* ── Top brand bar ── */
+/* ── Top brand bar: colours and type match the landing page navbar (public/header) ── */
 .login-topbar {
   flex: none;
   background: #e7ecf6;
-  border-bottom: 1px solid #ccd5ea;
+  border-bottom: 1px solid rgba(20, 33, 60, 0.08);
+  box-shadow: 0 1px 2px rgba(16, 29, 59, 0.06);
 }
 
 .topbar-inner {
-  max-width: 1160px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 8px 20px;
   display: flex;
@@ -39,24 +40,38 @@
 .topbar-divider {
   width: 1px;
   height: 36px;
-  background: #a3b5e0;
+  background: rgba(16, 29, 59, 0.12);
 }
 
 .topbar-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
 
-  strong { color: #174bd9; font-size: 1.05rem; font-weight: 700; }
-  small { color: #174bd9; font-size: 0.72rem; font-weight: 600; }
+  strong {
+    color: #101d3b;
+    font-size: 1.22rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  small {
+    color: #4a5a7c;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-top: 2px;
+    letter-spacing: 0.01em;
+  }
 }
+
+.topbar-accent { color: #174bd9; }
 
 .topbar-nav {
   display: flex;
   align-items: center;
   gap: 28px;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 700;
 
   a { color: #101d3b; }
   a:hover { color: #174bd9; }
