@@ -22,9 +22,9 @@ import { ApplicantDetailsModalComponent } from '../../../shared/applicant-detail
 /** Drill-down order; each level's code / name live in the query string (d / dn, b / bn, t / tn, p / pn). */
 const LEVELS: { level: PendencyLevel; code: string; name: string; label: string; heading: string }[] = [
   { level: 'district', code: 'd', name: 'dn', label: 'जिला', heading: 'District' },
-  { level: 'block', code: 'b', name: 'bn', label: 'प्रखंड / अंचल', heading: 'Block' },
+  { level: 'block', code: 'b', name: 'bn', label: 'अंचल', heading: 'Circle' },
   { level: 'thana', code: 't', name: 'tn', label: 'थाना', heading: 'Police Station' },
-  { level: 'panchayat', code: 'p', name: 'pn', label: 'पंचायत', heading: 'Panchayat' }
+  { level: 'panchayat', code: 'p', name: 'pn', label: 'ग्राम पंचायत', heading: 'Panchayat' }
 ];
 
 const STATUS_TEXT: Record<PendencyApplication['status'], string> = {
@@ -183,10 +183,6 @@ export class PendencyReportComponent {
     this.search();
   }
 
-  refresh(): void {
-    this.load();
-  }
-
   private withRow(row: PendencyRow): Params {
     const params: Params = { ...this.route.snapshot.queryParams };
     params[this.level.code] = row.code;
@@ -261,8 +257,8 @@ export class PendencyReportComponent {
           err?.status === 401
             ? 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।'
             : err?.status === 0
-              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर रिफ़्रेश करें।'
-              : `रिपोर्ट लोड नहीं हो सकी (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर पृष्ठ पुनः लोड करें।'
+              : `रिपोर्ट लोड नहीं हो सकी (त्रुटि ${err?.status ?? ''})। कृपया पृष्ठ पुनः लोड करें।`;
       }
     });
   }
@@ -295,7 +291,7 @@ export class PendencyReportComponent {
   /** CSV with a BOM, so Excel opens the Hindi text correctly. */
   exportToExcel(): void {
     const header = this.listView
-      ? ['क्रम सं.', 'आवेदन संख्या', 'आवेदक का नाम', 'पिता/पति का नाम', 'मोबाइल', 'जिला', 'प्रखंड', 'पंचायत', 'गाँव', 'थाना',
+      ? ['क्रम सं.', 'आवेदन संख्या', 'आवेदक का नाम', 'पिता / पति का नाम', 'मोबाइल नंबर', 'जिला', 'अनुमंडल', 'अंचल', 'थाना',
          'आवेदन प्राप्ति की तिथि', 'अग्रेषित', 'शिकायत का प्रकार', 'अग्रेषित दिनांक', 'स्थिति', 'निष्पादन दिनांक', 'दिन']
       : ['क्रम सं.', this.level.label, 'कुल आवेदन', ...(this.isAdmin ? ['पंजीकृत'] : []), 'अग्रेषित', 'लंबित', 'निष्पादित'];
 
@@ -303,7 +299,7 @@ export class PendencyReportComponent {
     const body: (string | number)[][] = this.listView
       ? this.applications.map((a, i) => [
           i + 1, a.applicationNo ?? '', a.applicantName, a.fatherHusbandName ?? '', a.mobileNumber ?? '', a.districtName,
-          a.blockName, a.panchayatName, a.villageName, a.policeStation, day(a.applicationDate), this.forwardedTo(a),
+          a.subDivisionName, a.blockName, a.policeStation, day(a.applicationDate), this.forwardedTo(a),
           a.complaintTypeLabel ?? '', day(a.forwardedAt), this.statusText(a.status), day(a.closedAt), a.pendingDays
         ])
       : [

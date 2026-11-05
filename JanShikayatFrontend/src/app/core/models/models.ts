@@ -54,6 +54,17 @@ export interface District {
   districtname: string;
 }
 
+export interface SubDivision {
+  subDivisionCode: number;
+  subDivisionName: string;
+  subDivisionNameHn?: string;
+}
+
+export interface Ward {
+  wardCode: number;
+  wardName: string;
+}
+
 export interface BlockMaster {
   distCode: number;
   blockCode: number;
@@ -76,7 +87,7 @@ export interface Village {
   blockcode: number;
 }
 
-/** One police station from POST /Master/get-thana (mst_thana); psCode is unique. */
+/** One police station from POST /Master/get-thana-by-block (mst_thana); psCode is unique. */
 export interface Thana {
   psCode: number;
   policeStation: string;
@@ -96,10 +107,14 @@ export interface SaveApplicantPayload {
   emailId?: string;
   applicationDate: string; // yyyy-MM-dd
   village?: number; // optional; left out (saved as NULL) when not selected
-  panchayat: number;
+  panchayat?: number; // gram panchayat or urban body; optional
   block: number;
+  subDivision: number;
   district: number;
-  thana?: number; // mst_thana.PS_Code; optional, left out (saved as NULL) when not selected
+  thana: number; // mst_thana.PS_Code
+  areaType?: string; // R = Rural, U = Urban; optional
+  ward?: number; // optional
+  mohalla?: string; // required for Urban
   applicationSource: string; // CPGRAMS | CM Dashboard | Sahyog Portal | PMO Grievance Portal | Offline | Other
   createdBy?: string;
   photograph: File;
@@ -129,6 +144,10 @@ export interface ApplicantRecord {
   districtName: string;
   thanaCode: number; // mst_thana.PS_Code, 0 = not selected
   policeStation: string; // thana name, '' when not selected
+  subDivisionName: string;
+  areaType: string; // 'R', 'U' or ''
+  wardName: string;
+  mohalla: string;
   documentBase64: string | null; // base64 of the stored file, or null
   applicationSource: string;
 }

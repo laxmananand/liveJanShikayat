@@ -48,10 +48,14 @@ export class ApplicantService {
     if (p.emailId) fd.append('Email_Id', p.emailId);
     fd.append('Application_Date', p.applicationDate);
     if (p.village) fd.append('Village', String(p.village));
-    fd.append('Panchayat', String(p.panchayat));
+    if (p.panchayat) fd.append('Panchayat', String(p.panchayat));
     fd.append('Block', String(p.block));
+    fd.append('SubDivision', String(p.subDivision));
     fd.append('District', String(p.district));
-    if (p.thana) fd.append('Thana', String(p.thana));
+    fd.append('Thana', String(p.thana));
+    if (p.areaType) fd.append('AreaType', p.areaType);
+    if (p.ward) fd.append('Ward', String(p.ward));
+    if (p.mohalla) fd.append('Mohalla', p.mohalla);
     fd.append('Application_Source', p.applicationSource);
     if (p.createdBy) fd.append('CreatedBy', p.createdBy);
     fd.append('Applicants_Photograph', p.photograph, p.photograph.name);
@@ -88,6 +92,10 @@ export class ApplicantService {
           districtName: pick(r, 'districtname', 'dISTRICTNAME', 'DISTRICTNAME') ?? '',
           thanaCode: Number(pick(r, 'thana', 'Thana') ?? 0),
           policeStation: pick(r, 'police_Station', 'Police_Station', 'policeStation') ?? '',
+          subDivisionName: pick(r, 'subDivisionName', 'SubDivisionName') ?? '',
+          areaType: pick(r, 'areaType', 'AreaType') ?? '',
+          wardName: pick(r, 'wardName', 'WardName') ?? '',
+          mohalla: pick(r, 'mohalla', 'Mohalla') ?? '',
           documentBase64: pick(r, 'documentPath', 'DocumentPath') ?? null,
           applicationSource: pick(r, 'application_Source', 'Application_Source') ?? 'Offline'
         }))

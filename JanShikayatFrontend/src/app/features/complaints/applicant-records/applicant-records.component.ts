@@ -50,11 +50,11 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  load(force = false): void {
-    this.forwardService.latestByApplicant(force).subscribe({ next: (m) => (this.forwards = m), error: () => {} });
+  load(): void {
+    this.forwardService.latestByApplicant().subscribe({ next: (m) => (this.forwards = m), error: () => {} });
     this.loading = true;
     this.errorMessage = '';
-    this.applicantService.getApplicants(force).subscribe({
+    this.applicantService.getApplicants().subscribe({
       next: (list) => {
         this.records = list;
         this.loading = false;
@@ -66,8 +66,8 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
           err?.status === 401
             ? 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।'
             : err?.status === 0
-              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर रिफ़्रेश करें।'
-              : `आवेदक सूची लोड नहीं हो सकी (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर पृष्ठ पुनः लोड करें।'
+              : `आवेदक सूची लोड नहीं हो सकी (त्रुटि ${err?.status ?? ''})। कृपया पृष्ठ पुनः लोड करें।`;
       }
     });
   }
@@ -100,7 +100,7 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
     const appNo = `आवेदन संख्या ${this.forwarding?.applicationNo || f.applicantId} (${this.forwarding?.applicantName})`;
     this.infoMessage =
       f.complaintTypeId === 'email'
-        ? `${appNo} "${f.branchLabel}" को ईमेल (${f.complaintTypeLabel}) पर भेजा गया — डेमो, ईमेल सेवा अभी उपलब्ध नहीं; रिफ्रेश पर यह हट जाएगा। / Emailed to the department (demo only, not saved).`
+        ? `${appNo} "${f.branchLabel}" को ईमेल (${f.complaintTypeLabel}) पर भेजा गया — डेमो, ईमेल सेवा अभी उपलब्ध नहीं; पृष्ठ पुनः लोड करने पर यह हट जाएगा। / Emailed to the department (demo only, not saved).`
         : `${appNo} "${f.branchLabel}" को अग्रेषित किया गया। / Forwarded successfully.`;
     this.forwarding = null;
     clearTimeout(this.infoTimer);

@@ -65,12 +65,12 @@ export class ForwardedApplicationsComponent implements OnInit {
     this.load();
   }
 
-  load(force = false): void {
+  load(): void {
     this.loading = true;
     this.errorMessage = '';
     forkJoin({
-      forwards: this.forwardService.myForwards(force),
-      records: this.applicantService.getApplicants(force)
+      forwards: this.forwardService.myForwards(),
+      records: this.applicantService.getApplicants()
     }).subscribe({
       next: ({ forwards, records }) => {
         const byId = new Map(records.map((r) => [r.id, r]));
@@ -85,8 +85,8 @@ export class ForwardedApplicationsComponent implements OnInit {
           err?.status === 401
             ? 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।'
             : err?.status === 0
-              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर रिफ़्रेश करें।'
-              : `अग्रेषित आवेदन लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर पृष्ठ पुनः लोड करें।'
+              : `अग्रेषित आवेदन लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया पृष्ठ पुनः लोड करें।`;
       }
     });
   }

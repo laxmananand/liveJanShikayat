@@ -42,6 +42,10 @@ namespace janshikayat.BAL.Services
             parameters.Add("@Block", applicant.Block);
             parameters.Add("@District", applicant.District);
             parameters.Add("@Thana", applicant.Thana);
+            parameters.Add("@SubDivision", applicant.SubDivision);
+            parameters.Add("@AreaType", applicant.AreaType);
+            parameters.Add("@Ward", applicant.Ward);
+            parameters.Add("@Mohalla", applicant.Mohalla);
             parameters.Add("@DocumentPath", DocumentPath);
             parameters.Add("@Application_Source", applicant.Application_Source);
             parameters.Add("@CreatedBy", applicant.CreatedBy);
@@ -283,9 +287,9 @@ namespace janshikayat.BAL.Services
               LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = d.ID
               " + FirstReplyApply + @"
               LEFT JOIN mst_Commissionary_Districts dist ON dist.DISTRICTCODE = d.District
+              LEFT JOIN SubDivisions sd ON sd.Sd_Code2 = d.SubDivision
               LEFT JOIN Blocks b ON b.BlockCode = d.Block AND b.DistCode = d.District
               LEFT JOIN mst_Panchayats pt ON pt.PanchayatCode = d.Panchayat AND pt.BlockCode = d.Block AND pt.DistrictCode = d.District
-              LEFT JOIN mst_VillageMaster v ON v.VILLCODE = d.Village AND v.BLOCKCODE = d.Block AND v.DISTCODE = d.District
               LEFT JOIN mst_thana th ON th.PS_Code = d.Thana
               WHERE d.Is_Active = 1
                 AND (@District IS NULL OR d.District = @District)
@@ -347,8 +351,8 @@ namespace janshikayat.BAL.Services
                 @"SELECT d.ID AS ApplicantId, d.Application_No AS ApplicationNo, d.Applicant_Name AS ApplicantName,
                          d.Father_Husband_Name AS FatherHusbandName, d.Mobile_Number AS MobileNumber,
                          d.Application_Date AS ApplicationDate,
-                         ISNULL(dist.DISTRICTNAME, '') AS DistrictName, ISNULL(b.BlockName, '') AS BlockName,
-                         ISNULL(pt.PanchayatName, '') AS PanchayatName, ISNULL(v.VILLNAME, '') AS VillageName,
+                         ISNULL(dist.DISTRICTNAME, '') AS DistrictName, ISNULL(sd.Sd_Name_En, '') AS SubDivisionName,
+                         ISNULL(b.BlockName, '') AS BlockName,
                          ISNULL(th.Police_Station, '') AS PoliceStation,
                          f.CategoryLabel, f.BranchLabel, f.ComplaintTypeLabel, f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel,
                          f.ForwardedDate AS ForwardedAt, c.ClosedDate AS ClosedAt,

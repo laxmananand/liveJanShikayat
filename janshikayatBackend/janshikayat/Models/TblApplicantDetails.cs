@@ -2,7 +2,7 @@
 
 namespace janshikayat.Models
 {
-    public class TblApplicantDetails
+    public class TblApplicantDetails : IValidatableObject
     {
         // [Required] is what rejects a missing field: the implicit check on non-nullable strings accepts the "" default
         [Required]
@@ -20,11 +20,21 @@ namespace janshikayat.Models
         public DateTime? Application_Date { get; set; }
         // Optional: null (not 0) when not selected
         public long? Village { get; set; }
-        public int Panchayat { get; set; }
+        public int? Panchayat { get; set; }
         public int Block { get; set; }
         public int District { get; set; }
-        // mst_thana.PS_Code; optional, null when not selected, like Village
-        public long? Thana { get; set; }
+        // SubDivisions.Sd_Code2
+        public long SubDivision { get; set; }
+        // mst_thana.PS_Code
+        public long Thana { get; set; }
+        // R = Rural, U = Urban; optional
+        [RegularExpression("^(R|U)$", ErrorMessage = "Invalid area type.")]
+        public string? AreaType { get; set; }
+        // mst_Wards.WARDCODE; optional
+        public long? Ward { get; set; }
+        // Required only for Urban
+        [StringLength(200)]
+        public string? Mohalla { get; set; }
         // CPGRAMS / CM Dashboard / Sahyog Portal / PMO Grievance Portal / Offline / Other (stored for source-wise reports)
         [Required]
         [RegularExpression("^(CPGRAMS|CM Dashboard|Sahyog Portal|PMO Grievance Portal|Offline|Other)$",
@@ -35,6 +45,37 @@ namespace janshikayat.Models
         public string?  CreatedBy { get; set;}
         public string?  CreatedIp { get; set; }
         public bool? Is_Active { get; set; }
+
+        // Int and long properties default to 0 when missing, so [Required] cannot reject them
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            // India time without relying on the server's timezone (IST has no daylight saving)
+            if (Application_Date?.Date > DateTime.UtcNow.AddHours(5.5).Date)
+                yield return new ValidationResult("आवेदन प्राप्ति की तिथि आज की तिथि के बाद की नहीं हो सकती।", new[] { nameof(Application_Date) });
+            if (District <= 0)
+                yield return new ValidationResult("कृपया जिला का चयन करें।", new[] { nameof(District) });
+            if (SubDivision <= 0)
+                yield return new ValidationResult("कृपया अनुमंडल का चयन करें।", new[] { nameof(SubDivision) });
+            if (Block <= 0)
+                yield return new ValidationResult("कृपया अंचल का चयन करें।", new[] { nameof(Block) });
+            if (Thana <= 0)
+                yield return new ValidationResult("कृपया थाना का चयन करें।", new[] { nameof(Thana) });
+            if (AreaType == "U" && string.IsNullOrWhiteSpace(Mohalla))
+                yield return new ValidationResult("कृपया मोहल्ला का नाम दर्ज करें।", new[] { nameof(Mohalla) });
+        }
+
+        // Drops values that do not belong to the chosen area type
+        public void NormalizeLocation()
+        {
+            if (AreaType != "R") Village = null;
+            if (AreaType == "U") Mohalla = Mohalla?.Trim();
+            else Mohalla = null;
+            if (AreaType == null)
+            {
+                Panchayat = null;
+                Ward = null;
+            }
+        }
     }
     public class ApplicantDetailsDto
     {
@@ -58,6 +99,10 @@ namespace janshikayat.Models
         public string? Application_Source { get; set; }
         public long Thana { get; set; }
         public string? Police_Station { get; set; }
+        public string? SubDivisionName { get; set; }
+        public string? AreaType { get; set; }
+        public string? WardName { get; set; }
+        public string? Mohalla { get; set; }
     }
     public class ApplicantDetailsDtoRequestParam
     {

@@ -581,23 +581,6 @@
     align-items: center;
     gap: 8px;
 
-    .results-count-tag {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #26324a;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-
-      i {
-        color: #17284a;
-      }
-
-      strong {
-        color: #101d3b;
-      }
-    }
-
     .active-filter-indicator {
       font-size: 0.72rem;
       font-weight: 700;

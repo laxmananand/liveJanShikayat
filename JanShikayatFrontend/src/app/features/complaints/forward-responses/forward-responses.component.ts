@@ -59,12 +59,12 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  load(force = false): void {
+  load(): void {
     this.loading = true;
     this.errorMessage = '';
     forkJoin({
       responses: this.forwardService.responses(),
-      records: this.applicantService.getApplicants(force)
+      records: this.applicantService.getApplicants()
     }).subscribe({
       next: ({ responses, records }) => {
         const byId = new Map(records.map((r) => [r.id, r]));
@@ -80,8 +80,8 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
           err?.status === 401
             ? 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।'
             : err?.status === 0
-              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर रिफ़्रेश करें।'
-              : `प्राप्त प्रतिवेदन लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर पृष्ठ पुनः लोड करें।'
+              : `प्राप्त प्रतिवेदन लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया पृष्ठ पुनः लोड करें।`;
       }
     });
   }

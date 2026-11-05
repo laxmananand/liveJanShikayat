@@ -15,9 +15,6 @@
     <a routerLink="/reports/pendency" class="btn btn-ghost">
       <i class="fa-solid fa-chart-column"></i> पेंडेंसी रिपोर्ट
     </a>
-    <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading" title="आंकड़े रिफ्रेश करें">
-      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i>
-    </button>
   </div>
 </section>
 
@@ -140,7 +137,7 @@
           <span class="recent-id">{{ r.id }}</span>
           <div class="recent-main">
             <b>{{ r.applicantName }}</b>
-            <small><span *ngIf="r.applicationNo">{{ r.applicationNo }} • </span>{{ r.villageName }}, {{ r.blockName }} • {{ r.districtName }}<span *ngIf="r.policeStation"> • थाना {{ r.policeStation }}</span></small>
+            <small><span *ngIf="r.applicationNo">{{ r.applicationNo }} • </span>{{ r.districtName }}, <ng-container *ngIf="r.subDivisionName">{{ r.subDivisionName }}, </ng-container>{{ r.blockName }}<span *ngIf="r.policeStation"> • थाना {{ r.policeStation }}</span></small>
           </div>
           <span class="recent-date">{{ r.applicationDate ? (r.applicationDate | date: 'dd-MM-yyyy') : '—' }}</span>
         </li>

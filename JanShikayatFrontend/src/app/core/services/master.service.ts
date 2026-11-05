@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { BlockMaster, District, MasterApiResponse, Panchayat, Thana, Village } from '../models/models';
+import { BlockMaster, District, MasterApiResponse, Panchayat, SubDivision, Thana, Village, Ward } from '../models/models';
 import { environment } from '../../../environments/environment';
 import { CachedRequest, CachedRequestMap } from '../utils/cached-request';
 import {
@@ -30,17 +30,31 @@ export class MasterService {
     () => this.http.post<MasterApiResponse<District>>(`${this.baseUrl}/get-district`, null).pipe(map(unwrap)),
     MASTER_TTL
   );
-  private blocks = new CachedRequestMap((dist: number) => {
+  private subDivisions = new CachedRequestMap((dist: number) => {
     const params = new HttpParams().set('District_Code', dist);
+    return this.http
+      .post<MasterApiResponse<SubDivision>>(`${this.baseUrl}/get-subdivision`, null, { params })
+      .pipe(map(unwrap));
+  }, MASTER_TTL);
+  private blocks = new CachedRequestMap((key: string) => {
+    const [dist, subDiv] = key.split('|');
+    const params = new HttpParams().set('District_Code', dist).set('SubDiv_Code', subDiv);
     return this.http
       .post<MasterApiResponse<BlockMaster>>(`${this.baseUrl}/get-block`, null, { params })
       .pipe(map(unwrap));
   }, MASTER_TTL);
   private panchayats = new CachedRequestMap((key: string) => {
-    const [dist, blk] = key.split('|');
-    const params = new HttpParams().set('District_Code', dist).set('Block_code', blk);
+    const [dist, blk, area] = key.split('|');
+    const params = new HttpParams().set('District_Code', dist).set('Block_code', blk).set('Area_Type', area);
     return this.http
       .post<MasterApiResponse<Panchayat>>(`${this.baseUrl}/get-panchayat`, null, { params })
+      .pipe(map(unwrap));
+  }, MASTER_TTL);
+  private wards = new CachedRequestMap((key: string) => {
+    const [dist, pan] = key.split('|');
+    const params = new HttpParams().set('District_Code', dist).set('Panchayat_Code', pan);
+    return this.http
+      .post<MasterApiResponse<Ward>>(`${this.baseUrl}/get-ward`, null, { params })
       .pipe(map(unwrap));
   }, MASTER_TTL);
   private villages = new CachedRequestMap((key: string) => {
@@ -52,16 +66,16 @@ export class MasterService {
   }, MASTER_TTL);
 
   // mst_thana columns (PS_Code, Police_Station, ...) are serialised with backend casing: map them once here
-  private thanas = new CachedRequestMap((dist: number) => {
-    const params = new HttpParams().set('District_Code', dist);
-    return this.http.post<MasterApiResponse<any>>(`${this.baseUrl}/get-thana`, null, { params }).pipe(
+  private thanas = new CachedRequestMap((block: number) => {
+    const params = new HttpParams().set('Block_code', block);
+    return this.http.post<MasterApiResponse<any>>(`${this.baseUrl}/get-thana-by-block`, null, { params }).pipe(
       map(unwrap),
       map((rows) =>
         rows.map(
           (r): Thana => ({
             psCode: Number(r.pS_Code ?? r.ps_Code ?? r.PS_Code ?? r.psCode ?? 0),
             policeStation: r.police_Station ?? r.Police_Station ?? r.policeStation ?? '',
-            districtCode: Number(r.district_code ?? r.District_code ?? r.districtCode ?? dist),
+            districtCode: Number(r.district_code ?? r.District_code ?? r.districtCode ?? 0),
             subdivisionName: r.subdivision_Name ?? r.Subdivision_Name ?? '',
             circleName: r.circle_Name ?? r.Circle_Name ?? ''
           })
@@ -152,14 +166,24 @@ export class MasterService {
     return this.districts.get();
   }
 
-  /** API: POST /Master/get-block?District_Code= (cached per district) */
-  getBlocks(districtCode: number): Observable<BlockMaster[]> {
-    return this.blocks.get(districtCode);
+  /** API: POST /Master/get-subdivision?District_Code= (cached per district) */
+  getSubDivisions(districtCode: number): Observable<SubDivision[]> {
+    return this.subDivisions.get(districtCode);
   }
 
-  /** API: POST /Master/get-panchayat?District_Code=&Block_code= (cached per block) */
-  getPanchayats(districtCode: number, blockCode: number): Observable<Panchayat[]> {
-    return this.panchayats.get(`${districtCode}|${blockCode}`);
+  /** API: POST /Master/get-block?District_Code=&SubDiv_Code= (cached per subdivision) */
+  getBlocks(districtCode: number, subDivisionCode: number): Observable<BlockMaster[]> {
+    return this.blocks.get(`${districtCode}|${subDivisionCode}`);
+  }
+
+  /** API: POST /Master/get-panchayat?District_Code=&Block_code=&Area_Type= — R: gram panchayats, U: urban bodies */
+  getPanchayats(districtCode: number, blockCode: number, areaType: string): Observable<Panchayat[]> {
+    return this.panchayats.get(`${districtCode}|${blockCode}|${areaType}`);
+  }
+
+  /** API: POST /Master/get-ward?District_Code=&Panchayat_Code= (cached per panchayat) */
+  getWards(districtCode: number, panchayatCode: number): Observable<Ward[]> {
+    return this.wards.get(`${districtCode}|${panchayatCode}`);
   }
 
   /** API: POST /Master/get-village?District_Code=&Block_code=&PanchayatCode= (cached per panchayat) */
@@ -167,8 +191,8 @@ export class MasterService {
     return this.villages.get(`${districtCode}|${blockCode}|${panchayatCode}`);
   }
 
-  /** API: POST /Master/get-thana?District_Code= (cached per district) — police stations of a district */
-  getThanas(districtCode: number): Observable<Thana[]> {
-    return this.thanas.get(districtCode);
+  /** API: POST /Master/get-thana-by-block?Block_code= (cached per block) — police stations serving an anchal */
+  getThanas(blockCode: number): Observable<Thana[]> {
+    return this.thanas.get(blockCode);
   }
 }

@@ -39,7 +39,7 @@ export class TrackingComponent implements OnInit {
     // Numbers used to contain dashes (JS-2026-0001); accept them as typed.
     const id = this.complaintId.replace(/[\s-]/g, '').toUpperCase();
     if (!id) {
-      this.errorMessage = 'कृपया अपनी शिकायत संख्या दर्ज करें।';
+      this.errorMessage = 'कृपया अपनी आवेदन संख्या दर्ज करें।';
       return;
     }
 

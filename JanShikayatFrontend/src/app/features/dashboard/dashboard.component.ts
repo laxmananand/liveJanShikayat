@@ -65,14 +65,14 @@ export class DashboardComponent implements OnInit {
     this.load();
   }
 
-  load(force = false): void {
+  load(): void {
     this.loading = true;
     this.loadPendency();
     // Admin sees every application; everyone else only those currently forwarded to them
     forkJoin({
-      list: this.applicantService.getApplicants(force),
-      forwards: this.forwardService.latestByApplicant(force),
-      mine: this.isAdmin ? of(null) : this.forwardService.myForwards(force).pipe(map((f) => new Set(f.map((x) => x.applicantId))))
+      list: this.applicantService.getApplicants(),
+      forwards: this.forwardService.latestByApplicant(),
+      mine: this.isAdmin ? of(null) : this.forwardService.myForwards().pipe(map((f) => new Set(f.map((x) => x.applicantId))))
     }).subscribe({
       next: ({ list: all, forwards, mine }) => {
         this.forwards = forwards;

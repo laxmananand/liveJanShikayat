@@ -26,6 +26,7 @@ export interface TrackedGrievanceItem extends ComplaintListItem {
   district?: string;
   block?: string;
   area?: string;
+  subDivision?: string;
   policeStation?: string;
   category?: string;
   currentCustody: string;
@@ -186,8 +187,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
           err?.status === 401
             ? 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।'
             : err?.status === 0
-              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर रिफ़्रेश करें।'
-              : `परिवाद लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया रिफ़्रेश करें।`;
+              ? 'सर्वर से संपर्क नहीं हो सका। कृपया जाँचें कि बैकएंड चल रहा है, फिर पुनः प्रयास करें।'
+              : `परिवाद लोड नहीं हो सके (त्रुटि ${err?.status ?? ''})। कृपया पुनः प्रयास करें।`;
       }
     });
   }
@@ -227,6 +228,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       guardianName: r.fatherHusbandName,
       mobileNumber: r.mobileNumber,
       district: r.districtName,
+      subDivision: r.subDivisionName,
       block: r.blockName,
       area: place,
       policeStation: r.policeStation,
@@ -467,7 +469,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
       area: item.area,
       email: r.emailId,
       category: item.category ?? '',
-      description: [r.address, item.area, r.pinCode && `पिन: ${r.pinCode}`].filter(Boolean).join(' • '),
+      description: [r.address, item.area, r.pinCode && `पिन कोड: ${r.pinCode}`].filter(Boolean).join(' • '),
       documents: [],
       remarks: remarks.map((m) => ({
         id: m.id,
@@ -503,7 +505,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
     if (event) event.stopPropagation();
     navigator.clipboard.writeText(id);
     this.copiedId = id;
-    this.showToast(`ट्रैकिंग आईडी (${id}) कॉपी हो गई है!`);
+    this.showToast(`आवेदन संख्या (${id}) कॉपी हो गई है!`);
     setTimeout(() => {
       if (this.copiedId === id) this.copiedId = '';
     }, 2500);

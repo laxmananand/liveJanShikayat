@@ -52,9 +52,8 @@
         public string? MobileNumber { get; set; }
         public DateTime? ApplicationDate { get; set; }
         public string DistrictName { get; set; } = string.Empty;
+        public string SubDivisionName { get; set; } = string.Empty;
         public string BlockName { get; set; } = string.Empty;
-        public string PanchayatName { get; set; } = string.Empty;
-        public string VillageName { get; set; } = string.Empty;
         public string PoliceStation { get; set; } = string.Empty;
         public string? CategoryLabel { get; set; }
         public string? BranchLabel { get; set; }

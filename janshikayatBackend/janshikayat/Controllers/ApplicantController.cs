@@ -42,6 +42,7 @@ namespace janshikayat.Controllers
             }
              var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             applicant.CreatedBy = userId;
+            applicant.NormalizeLocation();
 
             string photoPath = "";
             if (applicant.Applicants_Photograph != null)

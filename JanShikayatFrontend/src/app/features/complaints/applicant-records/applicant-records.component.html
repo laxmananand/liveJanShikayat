@@ -5,17 +5,13 @@
       <h1>अंतिम रूप से दर्ज आवेदन</h1>
       <p class="sub">शिकायत प्रविष्टि में अंतिम रूप दिए गए सभी आवेदनों की सूची।</p>
     </div>
-    <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading">
-      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
-    </button>
   </header>
 
   <div class="records-toolbar">
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, नाम, मोबाइल या जिला से खोजें" />
+      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, आवेदक का नाम, मोबाइल नंबर या जिला से खोजें" />
     </div>
-    <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदक</span>
   </div>
 
   <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
@@ -39,13 +35,12 @@
           <th class="col-sn">क्रम सं.<small>(Sl. No.)</small></th>
           <th>आवेदन संख्या<small>(Application No.)</small></th>
           <th>आवेदक का नाम<small>(Applicant)</small></th>
-          <th>पिता/पति का नाम</th>
+          <th>पिता / पति का नाम</th>
           <th>जिला</th>
-          <th>प्रखंड</th>
-          <th>पंचायत</th>
-          <th>गाँव</th>
+          <th>अनुमंडल</th>
+          <th>अंचल</th>
           <th class="col-thana">थाना</th>
-          <th>मोबाइल संख्या</th>
+          <th>मोबाइल नंबर</th>
           <th>आवेदन प्राप्ति की तिथि</th>
           <th>अग्रेषित दिनांक</th>
           <th>अग्रेषित<small>(Forwarded To)</small></th>
@@ -59,14 +54,13 @@
           <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
           <td data-label="आवेदन संख्या"><span class="app-no">{{ r.applicationNo || '—' }}</span></td>
           <td data-label="आवेदक का नाम">{{ r.applicantName }}</td>
-          <td data-label="पिता/पति का नाम">{{ r.fatherHusbandName || '—' }}</td>
+          <td data-label="पिता / पति का नाम">{{ r.fatherHusbandName || '—' }}</td>
           <td data-label="जिला">{{ r.districtName || '—' }}</td>
-          <td data-label="प्रखंड">{{ r.blockName || '—' }}</td>
-          <td data-label="पंचायत">{{ r.panchayatName || '—' }}</td>
-          <td data-label="गाँव">{{ r.villageName || '—' }}</td>
+          <td data-label="अनुमंडल">{{ r.subDivisionName || '—' }}</td>
+          <td data-label="अंचल">{{ r.blockName || '—' }}</td>
           <td class="col-thana" data-label="थाना">{{ r.policeStation || '—' }}</td>
-          <td class="nowrap" data-label="मोबाइल संख्या">{{ r.mobileNumber || '—' }}</td>
-          <td class="nowrap" data-label="प्राप्ति तिथि">{{ r.applicationDate ? (r.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
+          <td class="nowrap" data-label="मोबाइल नंबर">{{ r.mobileNumber || '—' }}</td>
+          <td class="nowrap" data-label="आवेदन प्राप्ति की तिथि">{{ r.applicationDate ? (r.applicationDate | date: 'dd/MM/yyyy') : '—' }}</td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ forwards.get(r.id)?.forwardedAt ? (forwards.get(r.id)!.forwardedAt | date: 'dd/MM/yyyy') : '' }}</td>
           <td data-label="अग्रेषित">
             <ng-container *ngIf="forwards.get(r.id) as f">

@@ -41,9 +41,8 @@ export interface PendencyApplication {
   mobileNumber: string | null;
   applicationDate: string | null;
   districtName: string;
+  subDivisionName: string;
   blockName: string;
-  panchayatName: string;
-  villageName: string;
   policeStation: string;
   categoryLabel: string | null;
   branchLabel: string | null;

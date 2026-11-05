@@ -44,7 +44,7 @@
 
     <div class="ref-number-card">
       <div class="ref-info">
-        <small>यूनिक शिकायत संदर्भ संख्या (Unique Complaint Reference Number)</small>
+        <small>यूनिक आवेदन संख्या (Application No.)</small>
         <span class="ref-code">{{ successComplaint.complaintNumber }}</span>
       </div>
       <button type="button" class="btn btn-copy" (click)="copyComplaintNumber()">
@@ -63,7 +63,7 @@
         <strong class="val">{{ form.get('mobileNumber')?.value || '—' }}</strong>
       </div>
       <div class="summary-item">
-        <span class="lbl"><i class="fa-solid fa-location-dot"></i> जिला व ब्लॉक:</span>
+        <span class="lbl"><i class="fa-solid fa-location-dot"></i> जिला व अंचल:</span>
         <strong class="val">{{ locationNames().district }} • {{ locationNames().block }}</strong>
       </div>
       <div class="summary-item">
@@ -113,304 +113,347 @@
         </div>
 
         <div class="card-body-content">
-          <div class="two-column-grid complainant-grid">
-            <!-- ── LEFT COLUMN ── -->
-            <div class="grid-column left-col">
-              <!-- 1. आवेदक का नाम -->
-              <div class="form-group">
-                <label for="applicantName" class="form-label">
-                  आवेदक का नाम <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('applicantName')">
-                  <i class="fa-solid fa-user field-icon"></i>
-                  <input
-                    id="applicantName"
-                    type="text"
-                    formControlName="applicantName"
-                    placeholder="आवेदक का नाम दर्ज करें"
-                    autocomplete="name"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('applicantName')">
-                  कृपया आवेदक का नाम दर्ज करें।
-                </span>
+          <div class="entry-grid">
+            <!-- ── Applicant details ── -->
+            <div class="form-group">
+              <label for="applicantName" class="form-label">
+                आवेदक का नाम <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('applicantName')">
+                <i class="fa-solid fa-user field-icon"></i>
+                <input
+                  id="applicantName"
+                  type="text"
+                  formControlName="applicantName"
+                  placeholder="आवेदक का नाम दर्ज करें"
+                  autocomplete="name"
+                />
               </div>
+              <span class="field-error" *ngIf="isInvalid('applicantName')">
+                कृपया आवेदक का नाम दर्ज करें।
+              </span>
+            </div>
 
-              <!-- 2. पिता / पति का नाम -->
-              <div class="form-group">
-                <label for="guardianName" class="form-label">
-                  पिता / पति का नाम <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('guardianName')">
-                  <i class="fa-solid fa-user field-icon"></i>
-                  <input
-                    id="guardianName"
-                    type="text"
-                    formControlName="guardianName"
-                    placeholder="पिता / पति / अभिभावक का नाम दर्ज करें"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('guardianName')">
-                  कृपया पिता / पति का नाम दर्ज करें।
-                </span>
+            <div class="form-group">
+              <label for="guardianName" class="form-label">
+                पिता / पति का नाम <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('guardianName')">
+                <i class="fa-solid fa-user field-icon"></i>
+                <input
+                  id="guardianName"
+                  type="text"
+                  formControlName="guardianName"
+                  placeholder="पिता / पति / अभिभावक का नाम दर्ज करें"
+                />
               </div>
+              <span class="field-error" *ngIf="isInvalid('guardianName')">
+                कृपया पिता / पति का नाम दर्ज करें।
+              </span>
+            </div>
 
-              <!-- 3. मोबाइल नंबर -->
-              <div class="form-group">
-                <label for="mobileNumber" class="form-label">
-                  मोबाइल नंबर
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('mobileNumber')">
-                  <i class="fa-solid fa-phone field-icon"></i>
-                  <input
-                    id="mobileNumber"
-                    type="tel"
-                    inputmode="numeric"
-                    maxlength="10"
-                    formControlName="mobileNumber"
-                    placeholder="10 अंकों का मोबाइल नंबर दर्ज करें"
-                    autocomplete="tel"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('mobileNumber')">
-                  कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।
-                </span>
+            <div class="form-group">
+              <label for="mobileNumber" class="form-label">
+                मोबाइल नंबर
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('mobileNumber')">
+                <i class="fa-solid fa-phone field-icon"></i>
+                <input
+                  id="mobileNumber"
+                  type="tel"
+                  inputmode="numeric"
+                  maxlength="10"
+                  formControlName="mobileNumber"
+                  placeholder="10 अंकों का मोबाइल नंबर दर्ज करें"
+                  autocomplete="tel"
+                />
               </div>
+              <span class="field-error" *ngIf="isInvalid('mobileNumber')">
+                कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।
+              </span>
+            </div>
 
-              <!-- 4. ईमेल आईडी (यदि उपलब्ध हो) -->
-              <div class="form-group">
-                <label for="email" class="form-label">
-                  ईमेल आईडी (यदि उपलब्ध हो)
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
-                  <i class="fa-solid fa-envelope field-icon"></i>
-                  <input
-                    id="email"
-                    type="email"
-                    formControlName="email"
-                    placeholder="ईमेल आईडी दर्ज करें"
-                    autocomplete="email"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('email')">
-                  कृपया मान्य ईमेल पता दर्ज करें।
-                </span>
+            <div class="form-group">
+              <label for="email" class="form-label">
+                ईमेल आईडी (यदि उपलब्ध हो)
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('email')">
+                <i class="fa-solid fa-envelope field-icon"></i>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="ईमेल आईडी दर्ज करें"
+                  autocomplete="email"
+                />
               </div>
+              <span class="field-error" *ngIf="isInvalid('email')">
+                कृपया मान्य ईमेल पता दर्ज करें।
+              </span>
+            </div>
 
-              <!-- 5. पता -->
-              <div class="form-group address-group">
-                <label for="address" class="form-label">
-                  पता <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap textarea-wrap" [class.has-error]="isInvalid('address')">
-                  <i class="fa-solid fa-house field-icon textarea-icon"></i>
-                  <textarea
-                    id="address"
-                    rows="3"
-                    formControlName="address"
-                    placeholder="घर का पता दर्ज करें"
-                  ></textarea>
-                </div>
-                <span class="field-error" *ngIf="isInvalid('address')">
-                  कृपया पूरा पता दर्ज करें।
-                </span>
+            <!-- ── Location: जिला → अनुमंडल → अंचल → थाना ── -->
+            <div class="form-group">
+              <label for="district" class="form-label">
+                जिला <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('district')">
+                <i class="fa-solid fa-map-location-dot field-icon"></i>
+                <select id="district" formControlName="district" (change)="onDistrictChange()">
+                  <option [ngValue]="null">{{ placeholder(loadingDistricts, districts.length, false) }}</option>
+                  <option *ngFor="let dist of districts" [ngValue]="dist.districtcode">{{ dist.districtname }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
               </div>
+              <span class="field-error" *ngIf="isInvalid('district')">
+                कृपया जिला का चयन करें।
+              </span>
+            </div>
 
-              <!-- 6. संबंधित दस्तावेज़ / आवेदन पत्र (PDF) (स्थान: पता के ठीक नीचे) -->
-              <div class="form-group pdf-upload-field-group">
-                <div class="pdf-field-header">
-                  <label for="pdfUploadInput" class="form-label">
-                    संबंधित दस्तावेज़ / आवेदन पत्र (PDF) <span class="req">*</span>
-                  </label>
-                  <span class="file-spec-tag"><i class="fa-solid fa-file-shield"></i> केवल PDF • अधिकतम 5MB</span>
-                </div>
+            <div class="form-group">
+              <label for="subDivision" class="form-label">
+                अनुमंडल <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('subDivision')">
+                <i class="fa-solid fa-sitemap field-icon"></i>
+                <select id="subDivision" formControlName="subDivision" (change)="onSubDivisionChange()">
+                  <option [ngValue]="null">{{ placeholder(loadingSubDivisions, availableSubDivisions.length, form.value.district != null) }}</option>
+                  <option *ngFor="let sub of availableSubDivisions" [ngValue]="sub.subDivisionCode">{{ sub.subDivisionName }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+              <span class="field-error" *ngIf="isInvalid('subDivision')">
+                कृपया अनुमंडल का चयन करें।
+              </span>
+            </div>
 
-                <div class="pdf-card-box" [class.has-file]="!!pdfFile" [class.has-error]="!!pdfError">
-                  <input
-                    #pdfFileInput
-                    id="pdfUploadInput"
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    (change)="onPdfSelected($event)"
-                    class="sr-only-file-input"
-                  />
+            <div class="form-group">
+              <label for="block" class="form-label">
+                अंचल <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('block')">
+                <i class="fa-solid fa-building-columns field-icon"></i>
+                <select id="block" formControlName="block" (change)="onBlockChange()">
+                  <option [ngValue]="null">{{ placeholder(loadingBlocks, availableBlocks.length, form.value.subDivision != null) }}</option>
+                  <option *ngFor="let blk of availableBlocks" [ngValue]="blk.blockCode">{{ blockLabel(blk) }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+              <span class="field-error" *ngIf="isInvalid('block')">
+                कृपया अंचल का चयन करें।
+              </span>
+            </div>
 
-                  <!-- State 1: No file chosen -->
-                  <div class="pdf-empty-trigger" *ngIf="!pdfFile" (click)="pdfFileInput.click()">
-                    <div class="pdf-upload-symbol">
-                      <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <div class="pdf-upload-instructions">
-                      <span class="pdf-prompt"><strong>फ़ाइल चुनें</strong> या यहाँ क्लिक करें</span>
-                      <small class="pdf-limits">केवल .pdf (अधिकतम 5 MB)</small>
-                    </div>
-                    <button type="button" class="btn btn-browse-action" (click)="$event.stopPropagation(); pdfFileInput.click()">
-                      <i class="fa-solid fa-folder-open"></i> ब्राउज़
-                    </button>
-                  </div>
+            <div class="form-group">
+              <label for="thana" class="form-label">
+                थाना <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('thana')">
+                <i class="fa-solid fa-building-shield field-icon"></i>
+                <select id="thana" formControlName="thana">
+                  <option [ngValue]="null">{{ placeholder(loadingThanas, availableThanas.length, form.value.block != null) }}</option>
+                  <option *ngFor="let th of availableThanas" [ngValue]="th.psCode">{{ th.policeStation }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+              <span class="field-error" *ngIf="isInvalid('thana')">
+                कृपया थाना का चयन करें।
+              </span>
+            </div>
 
-                  <!-- State 2: File selected and validated -->
-                  <div class="pdf-attached-row" *ngIf="pdfFile">
-                    <div class="pdf-attached-icon">
-                      <i class="fa-solid fa-file-pdf"></i>
-                    </div>
-                    <div class="pdf-attached-info">
-                      <strong class="pdf-attached-name" [title]="pdfFile.name">{{ pdfFile.name }}</strong>
-                      <span class="pdf-attached-size">
-                        <i class="fa-solid fa-circle-check"></i> {{ pdfSizeDisplay }}
-                      </span>
-                    </div>
-                    <div class="pdf-attached-actions">
-                      <button
-                        type="button"
-                        class="btn-file-icon-btn change-btn"
-                        (click)="pdfFileInput.click()"
-                        title="दूसरी फ़ाइल चुनें"
-                      >
-                        <i class="fa-solid fa-arrow-rotate-right"></i>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn-file-icon-btn remove-btn"
-                        (click)="removePdfFile(pdfFileInput)"
-                        title="फ़ाइल हटाएं"
-                      >
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <span class="field-error" *ngIf="pdfError">
-                  <i class="fa-solid fa-circle-exclamation"></i> {{ pdfError }}
-                </span>
+            <!-- ── Location: Rural = पंचायत, राजस्व ग्राम, वार्ड • Urban = नगर निकाय, वार्ड, मोहल्ला ── -->
+            <div class="form-group">
+              <label for="areaType" class="form-label">क्षेत्र का प्रकार</label>
+              <div class="input-icon-wrap select-wrap">
+                <i class="fa-solid fa-map field-icon"></i>
+                <select id="areaType" formControlName="areaType" (change)="onAreaTypeChange()">
+                  <option [ngValue]="null">--Select--</option>
+                  <option ngValue="R">Rural</option>
+                  <option ngValue="U">Urban</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
               </div>
             </div>
 
-            <!-- ── RIGHT COLUMN ── -->
-            <div class="grid-column right-col">
-              <!-- 7. पिन कोड -->
-              <div class="form-group">
-                <label for="pinCode" class="form-label">
-                  पिन कोड <span class="req">*</span>
+            <div class="form-group">
+              <label for="panchayat" class="form-label">{{ panchayatFieldLabel }}</label>
+              <div class="input-icon-wrap select-wrap">
+                <i class="fa-solid fa-landmark field-icon"></i>
+                <select id="panchayat" formControlName="panchayat" (change)="onPanchayatChange()">
+                  <option [ngValue]="null">{{ placeholder(loadingPanchayats, availablePanchayats.length, form.value.areaType != null && form.value.block != null) }}</option>
+                  <option *ngFor="let pan of availablePanchayats" [ngValue]="pan.panchayatCode">{{ panchayatLabel(pan) }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="!isUrban">
+              <label for="village" class="form-label">राजस्व ग्राम</label>
+              <div class="input-icon-wrap select-wrap">
+                <i class="fa-solid fa-location-dot field-icon"></i>
+                <select id="village" formControlName="village">
+                  <option [ngValue]="null">{{ placeholder(loadingVillages, availableVillages.length, form.value.panchayat != null) }}</option>
+                  <option *ngFor="let vil of availableVillages" [ngValue]="vil.villcode">{{ vil.villname }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="ward" class="form-label">वार्ड</label>
+              <div class="input-icon-wrap select-wrap">
+                <i class="fa-solid fa-table-cells-large field-icon"></i>
+                <select id="ward" formControlName="ward">
+                  <option [ngValue]="null">{{ placeholder(loadingWards, availableWards.length, form.value.panchayat != null) }}</option>
+                  <option *ngFor="let w of availableWards" [ngValue]="w.wardCode">{{ w.wardName }}</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="isUrban">
+              <label for="mohalla" class="form-label">
+                मोहल्ला <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('mohalla')">
+                <i class="fa-solid fa-signs-post field-icon"></i>
+                <input
+                  id="mohalla"
+                  type="text"
+                  maxlength="200"
+                  formControlName="mohalla"
+                  placeholder="मोहल्ला का नाम"
+                />
+              </div>
+              <span class="field-error" *ngIf="isInvalid('mohalla')">
+                कृपया मोहल्ला का नाम दर्ज करें।
+              </span>
+            </div>
+
+            <!-- ── PIN, application date, document, then the full-width address ── -->
+            <div class="form-group">
+              <label for="pinCode" class="form-label">
+                पिन कोड <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('pinCode')">
+                <i class="fa-solid fa-location-dot field-icon"></i>
+                <input
+                  id="pinCode"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="6"
+                  formControlName="pinCode"
+                  placeholder="6 अंकों का पिन कोड दर्ज करें"
+                />
+              </div>
+              <span class="field-error" *ngIf="isInvalid('pinCode')">
+                कृपया मान्य 6 अंकों का पिन कोड दर्ज करें।
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="applicationDate" class="form-label">
+                आवेदन प्राप्ति की तिथि <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap" [class.has-error]="isInvalid('applicationDate')">
+                <i class="fa-regular fa-calendar-days field-icon"></i>
+                <input
+                  id="applicationDate"
+                  type="date"
+                  [attr.max]="maxApplicationDate"
+                  formControlName="applicationDate"
+                />
+              </div>
+              <span class="field-error" *ngIf="isInvalid('applicationDate')">
+                {{ form.get('applicationDate')?.hasError('futureDate') ? 'आवेदन प्राप्ति की तिथि आज की तिथि के बाद की नहीं हो सकती।' : 'आवेदन प्राप्ति की तिथि आवश्यक है।' }}
+              </span>
+            </div>
+
+            <div class="form-group pdf-upload-field-group span-2">
+              <div class="pdf-field-header">
+                <label for="pdfUploadInput" class="form-label">
+                  संबंधित दस्तावेज़ / आवेदन पत्र (PDF) <span class="req">*</span>
                 </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('pinCode')">
-                  <i class="fa-solid fa-location-dot field-icon"></i>
-                  <input
-                    id="pinCode"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="6"
-                    formControlName="pinCode"
-                    placeholder="6 अंकों का पिन कोड दर्ज करें"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('pinCode')">
-                  कृपया मान्य 6 अंकों का पिन कोड दर्ज करें।
-                </span>
+                <span class="file-spec-tag"><i class="fa-solid fa-file-shield"></i> केवल PDF • अधिकतम 5MB</span>
               </div>
 
-              <!-- 9. आवेदन की तिथि -->
-              <div class="form-group">
-                <label for="applicationDate" class="form-label">
-                  आवेदन की तिथि <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap" [class.has-error]="isInvalid('applicationDate')">
-                  <i class="fa-regular fa-calendar-days field-icon"></i>
-                  <input
-                    id="applicationDate"
-                    type="date"
-                    formControlName="applicationDate"
-                  />
-                </div>
-                <span class="field-error" *ngIf="isInvalid('applicationDate')">
-                  आवेदन की तिथि आवश्यक है।
-                </span>
-              </div>
+              <div class="pdf-card-box" [class.has-file]="!!pdfFile" [class.has-error]="!!pdfError">
+                <input
+                  #pdfFileInput
+                  id="pdfUploadInput"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  (change)="onPdfSelected($event)"
+                  class="sr-only-file-input"
+                />
 
-              <!-- 10. जिला -->
-              <div class="form-group">
-                <label for="district" class="form-label">
-                  जिला <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('district')">
-                  <i class="fa-solid fa-map-location-dot field-icon"></i>
-                  <select id="district" formControlName="district" (change)="onDistrictChange()">
-                    <option [ngValue]="null" disabled>{{ loadingDistricts ? 'लोड हो रहा है...' : '-- जिला चुनें --' }}</option>
-                    <option *ngFor="let dist of districts" [ngValue]="dist.districtcode">{{ dist.districtname }}</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                <!-- State 1: No file chosen -->
+                <div class="pdf-empty-trigger" *ngIf="!pdfFile" (click)="pdfFileInput.click()">
+                  <div class="pdf-upload-symbol">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div class="pdf-upload-instructions">
+                    <span class="pdf-prompt"><strong>फ़ाइल चुनें</strong> या यहाँ क्लिक करें</span>
+                    <small class="pdf-limits">केवल .pdf (अधिकतम 5 MB)</small>
+                  </div>
+                  <button type="button" class="btn btn-browse-action" (click)="$event.stopPropagation(); pdfFileInput.click()">
+                    <i class="fa-solid fa-folder-open"></i> ब्राउज़
+                  </button>
                 </div>
-                <span class="field-error" *ngIf="isInvalid('district')">
-                  कृपया जिला का चयन करें।
-                </span>
-              </div>
 
-              <!-- 11. ब्लॉक (जिला चुनने के बाद) -->
-              <div class="form-group">
-                <label for="block" class="form-label">
-                  ब्लॉक <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('block')">
-                  <i class="fa-solid fa-building-columns field-icon"></i>
-                  <select id="block" formControlName="block" (change)="onBlockChange()">
-                    <option [ngValue]="null" disabled>{{ loadingBlocks ? 'लोड हो रहा है...' : (availableBlocks.length ? '-- ब्लॉक चुनें --' : '-- पहले जिला चुनें --') }}</option>
-                    <option *ngFor="let blk of availableBlocks" [ngValue]="blk.blockCode">{{ blockLabel(blk) }}</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down select-arrow"></i>
-                </div>
-                <span class="field-error" *ngIf="isInvalid('block')">
-                  कृपया ब्लॉक का चयन करें।
-                </span>
-              </div>
-
-              <!-- 12. पंचायत (ब्लॉक चुनने के बाद) -->
-              <div class="form-group">
-                <label for="panchayat" class="form-label">
-                  पंचायत <span class="req">*</span>
-                </label>
-                <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('panchayat')">
-                  <i class="fa-solid fa-landmark field-icon"></i>
-                  <select id="panchayat" formControlName="panchayat" (change)="onPanchayatChange()">
-                    <option [ngValue]="null" disabled>{{ loadingPanchayats ? 'लोड हो रहा है...' : (availablePanchayats.length ? '-- पंचायत चुनें --' : '-- पहले ब्लॉक चुनें --') }}</option>
-                    <option *ngFor="let pan of availablePanchayats" [ngValue]="pan.panchayatCode">{{ panchayatLabel(pan) }}</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down select-arrow"></i>
-                </div>
-                <span class="field-error" *ngIf="isInvalid('panchayat')">
-                  कृपया पंचायत का चयन करें।
-                </span>
-              </div>
-
-              <!-- 13. गाँव (पंचायत चुनने के बाद) -->
-              <div class="form-group">
-                <label for="village" class="form-label">
-                  गाँव
-                </label>
-                <div class="input-icon-wrap select-wrap">
-                  <i class="fa-solid fa-location-dot field-icon"></i>
-                  <select id="village" formControlName="village">
-                    <option [ngValue]="null">{{ loadingVillages ? 'लोड हो रहा है...' : (availableVillages.length ? '-- गाँव चुनें --' : '-- पहले पंचायत चुनें --') }}</option>
-                    <option *ngFor="let vil of availableVillages" [ngValue]="vil.villcode">{{ vil.villname }}</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down select-arrow"></i>
+                <!-- State 2: File selected and validated -->
+                <div class="pdf-attached-row" *ngIf="pdfFile">
+                  <div class="pdf-attached-icon">
+                    <i class="fa-solid fa-file-pdf"></i>
+                  </div>
+                  <div class="pdf-attached-info">
+                    <strong class="pdf-attached-name" [title]="pdfFile.name">{{ pdfFile.name }}</strong>
+                    <span class="pdf-attached-size">
+                      <i class="fa-solid fa-circle-check"></i> {{ pdfSizeDisplay }}
+                    </span>
+                  </div>
+                  <div class="pdf-attached-actions">
+                    <button
+                      type="button"
+                      class="btn-file-icon-btn change-btn"
+                      (click)="pdfFileInput.click()"
+                      title="दूसरी फ़ाइल चुनें"
+                    >
+                      <i class="fa-solid fa-arrow-rotate-right"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-file-icon-btn remove-btn"
+                      (click)="removePdfFile(pdfFileInput)"
+                      title="फ़ाइल हटाएं"
+                    >
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- 14. थाना (जिला चुनने के बाद) -->
-              <div class="form-group">
-                <label for="thana" class="form-label">
-                  थाना
-                </label>
-                <div class="input-icon-wrap select-wrap">
-                  <i class="fa-solid fa-building-shield field-icon"></i>
-                  <select id="thana" formControlName="thana">
-                    <option [ngValue]="null">{{ loadingThanas ? 'लोड हो रहा है...' : (availableThanas.length ? '-- थाना चुनें --' : '-- पहले जिला चुनें --') }}</option>
-                    <option *ngFor="let th of availableThanas" [ngValue]="th.psCode">{{ th.policeStation }}</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down select-arrow"></i>
-                </div>
+              <span class="field-error" *ngIf="pdfError">
+                <i class="fa-solid fa-circle-exclamation"></i> {{ pdfError }}
+              </span>
+            </div>
+
+            <div class="form-group span-full">
+              <label for="address" class="form-label">
+                पता <span class="req">*</span>
+              </label>
+              <div class="input-icon-wrap textarea-wrap" [class.has-error]="isInvalid('address')">
+                <i class="fa-solid fa-house field-icon textarea-icon"></i>
+                <textarea
+                  id="address"
+                  rows="2"
+                  formControlName="address"
+                  placeholder="घर का पता दर्ज करें"
+                ></textarea>
               </div>
+              <span class="field-error" *ngIf="isInvalid('address')">
+                कृपया पूरा पता दर्ज करें।
+              </span>
             </div>
           </div>
 
@@ -503,7 +546,7 @@
               <strong class="val">{{ draft.values.email || '—' }}</strong>
             </div>
             <div class="preview-item">
-              <span class="lbl">आवेदन की तिथि</span>
+              <span class="lbl">आवेदन प्राप्ति की तिथि</span>
               <strong class="val">{{ draft.values.applicationDate | date: 'dd-MM-yyyy' }}</strong>
             </div>
             <div class="preview-item full">
@@ -519,20 +562,36 @@
               <strong class="val">{{ draft.locationNames.district }}</strong>
             </div>
             <div class="preview-item">
-              <span class="lbl">ब्लॉक</span>
+              <span class="lbl">अनुमंडल</span>
+              <strong class="val">{{ draft.locationNames.subDivision }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">अंचल</span>
               <strong class="val">{{ draft.locationNames.block }}</strong>
             </div>
             <div class="preview-item">
-              <span class="lbl">पंचायत</span>
-              <strong class="val">{{ draft.locationNames.panchayat }}</strong>
-            </div>
-            <div class="preview-item">
-              <span class="lbl">गाँव</span>
-              <strong class="val">{{ draft.locationNames.village }}</strong>
-            </div>
-            <div class="preview-item">
               <span class="lbl">थाना</span>
-              <strong class="val">{{ draft.locationNames.thana || '—' }}</strong>
+              <strong class="val">{{ draft.locationNames.thana }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">क्षेत्र का प्रकार</span>
+              <strong class="val">{{ draft.locationNames.areaType || '—' }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">{{ draft.values.areaType === 'U' ? 'नगर निकाय' : 'ग्राम पंचायत' }}</span>
+              <strong class="val">{{ draft.locationNames.panchayat || '—' }}</strong>
+            </div>
+            <div class="preview-item" *ngIf="draft.values.areaType !== 'U'">
+              <span class="lbl">राजस्व ग्राम</span>
+              <strong class="val">{{ draft.locationNames.village || '—' }}</strong>
+            </div>
+            <div class="preview-item">
+              <span class="lbl">वार्ड</span>
+              <strong class="val">{{ draft.locationNames.ward || '—' }}</strong>
+            </div>
+            <div class="preview-item" *ngIf="draft.values.areaType === 'U'">
+              <span class="lbl">मोहल्ला</span>
+              <strong class="val">{{ draft.values.mohalla }}</strong>
             </div>
             <div class="preview-item">
               <span class="lbl">आवेदन स्रोत</span>
@@ -752,12 +811,12 @@
         <!-- Tracking ID Highlight Box -->
         <div class="tracking-id-highlight-box">
           <div class="tracking-label-row">
-            <span class="tracking-kicker"><i class="fa-solid fa-ticket"></i> शिकायत ट्रैकिंग संख्या (Tracking ID)</span>
+            <span class="tracking-kicker"><i class="fa-solid fa-ticket"></i> आवेदन संख्या (Application No.)</span>
             <span class="tracking-status-chip"><i class="fa-solid fa-circle-check"></i> सुरक्षित एवं पंजीकृत</span>
           </div>
           <div class="tracking-number-display">
             <span class="tracking-id-value">{{ savedTrackingId }}</span>
-            <button type="button" class="btn-copy-tracking" (click)="copyTrackingId()" [title]="copied ? 'कॉपी हो गया' : 'ट्रैकिंग आईडी कॉपी करें'">
+            <button type="button" class="btn-copy-tracking" (click)="copyTrackingId()" [title]="copied ? 'कॉपी हो गया' : 'आवेदन संख्या कॉपी करें'">
               <i class="fa-solid" [ngClass]="copied ? 'fa-check' : 'fa-copy'"></i>
               <span>{{ copied ? 'कॉपी हो गया' : 'कॉपी करें' }}</span>
             </button>
@@ -782,12 +841,12 @@
             <strong class="val">{{ savedData.mobileNumber || '—' }}</strong>
           </div>
           <div class="summary-row">
-            <span class="lbl"><i class="fa-solid fa-calendar-days"></i> आवेदन की तिथि:</span>
+            <span class="lbl"><i class="fa-solid fa-calendar-days"></i> आवेदन प्राप्ति की तिथि:</span>
             <strong class="val">{{ savedData.applicationDate }}</strong>
           </div>
           <div class="summary-row">
             <span class="lbl"><i class="fa-solid fa-location-dot"></i> क्षेत्र व स्थान:</span>
-            <strong class="val">{{ savedData.village }}, {{ savedData.panchayat }}, {{ savedData.block }}, {{ savedData.district }} ({{ savedData.pinCode }})</strong>
+            <strong class="val">{{ savedData.locationSummary }} ({{ savedData.pinCode }})</strong>
           </div>
           <div class="summary-row" *ngIf="savedData.thana">
             <span class="lbl"><i class="fa-solid fa-building-shield"></i> थाना:</span>
@@ -845,7 +904,7 @@
       <!-- Tracking Strip -->
       <div class="slip-tracking-strip">
         <div class="slip-tracking-left">
-          <span class="strip-label">शिकायत ट्रैकिंग संख्या / Unique Tracking ID:</span>
+          <span class="strip-label">आवेदन संख्या / Application No.:</span>
           <span class="strip-code">{{ savedData.trackingId }}</span>
         </div>
         <div class="slip-tracking-right">
@@ -874,20 +933,28 @@
             <td colspan="3">{{ savedData.address }}</td>
           </tr>
           <tr>
-            <th>गाँव (Village)</th>
-            <td>{{ savedData.village }}</td>
-            <th>पंचायत (Panchayat)</th>
-            <td>{{ savedData.panchayat }}</td>
-          </tr>
-          <tr>
-            <th>प्रखंड / ब्लॉक (Block)</th>
-            <td>{{ savedData.block }}</td>
             <th>जिला (District)</th>
             <td><strong>{{ savedData.district }}</strong></td>
+            <th>अनुमंडल (Subdivision)</th>
+            <td>{{ savedData.subDivision }}</td>
           </tr>
           <tr>
+            <th>अंचल (Circle)</th>
+            <td>{{ savedData.block }}</td>
             <th>थाना (Police Station)</th>
-            <td colspan="3">{{ savedData.thana || '—' }}</td>
+            <td>{{ savedData.thana }}</td>
+          </tr>
+          <tr>
+            <th>क्षेत्र का प्रकार (Area Type)</th>
+            <td>{{ savedData.areaType || '—' }}</td>
+            <th>{{ savedData.isUrban ? 'नगर निकाय (Urban Body)' : 'ग्राम पंचायत (Panchayat)' }}</th>
+            <td>{{ savedData.panchayat || '—' }}</td>
+          </tr>
+          <tr>
+            <th>{{ savedData.isUrban ? 'मोहल्ला (Mohalla)' : 'राजस्व ग्राम (Village)' }}</th>
+            <td>{{ (savedData.isUrban ? savedData.mohalla : savedData.village) || '—' }}</td>
+            <th>वार्ड (Ward)</th>
+            <td>{{ savedData.ward || '—' }}</td>
           </tr>
           <tr>
             <th>पिन कोड (PIN Code)</th>
@@ -909,7 +976,7 @@
         <h4>महत्वपूर्ण निर्देश (Important Instructions):</h4>
         <ol>
           <li>यह एक कंप्यूटर जनित पावती पर्ची है। इस पर किसी भौतिक हस्ताक्षर या कार्यालय मुहर की आवश्यकता नहीं है।</li>
-          <li>अपनी शिकायत के त्वरित निस्तारण एवं अद्यतन स्थिति जानने हेतु उपर्युक्त <strong>शिकायत ट्रैकिंग संख्या ({{ savedData.trackingId }})</strong> का उपयोग करें।</li>
+          <li>अपनी शिकायत के त्वरित निस्तारण एवं अद्यतन स्थिति जानने हेतु उपर्युक्त <strong>आवेदन संख्या ({{ savedData.trackingId }})</strong> का उपयोग करें।</li>
           <li>ऑनलाइन स्थिति देखने के लिए आधिकारिक पोर्टल पर जाएं: <strong>janshikayat.bihar.gov.in</strong> अथवा टोल-फ्री हेल्पलाइन <strong>1800-345-6262</strong> पर संपर्क करें।</li>
         </ol>
       </div>

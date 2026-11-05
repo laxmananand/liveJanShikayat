@@ -27,13 +27,26 @@ namespace janshikayat.BAL.Services
 
             return result.ToList();
         }
-        public List<Block> GetBlock(int district_code)
+        public List<MstSubDivision> GetSubDivision(int district_code)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = @"select Sd_Code2 as SubDivisionCode, Sd_Name_En as SubDivisionName, Sd_Name_Hn as SubDivisionNameHn
+                        from SubDivisions where DistCode=@DistCode order by Sd_Name_En";
+
+            return conn.Query<MstSubDivision>(sql, new { DistCode = district_code }).ToList();
+        }
+
+        // sub_div_code narrows the list to one subdivision; null keeps every block of the district
+        public List<Block> GetBlock(int district_code, long? sub_div_code = null)
         {
             using var conn = _context.CreateConnection();
 
             var parameters = new DynamicParameters();
-            parameters.Add("@DistCode", district_code);           
-            var sql = "select * from Blocks  where DistCode=@DistCode order by BlockName";           
+            parameters.Add("@DistCode", district_code);
+            parameters.Add("@SubDivCode", sub_div_code);
+            var sql = @"select * from Blocks where DistCode=@DistCode
+                        and (@SubDivCode is null or SubDivCode=@SubDivCode) order by BlockName";
             var result = conn.Query<Block>(
               sql,
                parameters
@@ -41,21 +54,52 @@ namespace janshikayat.BAL.Services
             return result.ToList();
         }
 
-        public List<MstPanchayat> GetPanchayat(int district_code, int block_code)
+        // area_type: R = gram panchayats, U = urban bodies, null = both
+        public List<MstPanchayat> GetPanchayat(int district_code, int block_code, string? area_type = null)
         {
             using var conn = _context.CreateConnection();
 
-            var sql = "SELECT * FROM mst_Panchayats where DistrictCode=@DistrictCode and BlockCode=@BlockCode order by PanchayatName";
+            var sql = @"SELECT * FROM mst_Panchayats where DistrictCode=@DistrictCode and BlockCode=@BlockCode
+                        and (@AreaType is null or AreaType=@AreaType) order by PanchayatName";
             var parameters = new DynamicParameters();
             parameters.Add("@DistrictCode", district_code);
             parameters.Add("@BlockCode", block_code);
+            parameters.Add("@AreaType", area_type);
             var result = conn.Query<MstPanchayat>(sql,parameters).ToList();
             return result.ToList();
         }
+
+        // Filtered by panchayat and district, not block: some ward rows carry a different block code than their panchayat
+        public List<MstWard> GetWard(int district_code, int panchayat_code)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = @"select cast(WARDCODE as bigint) as WardCode, WARDNAME as WardName from mst_Wards
+                        where DISTCODE=@DistrictCode and PANCHAYATCODE=@PanchayatCode and WARDCODE is not null
+                        order by WARDCODE";
+
+            return conn.Query<MstWard>(sql, new { DistrictCode = district_code, PanchayatCode = panchayat_code }).ToList();
+        }
+
+        // Through MstThanaMapping, not mst_thana.Circle_Code: one station (e.g. Mahila Thana) serves many blocks
+        public List<Thana> GetThanaByBlock(int block_code)
+        {
+            using var conn = _context.CreateConnection();
+
+            var sql = @"select t.District_code, t.Subdivision_Name, t.PS_Code, t.Police_Station, t.Circle_Name
+                        from MstThanaMapping m
+                        inner join mst_thana t on t.PS_Code = m.Thana_Code
+                        where m.[Type] = 'Block' and m.Code = @BlockCode
+                        order by t.Police_Station";
+
+            return conn.Query<Thana>(sql, new { BlockCode = block_code }).ToList();
+        }
+
         public List<MstVillageMaster> GetVillage(int districtCode, int blockCode, int panchayatCode)
         {
             using var conn = _context.CreateConnection();
-            string sql = @" select v.* from mst_VillageMaster v 
+            // distinct: mst_VillageMaster and PanchayatVillage both repeat some rows
+            string sql = @" select distinct v.VILLCODE, v.VILLNAME, v.DISTCODE, v.BLOCKCODE from mst_VillageMaster v
   inner join PanchayatVillage p on p.VillageCode=v.VILLCODE and v.BLOCKCODE=p.BlockCode and p.DistrictCode=v.DISTCODE
   where p.PanchayatCode=@PanchayatCode and p.BlockCode=@BlockCode and p.DistrictCode=@DistrictCode
   order by v.VILLNAME";

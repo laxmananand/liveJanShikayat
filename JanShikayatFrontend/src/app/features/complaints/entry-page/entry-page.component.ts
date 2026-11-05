@@ -1,16 +1,25 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { ComplaintService } from '../../../core/services/complaint.service';
 import { LookupService } from '../../../core/services/lookup.service';
 import { MasterService } from '../../../core/services/master.service';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { BlockMaster, Branch, Department, District, Panchayat, Thana, Village } from '../../../core/models/models';
+import { BlockMaster, Branch, Department, District, Panchayat, SubDivision, Thana, Village, Ward } from '../../../core/models/models';
 import { COMPLAINT_CATEGORY_SUGGESTIONS } from '../../../core/utils/bihar';
+
+/** Today in the user's own timezone as yyyy-MM-dd (toISOString alone gives the UTC date). */
+function localToday(): string {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().substring(0, 10);
+}
+
+const notFutureDate: ValidatorFn = (control) =>
+  control.value && control.value > localToday() ? { futureDate: true } : null;
 
 /** Fields checked before the entry can be saved as a draft (mobile number is optional, but must be valid when entered). */
 const REQUIRED_FIELDS = [
@@ -20,16 +29,29 @@ const REQUIRED_FIELDS = [
   'address',
   'pinCode',
   'applicationDate',
-  'panchayat',
-  'block',
   'district',
+  'subDivision',
+  'block',
+  'thana',
+  'mohalla',
   'applicationSource'
 ];
+
+interface LocationNames {
+  district: string;
+  subDivision: string;
+  block: string;
+  thana: string;
+  areaType: string;
+  panchayat: string;
+  village: string;
+  ward: string;
+}
 
 /** A temporarily saved (not yet finalised) entry, kept in sessionStorage until finalised. */
 interface EntryDraft {
   values: any;
-  locationNames: { district: string; block: string; panchayat: string; village: string; thana?: string };
+  locationNames: LocationNames;
   pdf: { name: string; size: string; dataUrl: string } | null;
   savedAt: string;
 }
@@ -57,14 +79,18 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   departments: Department[] = [];
 
   // Cascading location options (from /Master APIs)
+  availableSubDivisions: SubDivision[] = [];
   availableBlocks: BlockMaster[] = [];
   availablePanchayats: Panchayat[] = [];
   availableVillages: Village[] = [];
+  availableWards: Ward[] = [];
   availableThanas: Thana[] = [];
   loadingDistricts = false;
+  loadingSubDivisions = false;
   loadingBlocks = false;
   loadingPanchayats = false;
   loadingVillages = false;
+  loadingWards = false;
   loadingThanas = false;
 
   // Application sources from the image
@@ -110,14 +136,17 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     address: ['', [Validators.required, Validators.minLength(5)]],
     pinCode: ['', [Validators.required, Validators.pattern(/^[1-9][0-9]{5}$/)]],
     email: ['', [Validators.email]],
-    applicationDate: [new Date().toISOString().substring(0, 10), Validators.required],
-    // district/block/panchayat/village hold the master codes; names are resolved via locationNames()
-    village: [null as number | null],
-    // police station (mst_thana.PS_Code) of the district; optional like village
-    thana: [null as number | null],
-    panchayat: [null as number | null, Validators.required],
-    block: [null as number | null, Validators.required],
+    applicationDate: [localToday(), [Validators.required, notFutureDate]],
+    // Location fields hold the master codes; names are resolved via locationNames()
     district: [null as number | null, Validators.required],
+    subDivision: [null as number | null, Validators.required],
+    block: [null as number | null, Validators.required],
+    thana: [null as number | null, Validators.required],
+    areaType: [null as 'R' | 'U' | null],
+    panchayat: [null as number | null], // gram panchayat (Rural) or urban body (Urban)
+    village: [null as number | null], // Rural only
+    ward: [null as number | null],
+    mohalla: [''], // Urban only; required then (see applyMohallaRule)
     applicationSource: ['Offline', Validators.required],
 
     // ── Additional complaint fields for complete filing ──
@@ -156,7 +185,9 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     this.revokePdfUrl();
   }
 
-  // ── Cascading Dropdowns (जिला → ब्लॉक → पंचायत → गाँव) ──
+  // ── Cascading Dropdowns ──
+  // जिला → अनुमंडल → अंचल → थाना
+  // अंचल + क्षेत्र का प्रकार → ग्राम पंचायत / नगर निकाय → राजस्व ग्राम, वार्ड
   private loadDistricts(): void {
     this.loadingDistricts = true;
     this.masterService.getDistricts().subscribe({
@@ -173,76 +204,60 @@ export class EntryPageComponent implements OnInit, OnDestroy {
 
   onDistrictChange(): void {
     const dist = this.form.get('district')?.value;
-    this.form.patchValue({ block: null, panchayat: null, village: null, thana: null });
+    this.form.patchValue({ subDivision: null, block: null, thana: null });
+    this.availableSubDivisions = [];
     this.availableBlocks = [];
-    this.availablePanchayats = [];
-    this.availableVillages = [];
     this.availableThanas = [];
+    this.clearArea();
     if (dist == null) return;
 
-    this.loadThanas(dist);
-    this.loadingBlocks = true;
-    this.masterService.getBlocks(dist).subscribe({
+    this.loadingSubDivisions = true;
+    this.masterService.getSubDivisions(dist).subscribe({
       next: (list) => {
         // Ignore a stale response if the district changed meanwhile
-        if (this.form.get('district')?.value === dist) this.availableBlocks = list;
+        if (this.form.get('district')?.value === dist) this.availableSubDivisions = list;
+        this.loadingSubDivisions = false;
+      },
+      error: () => {
+        this.loadingSubDivisions = false;
+        this.showToast('अनुमंडल सूची लोड नहीं हो सकी।');
+      }
+    });
+  }
+
+  onSubDivisionChange(): void {
+    const dist = this.form.get('district')?.value;
+    const subDiv = this.form.get('subDivision')?.value;
+    this.form.patchValue({ block: null, thana: null });
+    this.availableBlocks = [];
+    this.availableThanas = [];
+    this.clearArea();
+    if (dist == null || subDiv == null) return;
+
+    this.loadingBlocks = true;
+    this.masterService.getBlocks(dist, subDiv).subscribe({
+      next: (list) => {
+        if (this.form.get('subDivision')?.value === subDiv) this.availableBlocks = list;
         this.loadingBlocks = false;
       },
       error: () => {
         this.loadingBlocks = false;
-        this.showToast('ब्लॉक सूची लोड नहीं हो सकी।');
+        this.showToast('अंचल सूची लोड नहीं हो सकी।');
       }
     });
   }
 
   onBlockChange(): void {
-    const dist = this.form.get('district')?.value;
     const blk = this.form.get('block')?.value;
-    this.form.patchValue({ panchayat: null, village: null });
-    this.availablePanchayats = [];
-    this.availableVillages = [];
-    if (dist == null || blk == null) return;
+    this.form.patchValue({ thana: null });
+    this.availableThanas = [];
+    this.clearArea();
+    if (blk == null) return;
 
-    this.loadingPanchayats = true;
-    this.masterService.getPanchayats(dist, blk).subscribe({
-      next: (list) => {
-        if (this.form.get('block')?.value === blk) this.availablePanchayats = list;
-        this.loadingPanchayats = false;
-      },
-      error: () => {
-        this.loadingPanchayats = false;
-        this.showToast('पंचायत सूची लोड नहीं हो सकी।');
-      }
-    });
-  }
-
-  onPanchayatChange(): void {
-    const dist = this.form.get('district')?.value;
-    const blk = this.form.get('block')?.value;
-    const pan = this.form.get('panchayat')?.value;
-    this.form.patchValue({ village: null });
-    this.availableVillages = [];
-    if (dist == null || blk == null || pan == null) return;
-
-    this.loadingVillages = true;
-    this.masterService.getVillages(dist, blk, pan).subscribe({
-      next: (list) => {
-        if (this.form.get('panchayat')?.value === pan) this.availableVillages = list;
-        this.loadingVillages = false;
-      },
-      error: () => {
-        this.loadingVillages = false;
-        this.showToast('गाँव सूची लोड नहीं हो सकी।');
-      }
-    });
-  }
-
-  /** Police stations depend only on the district (not on block / panchayat). */
-  private loadThanas(dist: number): void {
     this.loadingThanas = true;
-    this.masterService.getThanas(dist).subscribe({
+    this.masterService.getThanas(blk).subscribe({
       next: (list) => {
-        if (this.form.get('district')?.value === dist) this.availableThanas = list;
+        if (this.form.get('block')?.value === blk) this.availableThanas = list;
         this.loadingThanas = false;
       },
       error: () => {
@@ -252,20 +267,125 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  onAreaTypeChange(): void {
+    const dist = this.form.get('district')?.value;
+    const blk = this.form.get('block')?.value;
+    const area = this.form.get('areaType')?.value;
+    this.clearAreaFields();
+    this.applyMohallaRule();
+    if (dist == null || blk == null || area == null) return;
+
+    this.loadingPanchayats = true;
+    this.masterService.getPanchayats(dist, blk, area).subscribe({
+      next: (list) => {
+        if (this.form.get('block')?.value === blk && this.form.get('areaType')?.value === area) {
+          this.availablePanchayats = list;
+        }
+        this.loadingPanchayats = false;
+      },
+      error: () => {
+        this.loadingPanchayats = false;
+        this.showToast(`${this.panchayatFieldLabel} सूची लोड नहीं हो सकी।`);
+      }
+    });
+  }
+
+  onPanchayatChange(): void {
+    const dist = this.form.get('district')?.value;
+    const blk = this.form.get('block')?.value;
+    const pan = this.form.get('panchayat')?.value;
+    this.form.patchValue({ village: null, ward: null });
+    this.availableVillages = [];
+    this.availableWards = [];
+    if (dist == null || blk == null || pan == null) return;
+
+    this.loadingWards = true;
+    this.masterService.getWards(dist, pan).subscribe({
+      next: (list) => {
+        if (this.form.get('panchayat')?.value === pan) this.availableWards = list;
+        this.loadingWards = false;
+      },
+      error: () => {
+        this.loadingWards = false;
+        this.showToast('वार्ड सूची लोड नहीं हो सकी।');
+      }
+    });
+
+    if (this.isUrban) return; // Urban bodies have no revenue villages
+    this.loadingVillages = true;
+    this.masterService.getVillages(dist, blk, pan).subscribe({
+      next: (list) => {
+        if (this.form.get('panchayat')?.value === pan) this.availableVillages = list;
+        this.loadingVillages = false;
+      },
+      error: () => {
+        this.loadingVillages = false;
+        this.showToast('राजस्व ग्राम सूची लोड नहीं हो सकी।');
+      }
+    });
+  }
+
+  /** A change higher up also resets क्षेत्र का प्रकार and everything that depends on it. */
+  private clearArea(): void {
+    this.form.patchValue({ areaType: null });
+    this.clearAreaFields();
+    this.applyMohallaRule();
+  }
+
+  /** Rural and Urban values must not mix when the area type changes. */
+  private clearAreaFields(): void {
+    this.form.patchValue({ panchayat: null, village: null, ward: null, mohalla: '' });
+    this.availablePanchayats = [];
+    this.availableVillages = [];
+    this.availableWards = [];
+  }
+
+  /** मोहल्ला is mandatory for Urban and does not exist for Rural. */
+  private applyMohallaRule(): void {
+    const mohalla = this.form.get('mohalla');
+    mohalla?.setValidators(this.isUrban ? [Validators.required, Validators.pattern(/\S/), Validators.maxLength(200)] : []);
+    mohalla?.updateValueAndValidity();
+    if (!this.isUrban) mohalla?.markAsUntouched();
+  }
+
+  /** Latest date the picker offers for आवेदन प्राप्ति की तिथि. */
+  get maxApplicationDate(): string {
+    return localToday();
+  }
+
+  get isUrban(): boolean {
+    return this.form.get('areaType')?.value === 'U';
+  }
+
+  get panchayatFieldLabel(): string {
+    return this.isUrban ? 'नगर निकाय' : 'ग्राम पंचायत';
+  }
+
+  /** First option of a location dropdown: empty list after its parent was chosen means no master data. */
+  placeholder(loading: boolean, listLength: number, parentChosen: boolean): string {
+    if (loading) return 'लोड हो रहा है...';
+    return parentChosen && !listLength ? 'उपलब्ध नहीं' : '--Select--';
+  }
+
   /** English display names (from the master APIs) for the selected location codes. */
-  locationNames(): { district: string; block: string; panchayat: string; village: string; thana: string } {
+  locationNames(): LocationNames {
     const v = this.form.value;
     const dist = this.districts.find((d) => d.districtcode === v.district);
+    const sub = this.availableSubDivisions.find((s) => s.subDivisionCode === v.subDivision);
     const blk = this.availableBlocks.find((b) => b.blockCode === v.block);
     const pan = this.availablePanchayats.find((p) => p.panchayatCode === v.panchayat);
     const vil = this.availableVillages.find((x) => x.villcode === v.village);
+    const wrd = this.availableWards.find((w) => w.wardCode === v.ward);
     const thn = this.availableThanas.find((t) => t.psCode === v.thana);
     return {
       district: dist?.districtname ?? '',
+      subDivision: sub?.subDivisionName ?? '',
       block: blk ? this.blockLabel(blk) : '',
+      thana: thn?.policeStation ?? '',
+      areaType: v.areaType === 'U' ? 'Urban' : v.areaType === 'R' ? 'Rural' : '',
       panchayat: pan ? this.panchayatLabel(pan) : '',
       village: vil?.villname ?? '',
-      thana: thn?.policeStation ?? ''
+      ward: wrd?.wardName ?? ''
     };
   }
 
@@ -285,22 +405,8 @@ export class EntryPageComponent implements OnInit, OnDestroy {
 
   // ── Step 1: Proceed ("आगे बढ़ें") ──
   proceedToStep2(): void {
-    // Validate step 1 fields from image
-    const step1Fields = [
-      'applicantName',
-      'guardianName',
-      'mobileNumber',
-      'address',
-      'pinCode',
-      'applicationDate',
-      'panchayat',
-      'block',
-      'district',
-      'applicationSource'
-    ];
-
     let hasError = false;
-    step1Fields.forEach((f) => {
+    REQUIRED_FIELDS.forEach((f) => {
       const ctrl = this.form.get(f);
       if (ctrl) {
         ctrl.markAsTouched();
@@ -330,7 +436,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       this.form.patchValue({
         subject: `${source} के माध्यम से प्राप्त परिवाद - ${this.form.get('applicantName')?.value}`,
         category: 'भूमि विवाद',
-        description: `आवेदक ${this.form.get('applicantName')?.value} (पिता/पति: ${this.form.get('guardianName')?.value}, ग्राम: ${loc.village}, पंचायत: ${loc.panchayat}, प्रखंड: ${loc.block}, थाना: ${loc.thana || '—'}, जिला: ${loc.district}, पिन कोड: ${this.form.get('pinCode')?.value}) द्वारा ${source} स्रोत से प्रस्तुत आवेदन पत्र।`
+        description: `आवेदक ${this.form.get('applicantName')?.value} (पिता / पति का नाम: ${this.form.get('guardianName')?.value}, राजस्व ग्राम: ${loc.village}, ${this.panchayatFieldLabel}: ${loc.panchayat}, अंचल: ${loc.block}, थाना: ${loc.thana || '—'}, जिला: ${loc.district}, पिन कोड: ${this.form.get('pinCode')?.value}) द्वारा ${source} स्रोत से प्रस्तुत आवेदन पत्र।`
       });
     }
 
@@ -352,24 +458,31 @@ export class EntryPageComponent implements OnInit, OnDestroy {
 
   private clearFormState(): void {
     this.form.reset({
-      applicationDate: new Date().toISOString().substring(0, 10),
+      applicationDate: localToday(),
       applicationSource: 'Offline',
       district: null,
+      subDivision: null,
       block: null,
+      thana: null,
+      areaType: null,
       panchayat: null,
       village: null,
-      thana: null,
+      ward: null,
+      mohalla: '',
       branchId: this.branches.length > 0 ? this.branches[0].id : null
     });
+    this.applyMohallaRule();
     this.currentStep = 1;
     this.errorMessage = '';
     this.pdfFile = null;
     this.selectedFile = null;
     this.pdfError = '';
     this.pdfSizeDisplay = '';
+    this.availableSubDivisions = [];
     this.availableBlocks = [];
     this.availablePanchayats = [];
     this.availableVillages = [];
+    this.availableWards = [];
     this.availableThanas = [];
   }
 
@@ -585,11 +698,16 @@ export class EntryPageComponent implements OnInit, OnDestroy {
         pinCode: v.pinCode,
         emailId: v.email || undefined,
         applicationDate: v.applicationDate,
-        village: v.village || undefined, // optional; saved as NULL when not selected
-        panchayat: v.panchayat,
+        // Optional location fields are left out (saved as NULL) when not selected
+        village: v.village || undefined,
+        panchayat: v.panchayat || undefined,
         block: v.block,
+        subDivision: v.subDivision,
         district: v.district,
-        thana: v.thana || undefined, // optional; saved as NULL when not selected
+        thana: v.thana,
+        areaType: v.areaType || undefined,
+        ward: v.ward || undefined,
+        mohalla: v.mohalla?.trim() || undefined,
         applicationSource: v.applicationSource || 'Offline',
         createdBy: this.auth.currentUser()?.email,
         photograph: this.pdfFile
@@ -628,11 +746,18 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       pinCode: v.pinCode || '',
       email: v.email || '',
       applicationDate: v.applicationDate || '',
-      village: draft.locationNames.village,
-      panchayat: draft.locationNames.panchayat,
-      block: draft.locationNames.block,
-      district: draft.locationNames.district,
-      thana: draft.locationNames.thana ?? '',
+      ...draft.locationNames,
+      isUrban: v.areaType === 'U',
+      mohalla: v.mohalla?.trim() || '',
+      locationSummary: [
+        draft.locationNames.village,
+        draft.locationNames.ward,
+        v.mohalla?.trim(),
+        draft.locationNames.panchayat,
+        draft.locationNames.block,
+        draft.locationNames.subDivision,
+        draft.locationNames.district
+      ].filter(Boolean).join(', '),
       applicationSource: v.applicationSource || 'Offline',
       pdfName: draft.pdf?.name,
       pdfSize: draft.pdf?.size
@@ -681,38 +806,56 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     }
     if (!draft) return;
 
+    // A draft saved by the previous form has no अनुमंडल and could not be finalised
+    if (draft.values?.subDivision == null) {
+      this.clearDraft();
+      return;
+    }
+
     this.draft = draft;
     this.form.patchValue(draft.values);
+    this.applyMohallaRule();
     if (draft.pdf) {
       this.pdfFile = this.dataUrlToFile(draft.pdf.dataUrl, draft.pdf.name);
       this.selectedFile = this.pdfFile;
       this.pdfSizeDisplay = draft.pdf.size;
     }
-    this.loadLocationLists(draft.values.district, draft.values.block, draft.values.panchayat);
-    if (draft.values.district != null) this.loadThanas(draft.values.district);
+    this.loadLocationLists(draft.values);
     this.showPreview = true;
   }
 
   /** Re-populate the cascading dropdowns for a restored draft without clearing its selections. */
-  private loadLocationLists(dist: number | null, blk: number | null, pan: number | null): void {
-    if (dist == null || blk == null || pan == null) return;
-    this.loadingBlocks = this.loadingPanchayats = this.loadingVillages = true;
+  private loadLocationLists(v: any): void {
+    const none = <T>(): Observable<T[]> => of([]);
+    const hasPanchayat = v.panchayat != null;
+    this.setListsLoading(true);
     forkJoin({
-      blocks: this.masterService.getBlocks(dist),
-      panchayats: this.masterService.getPanchayats(dist, blk),
-      villages: this.masterService.getVillages(dist, blk, pan)
+      subDivisions: this.masterService.getSubDivisions(v.district),
+      blocks: this.masterService.getBlocks(v.district, v.subDivision),
+      thanas: this.masterService.getThanas(v.block),
+      panchayats: v.areaType ? this.masterService.getPanchayats(v.district, v.block, v.areaType) : none<Panchayat>(),
+      wards: hasPanchayat ? this.masterService.getWards(v.district, v.panchayat) : none<Ward>(),
+      villages: hasPanchayat && v.areaType === 'R' ? this.masterService.getVillages(v.district, v.block, v.panchayat) : none<Village>()
     }).subscribe({
-      next: ({ blocks, panchayats, villages }) => {
+      next: ({ subDivisions, blocks, thanas, panchayats, wards, villages }) => {
+        this.availableSubDivisions = subDivisions;
         this.availableBlocks = blocks;
+        this.availableThanas = thanas;
         this.availablePanchayats = panchayats;
+        this.availableWards = wards;
         this.availableVillages = villages;
-        this.loadingBlocks = this.loadingPanchayats = this.loadingVillages = false;
+        this.setListsLoading(false);
       },
       error: () => {
-        this.loadingBlocks = this.loadingPanchayats = this.loadingVillages = false;
+        this.setListsLoading(false);
         this.showToast('स्थान सूची लोड नहीं हो सकी।');
       }
     });
+  }
+
+  private setListsLoading(loading: boolean): void {
+    this.loadingSubDivisions = this.loadingBlocks = this.loadingThanas = loading;
+    this.loadingPanchayats = this.loadingWards = this.loadingVillages = loading;
   }
 
   private readAsDataUrl(file: File): Promise<string> {
@@ -754,7 +897,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       navigator.clipboard.writeText(this.savedTrackingId);
       this.copied = true;
       setTimeout(() => (this.copied = false), 2500);
-      this.showToast('शिकायत ट्रैकिंग संख्या कॉपी हो गई है!');
+      this.showToast('आवेदन संख्या कॉपी हो गई है!');
     }
   }
 
@@ -777,7 +920,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
       navigator.clipboard.writeText(this.successComplaint.complaintNumber);
       this.copied = true;
       setTimeout(() => (this.copied = false), 2500);
-      this.showToast('शिकायत संख्या कॉपी हो गई है!');
+      this.showToast('आवेदन संख्या कॉपी हो गई है!');
     }
   }
 

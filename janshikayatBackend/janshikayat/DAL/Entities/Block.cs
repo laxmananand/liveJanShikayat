@@ -67,4 +67,17 @@ public class MstPanchayat
         public string?UpdateUserld { get; set; }
     }
 
+    public class MstSubDivision
+    {
+        public long SubDivisionCode { get; set; }
+        public string? SubDivisionName { get; set; }
+        public string? SubDivisionNameHn { get; set; }
+    }
+
+    public class MstWard
+    {
+        public long WardCode { get; set; }
+        public string? WardName { get; set; }
+    }
+
 }

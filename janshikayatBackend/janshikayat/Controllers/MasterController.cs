@@ -41,12 +41,31 @@ namespace janshikayat.Controllers
             return Ok(re);
         }
         //[Authorize] // TEMP: disabled for testing
+        [HttpPost("get-subdivision")]
+        public IActionResult GetSubDivision(int District_Code)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetSubDivision(District_Code) });
+        }
+
+        [HttpPost("get-ward")]
+        public IActionResult GetWard(int District_Code, int Panchayat_Code)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetWard(District_Code, Panchayat_Code) });
+        }
+
+        [HttpPost("get-thana-by-block")]
+        public IActionResult GetThanaByBlock(int Block_code)
+        {
+            return Ok(new { status = "true", message = "Success", data = _MasterData.GetThanaByBlock(Block_code) });
+        }
+
+        //[Authorize] // TEMP: disabled for testing
         [HttpPost("get-block")]
-        public IActionResult GetBlock(int District_Code)
+        public IActionResult GetBlock(int District_Code, long? SubDiv_Code = null)
         {
             var response = new Dictionary<string, string>();
 
-            var data = _MasterData.GetBlock(District_Code);
+            var data = _MasterData.GetBlock(District_Code, SubDiv_Code);
 
             if (data == null || !data.Any())
             {
@@ -65,10 +84,10 @@ namespace janshikayat.Controllers
 
         //[Authorize] // TEMP: disabled for testing
         [HttpPost("get-panchayat")]
-        public IActionResult GetPanchayat(int District_Code, int Block_code)
+        public IActionResult GetPanchayat(int District_Code, int Block_code, string? Area_Type = null)
         {
             var response = new Dictionary<string, string>();
-            var data = _MasterData.GetPanchayat(District_Code, Block_code);
+            var data = _MasterData.GetPanchayat(District_Code, Block_code, Area_Type);
             if (data == null || !data.Any())
             {
                 response["status"] = "false";

@@ -9,7 +9,7 @@
     </nav>
     <span class="section-kicker">नागरिक सेवा / Online Registration</span>
     <h1>नई शिकायत <span class="gold">ऑनलाइन दर्ज करें</span></h1>
-    <p>अपनी शिकायत का विवरण भरें, सहायक PDF संलग्न करें और तुरंत यूनिक शिकायत संख्या प्राप्त करें।</p>
+    <p>अपनी शिकायत का विवरण भरें, सहायक PDF संलग्न करें और तुरंत यूनिक आवेदन संख्या प्राप्त करें।</p>
   </div>
 </section>
 
@@ -20,11 +20,11 @@
       <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
       <span class="section-kicker">पंजीकरण सफल</span>
       <h2>आपकी शिकायत सफलतापूर्वक दर्ज हो गई है</h2>
-      <p>कृपया नीचे दी गई शिकायत संख्या सुरक्षित रखें। इसी संख्या से आप शिकायत की स्थिति ट्रैक कर सकते हैं।</p>
+      <p>कृपया नीचे दी गई आवेदन संख्या सुरक्षित रखें। इसी संख्या से आप शिकायत की स्थिति ट्रैक कर सकते हैं।</p>
 
       <div class="ref-box">
         <div>
-          <small>Unique Complaint Reference Number</small>
+          <small>आवेदन संख्या (Application No.)</small>
           <strong>{{ created.complaintNumber }}</strong>
         </div>
         <button type="button" class="copy-btn" (click)="copyNumber()" [attr.aria-label]="'संख्या कॉपी करें'">
@@ -69,7 +69,7 @@
                 <span class="error-text" *ngIf="invalid('applicantName')">आवेदक का नाम आवश्यक है।</span>
               </div>
               <div class="form-field">
-                <label for="guardianName">पिता / पति / अभिभावक का नाम <span class="req">*</span></label>
+                <label for="guardianName">पिता / पति का नाम <span class="req">*</span></label>
                 <input id="guardianName" type="text" formControlName="guardianName" />
                 <span class="error-text" *ngIf="invalid('guardianName')">यह जानकारी आवश्यक है।</span>
               </div>
@@ -79,9 +79,9 @@
                 <span class="error-text" *ngIf="invalid('mobileNumber')">कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।</span>
               </div>
               <div class="form-field">
-                <label for="email">ई-मेल (वैकल्पिक)</label>
+                <label for="email">ईमेल आईडी (वैकल्पिक)</label>
                 <input id="email" type="email" formControlName="email" placeholder="name@example.com" />
-                <span class="error-text" *ngIf="invalid('email')">कृपया मान्य ई-मेल दर्ज करें।</span>
+                <span class="error-text" *ngIf="invalid('email')">कृपया मान्य ईमेल आईडी दर्ज करें।</span>
               </div>
               <div class="form-field full-width">
                 <label for="address">पूरा पता <span class="req">*</span></label>
@@ -97,9 +97,9 @@
                 <span class="error-text" *ngIf="invalid('district')">जिला चुनें।</span>
               </div>
               <div class="form-field">
-                <label for="block">प्रखंड / ब्लॉक <span class="req">*</span></label>
+                <label for="block">अंचल <span class="req">*</span></label>
                 <input id="block" type="text" formControlName="block" />
-                <span class="error-text" *ngIf="invalid('block')">प्रखंड आवश्यक है।</span>
+                <span class="error-text" *ngIf="invalid('block')">अंचल आवश्यक है।</span>
               </div>
               <div class="form-field">
                 <label for="policeStation">थाना</label>
@@ -239,7 +239,7 @@
             <ol>
               <li><b>विवरण भरें</b><small>आवेदक एवं शिकायत की जानकारी</small></li>
               <li><b>PDF संलग्न करें</b><small>आवेदन पत्र या साक्ष्य (वैकल्पिक)</small></li>
-              <li><b>शिकायत संख्या प्राप्त करें</b><small>स्क्रीन पर तुरंत प्रदर्शित</small></li>
+              <li><b>आवेदन संख्या प्राप्त करें</b><small>स्क्रीन पर तुरंत प्रदर्शित</small></li>
               <li><b>स्थिति ट्रैक करें</b><small>संख्या से किसी भी समय</small></li>
             </ol>
           </div>

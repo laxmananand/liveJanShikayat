@@ -16,7 +16,7 @@
         <input type="text" formControlName="applicantName" />
       </div>
       <div class="form-field">
-        <label>पिता / पति / अभिभावक का नाम <span class="req">*</span></label>
+        <label>पिता / पति का नाम <span class="req">*</span></label>
         <input type="text" formControlName="guardianName" />
       </div>
       <div class="form-field">
@@ -25,7 +25,7 @@
         <span class="error-text" *ngIf="form.get('mobileNumber')?.touched && form.get('mobileNumber')?.invalid">10 अंकों का मान्य मोबाइल नंबर दर्ज करें।</span>
       </div>
       <div class="form-field">
-        <label>ईमेल (वैकल्पिक)</label>
+        <label>ईमेल आईडी (वैकल्पिक)</label>
         <input type="email" formControlName="email" />
       </div>
       <div class="form-field full-width">
@@ -40,7 +40,7 @@
         </select>
       </div>
       <div class="form-field">
-        <label>प्रखंड / ब्लॉक <span class="req">*</span></label>
+        <label>अंचल <span class="req">*</span></label>
         <input type="text" formControlName="block" />
       </div>
       <div class="form-field">
@@ -87,7 +87,7 @@
     <h2 class="card-title"><i class="fa-solid fa-route"></i> स्रोत एवं आवंटन</h2>
     <div class="form-grid">
       <div class="form-field">
-        <label>शिकायत की तिथि <span class="req">*</span></label>
+        <label>आवेदन प्राप्ति की तिथि <span class="req">*</span></label>
         <input type="date" formControlName="complaintDate" />
       </div>
       <div class="form-field">

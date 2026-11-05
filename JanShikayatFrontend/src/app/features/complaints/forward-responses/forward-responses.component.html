@@ -5,9 +5,6 @@
       <h1>प्राप्त प्रतिवेदन</h1>
       <p class="sub">अग्रेषित आवेदनों पर शाखा / प्रशाखा / कार्यालय द्वारा दी गई टिप्पणियाँ। प्रतिवेदन देखकर आवेदन बंद करें।</p>
     </div>
-    <button type="button" class="btn btn-ghost" (click)="load(true)" [disabled]="loading">
-      <i class="fa-solid" [ngClass]="loading ? 'fa-circle-notch fa-spin' : 'fa-rotate-right'"></i> रिफ्रेश
-    </button>
   </header>
 
   <div class="status-tabs" role="tablist">
@@ -25,9 +22,8 @@
   <div class="records-toolbar">
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, नाम, मोबाइल, शाखा या टिप्पणी से खोजें" />
+      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, आवेदक का नाम, मोबाइल नंबर" />
     </div>
-    <span class="count-pill" *ngIf="!loading">{{ filtered.length }} आवेदन</span>
   </div>
 
   <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
@@ -52,6 +48,9 @@
           <th>आवेदन संख्या<small>(Application No.)</small></th>
           <th>आवेदक का नाम<small>(Applicant)</small></th>
           <th>जिला</th>
+          <th>अनुमंडल</th>
+          <th>अंचल</th>
+          <th>थाना</th>
           <th>अग्रेषित<small>(Forwarded To)</small></th>
           <th>अग्रेषित दिनांक</th>
           <th>नवीनतम प्रतिवेदन<small>(Latest Response)</small></th>
@@ -68,6 +67,9 @@
           </td>
           <td data-label="आवेदक का नाम">{{ row.record.applicantName }}</td>
           <td data-label="जिला">{{ row.record.districtName || '—' }}</td>
+          <td data-label="अनुमंडल">{{ row.record.subDivisionName || '—' }}</td>
+          <td data-label="अंचल">{{ row.record.blockName || '—' }}</td>
+          <td data-label="थाना">{{ row.record.policeStation || '—' }}</td>
           <td data-label="अग्रेषित">
             {{ row.response.branchLabel }}
             <small class="sub">{{ forwardedTo(row.response) }}</small>
@@ -103,7 +105,6 @@
   </div>
 
   <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
-    <i class="fa-solid fa-inbox"></i>
     <p *ngIf="statusTab === 'Pending'">कोई लंबित प्रतिवेदन नहीं है।</p>
     <p *ngIf="statusTab === 'Disposed'">अभी तक कोई आवेदन बंद नहीं किया गया है।</p>
     <p *ngIf="statusTab === ''">अग्रेषित आवेदनों पर अभी तक कोई प्रतिवेदन प्राप्त नहीं हुआ है।</p>

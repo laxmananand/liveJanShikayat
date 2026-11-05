@@ -18,17 +18,21 @@
         <div><dt>मोबाइल नंबर</dt><dd>{{ s.mobileNumber || '—' }}</dd></div>
         <div><dt>मोबाइल नंबर 2</dt><dd>{{ s.mobileNumber2 || '—' }}</dd></div>
         <div><dt>ईमेल आईडी</dt><dd>{{ s.emailId || '—' }}</dd></div>
-        <div><dt>आवेदन की तिथि</dt><dd>{{ s.applicationDate ? (s.applicationDate | date: 'dd-MM-yyyy') : '—' }}</dd></div>
+        <div><dt>आवेदन प्राप्ति की तिथि</dt><dd>{{ s.applicationDate ? (s.applicationDate | date: 'dd-MM-yyyy') : '—' }}</dd></div>
         <div class="full"><dt>पता</dt><dd>{{ s.address || '—' }}</dd></div>
       </dl>
 
       <h3><i class="fa-solid fa-map-location-dot"></i> स्थान</h3>
       <dl class="details-grid">
         <div><dt>जिला</dt><dd>{{ s.districtName || '—' }}</dd></div>
-        <div><dt>प्रखंड / ब्लॉक</dt><dd>{{ s.blockName || '—' }}</dd></div>
-        <div><dt>पंचायत</dt><dd>{{ s.panchayatName || '—' }}</dd></div>
-        <div><dt>गाँव</dt><dd>{{ s.villageName || '—' }}</dd></div>
+        <div><dt>अनुमंडल</dt><dd>{{ s.subDivisionName || '—' }}</dd></div>
+        <div><dt>अंचल</dt><dd>{{ s.blockName || '—' }}</dd></div>
         <div><dt>थाना</dt><dd>{{ s.policeStation || '—' }}</dd></div>
+        <div><dt>क्षेत्र का प्रकार</dt><dd>{{ s.areaType === 'U' ? 'Urban' : s.areaType === 'R' ? 'Rural' : '—' }}</dd></div>
+        <div><dt>{{ s.areaType === 'U' ? 'नगर निकाय' : 'ग्राम पंचायत' }}</dt><dd>{{ s.panchayatName || '—' }}</dd></div>
+        <div *ngIf="s.areaType !== 'U'"><dt>राजस्व ग्राम</dt><dd>{{ s.villageName || '—' }}</dd></div>
+        <div><dt>वार्ड</dt><dd>{{ s.wardName || '—' }}</dd></div>
+        <div *ngIf="s.areaType === 'U'"><dt>मोहल्ला</dt><dd>{{ s.mohalla || '—' }}</dd></div>
         <div><dt>पिन कोड</dt><dd>{{ s.pinCode || '—' }}</dd></div>
       </dl>
 

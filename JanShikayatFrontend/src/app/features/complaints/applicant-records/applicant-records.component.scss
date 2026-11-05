@@ -55,15 +55,6 @@
       font-size: 1rem;
     }
   }
-
-  .count-pill {
-    background: #dfe4f3;
-    color: #17284a;
-    padding: 0.35rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
 }
 
 .btn {
@@ -331,7 +322,8 @@
 .sheet-wrap {
   border: 1px solid #d9d9d9;
   border-radius: 6px;
-  overflow: hidden;
+  // Scrolls on narrower desktops so the Forward column is never cut off
+  overflow-x: auto;
   background: #fff;
 }
 

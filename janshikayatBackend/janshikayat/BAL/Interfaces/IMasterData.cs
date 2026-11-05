@@ -7,9 +7,12 @@ namespace janshikayat.BAL.Interfaces
     {
        
         List<MstCommissionaryDistrict> GetDistrict();
-        List<Block> GetBlock(int district_code);
-        List<MstPanchayat> GetPanchayat(int district_code, int block_code);
+        List<MstSubDivision> GetSubDivision(int district_code);
+        List<Block> GetBlock(int district_code, long? sub_div_code = null);
+        List<MstPanchayat> GetPanchayat(int district_code, int block_code, string? area_type = null);
         List<MstVillageMaster> GetVillage(int districtCode, int blockCode, int panchayatCode);
+        List<MstWard> GetWard(int district_code, int panchayat_code);
+        List<Thana> GetThanaByBlock(int block_code);
         List<MstDepartment> GetDepartment();
         List<Forwarded_To_sub> GetForwarded_To_sub(int id);
         List<MstCategory> GetForwarded();

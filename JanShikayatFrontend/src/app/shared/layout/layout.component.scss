@@ -35,14 +35,20 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 20px;
+  padding: 9px 18px;
   min-height: var(--topbar-height);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
+/* The logo is transparent with red/black artwork, so it needs the same light
+   surface it sits on in the landing and login headers. */
 .brand-logo {
-  width: 38px;
+  box-sizing: border-box;
+  width: 42px;
   height: auto;
+  padding: 3px;
+  background: #e7ecf6;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
@@ -280,18 +286,9 @@
 .title-sub {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   font-size: 0.72rem;
   color: var(--muted);
   font-weight: 600;
-}
-
-.pulse {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #22a05a;
-  box-shadow: 0 0 0 3px rgba(34, 160, 90, 0.18);
 }
 
 .topbar-right {

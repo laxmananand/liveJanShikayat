@@ -7,6 +7,7 @@ import { ApplicantService } from '../../../core/services/applicant.service';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { ApplicantRecord } from '../../../core/models/models';
 import { STATUS_STAGES, applicationStatus, statusLabel } from '../../../core/utils/labels';
+import { openBase64Document } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 
 /**
@@ -18,7 +19,7 @@ import { ApplicantDetailsModalComponent } from '../../../shared/applicant-detail
   standalone: true,
   imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent],
   templateUrl: './complaint-list.component.html',
-  styleUrl: './complaint-list.component.scss'
+  styleUrls: ['../applicant-records/applicant-records.component.scss', './complaint-list.component.scss']
 })
 export class ComplaintListComponent implements OnInit {
   private all: ApplicantRecord[] = [];
@@ -77,12 +78,12 @@ export class ComplaintListComponent implements OnInit {
     this.applyLocalFilters();
   }
 
-  load(force = false): void {
+  load(): void {
     this.loading = true;
     this.errorMessage = '';
     forkJoin({
-      list: this.applicantService.getApplicants(force),
-      forwards: this.forwardService.latestByApplicant(force)
+      list: this.applicantService.getApplicants(),
+      forwards: this.forwardService.latestByApplicant()
     }).subscribe({
       next: ({ list, forwards }) => {
         this.all = list;
@@ -138,5 +139,11 @@ export class ComplaintListComponent implements OnInit {
 
   openComplaint(r: ApplicantRecord): void {
     this.selected = r;
+  }
+
+  openDoc(r: ApplicantRecord): void {
+    if (r.documentBase64 && !openBase64Document(r.documentBase64)) {
+      this.errorMessage = 'दस्तावेज़ खोला नहीं जा सका।';
+    }
   }
 }
