@@ -32,12 +32,6 @@
             <i class="fa-solid" [ngClass]="auth.isLoggedIn() ? 'fa-gauge-high' : 'fa-user-shield'"></i>
             <span>{{ auth.isLoggedIn() ? 'डैशबोर्ड' : 'Login' }}</span>
           </a>
-
-          <!-- Primary CTA Button -->
-          <a class="btn-nav-cta" routerLink="/" fragment="track" (click)="setActive('track')">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <span>शिकायत ट्रैक करें</span>
-          </a>
         </div>
       </div>
 
@@ -99,10 +93,6 @@
 
       <!-- Drawer Action Cards -->
       <div class="drawer-actions">
-        <a class="drawer-btn-cta" routerLink="/" fragment="track" (click)="setActive('track')">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <span>शिकायत स्थिति ट्रैक करें</span>
-        </a>
         <a class="drawer-btn-secondary" routerLink="/complaints/entry" (click)="closeMobileNav()">
           <i class="fa-solid fa-file-pen"></i>
           <span>शिकायत प्रविष्टि (Entry Page)</span>
