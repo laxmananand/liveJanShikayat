@@ -87,7 +87,7 @@ export interface Village {
   blockcode: number;
 }
 
-/** One police station from POST /Master/get-thana-by-block (mst_thana); psCode is unique. */
+/** One police station from POST /Master/get-thana (mst_thana); psCode is unique. */
 export interface Thana {
   psCode: number;
   policeStation: string;

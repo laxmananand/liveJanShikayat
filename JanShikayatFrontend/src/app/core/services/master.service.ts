@@ -66,16 +66,16 @@ export class MasterService {
   }, MASTER_TTL);
 
   // mst_thana columns (PS_Code, Police_Station, ...) are serialised with backend casing: map them once here
-  private thanas = new CachedRequestMap((block: number) => {
-    const params = new HttpParams().set('Block_code', block);
-    return this.http.post<MasterApiResponse<any>>(`${this.baseUrl}/get-thana-by-block`, null, { params }).pipe(
+  private thanas = new CachedRequestMap((dist: number) => {
+    const params = new HttpParams().set('District_Code', dist);
+    return this.http.post<MasterApiResponse<any>>(`${this.baseUrl}/get-thana`, null, { params }).pipe(
       map(unwrap),
       map((rows) =>
         rows.map(
           (r): Thana => ({
             psCode: Number(r.pS_Code ?? r.ps_Code ?? r.PS_Code ?? r.psCode ?? 0),
             policeStation: r.police_Station ?? r.Police_Station ?? r.policeStation ?? '',
-            districtCode: Number(r.district_code ?? r.District_code ?? r.districtCode ?? 0),
+            districtCode: Number(r.district_code ?? r.District_code ?? r.districtCode ?? dist),
             subdivisionName: r.subdivision_Name ?? r.Subdivision_Name ?? '',
             circleName: r.circle_Name ?? r.Circle_Name ?? ''
           })
@@ -191,8 +191,8 @@ export class MasterService {
     return this.villages.get(`${districtCode}|${blockCode}|${panchayatCode}`);
   }
 
-  /** API: POST /Master/get-thana-by-block?Block_code= (cached per block) — police stations serving an anchal */
-  getThanas(blockCode: number): Observable<Thana[]> {
-    return this.thanas.get(blockCode);
+  /** API: POST /Master/get-thana?District_Code= (cached per district) — police stations of a district */
+  getThanas(districtCode: number): Observable<Thana[]> {
+    return this.thanas.get(districtCode);
   }
 }

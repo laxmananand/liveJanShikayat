@@ -251,7 +251,7 @@
               <div class="input-icon-wrap select-wrap" [class.has-error]="isInvalid('thana')">
                 <i class="fa-solid fa-building-shield field-icon"></i>
                 <select id="thana" formControlName="thana">
-                  <option [ngValue]="null">{{ placeholder(loadingThanas, availableThanas.length, form.value.block != null) }}</option>
+                  <option [ngValue]="null">{{ placeholder(loadingThanas, availableThanas.length, form.value.district != null) }}</option>
                   <option *ngFor="let th of availableThanas" [ngValue]="th.psCode">{{ th.policeStation }}</option>
                 </select>
                 <i class="fa-solid fa-chevron-down select-arrow"></i>

@@ -53,12 +53,6 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data = _MasterData.GetWard(District_Code, Panchayat_Code) });
         }
 
-        [HttpPost("get-thana-by-block")]
-        public IActionResult GetThanaByBlock(int Block_code)
-        {
-            return Ok(new { status = "true", message = "Success", data = _MasterData.GetThanaByBlock(Block_code) });
-        }
-
         //[Authorize] // TEMP: disabled for testing
         [HttpPost("get-block")]
         public IActionResult GetBlock(int District_Code, long? SubDiv_Code = null)

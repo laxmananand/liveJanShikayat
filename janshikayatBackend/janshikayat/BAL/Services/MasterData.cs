@@ -81,20 +81,6 @@ namespace janshikayat.BAL.Services
             return conn.Query<MstWard>(sql, new { DistrictCode = district_code, PanchayatCode = panchayat_code }).ToList();
         }
 
-        // Through MstThanaMapping, not mst_thana.Circle_Code: one station (e.g. Mahila Thana) serves many blocks
-        public List<Thana> GetThanaByBlock(int block_code)
-        {
-            using var conn = _context.CreateConnection();
-
-            var sql = @"select t.District_code, t.Subdivision_Name, t.PS_Code, t.Police_Station, t.Circle_Name
-                        from MstThanaMapping m
-                        inner join mst_thana t on t.PS_Code = m.Thana_Code
-                        where m.[Type] = 'Block' and m.Code = @BlockCode
-                        order by t.Police_Station";
-
-            return conn.Query<Thana>(sql, new { BlockCode = block_code }).ToList();
-        }
-
         public List<MstVillageMaster> GetVillage(int districtCode, int blockCode, int panchayatCode)
         {
             using var conn = _context.CreateConnection();

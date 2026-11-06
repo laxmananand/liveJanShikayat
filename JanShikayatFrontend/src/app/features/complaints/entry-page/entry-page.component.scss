@@ -1167,11 +1167,57 @@
 }
 
 /* ── Responsive ── */
+
+/* Tablet / small laptop */
+@media (max-width: 1100px) {
+  .entry-page-wrapper {
+    padding: 4px 12px 24px;
+  }
+}
+
 @media (max-width: 860px) {
-  .two-column-grid,
-  .source-radio-grid {
+  .two-column-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .source-radio-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .source-radio-pill .source-label-text {
+    white-space: normal;
+  }
+
+  /* Header: stack title and "view all" button */
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    .header-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .card-header-banner {
+    flex-wrap: wrap;
+  }
+
+  .draft-chip {
+    margin-left: 0;
+  }
+
+  .toast-popup {
+    font-size: 1rem;
+    padding: 14px 18px;
+    width: auto;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    animation: none;
   }
 
   .form-action-buttons {
@@ -1209,6 +1255,154 @@
     .ref-info {
       text-align: center;
     }
+  }
+}
+
+/* Phone */
+@media (max-width: 600px) {
+  .entry-page-wrapper {
+    padding: 4px 8px 20px;
+  }
+
+  /* In a single-column grid, "span 2" would create a phantom 2nd column and overflow sideways */
+  .entry-grid .span-2,
+  .preview-grid .preview-item.span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .source-radio-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card-body-content {
+    padding: 14px 12px;
+  }
+
+  .card-header-banner {
+    padding: 10px 12px;
+  }
+
+  .card-header-sub {
+    font-size: 0.74rem;
+  }
+
+  /* 16px inputs stop iOS from zooming in on focus; slightly taller for touch */
+  .input-icon-wrap {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+      height: 40px;
+    }
+
+    textarea {
+      height: auto;
+    }
+  }
+
+  /* PDF upload box: let content wrap instead of overflowing the fixed 35px height */
+  .pdf-card-box {
+    height: auto;
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+
+  .pdf-upload-instructions {
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .pdf-attached-info {
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .entry-info-notice {
+    padding: 7px 10px;
+    align-items: flex-start;
+  }
+
+  .success-screen-card {
+    padding: 28px 14px;
+
+    h2 {
+      font-size: 1.25rem;
+    }
+  }
+
+  .ref-number-card {
+    padding: 14px 12px;
+
+    .ref-info .ref-code {
+      font-size: 1.25rem;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .registered-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .success-actions-bar > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Save confirmation modal */
+  .modal-backdrop {
+    padding: 8px;
+    align-items: flex-start;
+  }
+
+  .modal-body-content {
+    padding: 16px 12px 18px;
+  }
+
+  .modal-main-title {
+    font-size: 1.2rem;
+  }
+
+  .tracking-id-highlight-box {
+    padding: 10px 12px;
+
+    .tracking-label-row {
+      flex-wrap: wrap;
+    }
+
+    .tracking-number-display {
+      flex-direction: column;
+      align-items: stretch;
+
+      .tracking-id-value {
+        font-size: 1.25rem;
+        overflow-wrap: anywhere;
+      }
+
+      .btn-copy-tracking {
+        justify-content: center;
+      }
+    }
+  }
+
+  .modal-summary-card .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+
+    .val {
+      max-width: 100%;
+      text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .modal-actions-bar > * {
+    width: 100%;
+    justify-content: center;
   }
 }
 

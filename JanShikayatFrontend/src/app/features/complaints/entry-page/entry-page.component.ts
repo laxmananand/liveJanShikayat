@@ -186,7 +186,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   }
 
   // ── Cascading Dropdowns ──
-  // जिला → अनुमंडल → अंचल → थाना
+  // जिला → अनुमंडल → अंचल, and जिला → थाना (all police stations of the district)
   // अंचल + क्षेत्र का प्रकार → ग्राम पंचायत / नगर निकाय → राजस्व ग्राम, वार्ड
   private loadDistricts(): void {
     this.loadingDistricts = true;
@@ -211,6 +211,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     this.clearArea();
     if (dist == null) return;
 
+    this.loadThanas(dist);
     this.loadingSubDivisions = true;
     this.masterService.getSubDivisions(dist).subscribe({
       next: (list) => {
@@ -228,9 +229,8 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   onSubDivisionChange(): void {
     const dist = this.form.get('district')?.value;
     const subDiv = this.form.get('subDivision')?.value;
-    this.form.patchValue({ block: null, thana: null });
+    this.form.patchValue({ block: null });
     this.availableBlocks = [];
-    this.availableThanas = [];
     this.clearArea();
     if (dist == null || subDiv == null) return;
 
@@ -248,16 +248,15 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   }
 
   onBlockChange(): void {
-    const blk = this.form.get('block')?.value;
-    this.form.patchValue({ thana: null });
-    this.availableThanas = [];
     this.clearArea();
-    if (blk == null) return;
+  }
 
+  /** Police stations depend only on the district (mst_thana.District_code). */
+  private loadThanas(dist: number): void {
     this.loadingThanas = true;
-    this.masterService.getThanas(blk).subscribe({
+    this.masterService.getThanas(dist).subscribe({
       next: (list) => {
-        if (this.form.get('block')?.value === blk) this.availableThanas = list;
+        if (this.form.get('district')?.value === dist) this.availableThanas = list;
         this.loadingThanas = false;
       },
       error: () => {
@@ -832,7 +831,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
     forkJoin({
       subDivisions: this.masterService.getSubDivisions(v.district),
       blocks: this.masterService.getBlocks(v.district, v.subDivision),
-      thanas: this.masterService.getThanas(v.block),
+      thanas: this.masterService.getThanas(v.district),
       panchayats: v.areaType ? this.masterService.getPanchayats(v.district, v.block, v.areaType) : none<Panchayat>(),
       wards: hasPanchayat ? this.masterService.getWards(v.district, v.panchayat) : none<Ward>(),
       villages: hasPanchayat && v.areaType === 'R' ? this.masterService.getVillages(v.district, v.block, v.panchayat) : none<Village>()
