@@ -447,6 +447,25 @@
     white-space: nowrap;
   }
 
+  // Track (Forward Progress) button
+  .btn-track {
+    background: #6c72e8;
+    border: none;
+    color: #fff;
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover { background: #5158d6; }
+  }
+
   .btn-send {
     background: #23a6e6;
     border: none;

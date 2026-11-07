@@ -1,0 +1,406 @@
+// Forward Progress popup: summary row, tree graph (left) and the selected office's action (right).
+
+.tk-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 15, 30, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.tk-modal {
+  background: #fff;
+  border-radius: 6px;
+  width: min(1180px, 100%);
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(8, 15, 30, 0.3);
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.tk-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid #e3e6ec;
+
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #555;
+
+    i {
+      margin-right: 0.3rem;
+    }
+  }
+}
+
+.tk-x {
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+
+  &:hover {
+    background: #f1f2f5;
+    color: #222;
+  }
+}
+
+.tk-body {
+  padding: 1rem 1.1rem;
+  overflow-y: auto;
+}
+
+dt {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.2rem;
+}
+
+dd {
+  margin: 0;
+  font-weight: 700;
+  color: #444;
+  overflow-wrap: anywhere;
+}
+
+.tk-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0 0 1rem;
+
+  dd {
+    font-size: 1rem;
+  }
+}
+
+.tk-msg {
+  padding: 1rem 0;
+  color: #666;
+
+  &.error {
+    color: #dc2626;
+  }
+}
+
+.tk-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.tk-panel {
+  border: 1px solid #e0e3e9;
+  border-radius: 4px;
+  background: #fff;
+  min-width: 0;
+
+  h3 {
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #444;
+    background: #f7f8fa;
+    border-bottom: 1px solid #e0e3e9;
+
+    small {
+      font-weight: 400;
+      color: #777;
+    }
+    i {
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+// Graph
+.tk-canvas {
+  overflow: auto;
+  max-height: 460px;
+  padding: 0.5rem;
+}
+
+svg {
+  display: block;
+  margin: 0 auto;
+  font-family: inherit;
+}
+
+.edge {
+  fill: none;
+  stroke: #d3d6de;
+  stroke-width: 3;
+
+  &.done {
+    stroke: #2bbf7e;
+  }
+}
+
+.node {
+  cursor: pointer;
+  outline: none;
+
+  .ring {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 2.5;
+  }
+  .dot {
+    fill: #2bbf7e;
+    stroke: #fff;
+    stroke-width: 2;
+  }
+  .tick {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .num {
+    text-anchor: middle;
+    font-size: 12px;
+    font-weight: 700;
+    fill: #9aa0ad;
+  }
+  text {
+    text-anchor: middle;
+  }
+  .t1 {
+    font-size: 12px;
+    font-weight: 700;
+    fill: #333;
+  }
+  .t2 {
+    font-size: 10.5px;
+    fill: #3b6fd8;
+  }
+  .t3 {
+    font-size: 10.5px;
+    fill: #666;
+  }
+
+  &.pending {
+    .dot {
+      fill: #fff;
+      stroke: #d3d6de;
+      stroke-width: 2.5;
+    }
+    .t1,
+    .t2 {
+      fill: #a3a8b4;
+      font-weight: 400;
+    }
+  }
+
+  &:hover .ring,
+  &:focus .ring {
+    stroke: #c7d7f5;
+  }
+  &.sel .ring {
+    stroke: #3b6fd8;
+  }
+}
+
+.tk-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  padding: 0.5rem 0.8rem;
+  border-top: 1px solid #e0e3e9;
+  font-size: 0.78rem;
+  color: #555;
+
+  .done {
+    color: #2bbf7e;
+  }
+  .pending {
+    color: #d3d6de;
+  }
+  .hint {
+    margin-left: auto;
+    color: #888;
+  }
+}
+
+// Selected step
+.tk-detail {
+  padding-bottom: 0.8rem;
+}
+
+.tk-card {
+  margin: 0.8rem 0.8rem 0;
+  border: 1px solid #e0e3e9;
+  border-left: 4px solid #2bbf7e;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+
+  &.pending {
+    border-left-color: #d3d6de;
+  }
+}
+
+.tk-card-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid #eef0f3;
+
+  strong {
+    font-size: 1rem;
+    color: #444;
+
+    i {
+      margin-right: 0.25rem;
+      color: #666;
+    }
+  }
+}
+
+.chip {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #fff4e0;
+  color: #9a5b00;
+
+  &.ok {
+    background: #2bbf7e;
+    color: #fff;
+  }
+}
+
+.tk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem 1rem;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+
+  .full {
+    grid-column: 1 / -1;
+  }
+  .box {
+    padding: 0.5rem 0.65rem;
+    background: #f5f6f8;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: pre-line;
+  }
+}
+
+.tk-note {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.tk-replies {
+  border-top: 1px solid #eef0f3;
+
+  h4 {
+    margin: 0;
+    padding: 0.6rem 0.8rem 0.2rem;
+    font-size: 0.85rem;
+    color: #555;
+
+    small {
+      font-weight: 400;
+      color: #888;
+    }
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0.3rem 0.8rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  li {
+    padding: 0.5rem 0.65rem;
+    background: #f5f6f8;
+    border-radius: 4px;
+
+    p {
+      margin: 0 0 0.2rem;
+      white-space: pre-line;
+    }
+    small {
+      color: #777;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.tk-pdf {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #e05a4f;
+  border-radius: 4px;
+  background: #fff;
+  color: #e05a4f;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.tk-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1.1rem;
+  border-top: 1px solid #e3e6ec;
+}
+
+.tk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-radius: 4px;
+  background: #737373;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: #5e5e5e;
+  }
+}
+
+@media (max-width: 900px) {
+  .tk-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .tk-summary,
+  .tk-grid {
+    grid-template-columns: 1fr;
+  }
+  .tk-head h2 span {
+    display: none;
+  }
+}

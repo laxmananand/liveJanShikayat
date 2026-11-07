@@ -518,10 +518,11 @@ namespace janshikayat.BAL.Services
             return conn.Query<ApplicantRemarkDto>(
                 @"SELECT m.ID, m.ApplicantId, m.Remark, m.RemarkBy, m.RemarkByRole, m.CreatedDate,
                          CAST(CASE WHEN m.DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument,
-                         o.RemarkByOffice
+                         o.RemarkByOffice, o.RemarkByOfficeId, o.RemarkByUnitCode
                   FROM Tbl_Applicant_Remarks m
                   -- The writer's office (Commissioner / DM / ...), section or branch, from its login
-                  OUTER APPLY (SELECT TOP 1 COALESCE(ou.Unit_Name, p.Name, b.Branch_Hindi) AS RemarkByOffice
+                  OUTER APPLY (SELECT TOP 1 COALESCE(ou.Unit_Name, p.Name, b.Branch_Hindi) AS RemarkByOffice,
+                                      u.Office_Id AS RemarkByOfficeId, u.Office_Unit_Code AS RemarkByUnitCode
                                FROM Tbl_UserLogin u
                                LEFT JOIN vw_Office_Unit ou ON ou.Office_Id = u.Office_Id AND ou.Unit_Code = u.Office_Unit_Code
                                LEFT JOIN Mst_Prashakha p ON CAST(p.ID AS INT) = u.Prashakha_Id
@@ -544,14 +545,14 @@ namespace janshikayat.BAL.Services
             return conn.Query<ForwardHopDto>(
                 @"SELECT h.* FROM (
                       SELECT 'F' + CAST(f.ID AS VARCHAR(20)) AS Id, CAST(NULL AS VARCHAR(21)) AS ParentId, 1 AS Level,
-                             @AdminDepartment AS FromLabel, f.OfficeId AS ToOfficeId,
+                             @AdminDepartment AS FromLabel, f.OfficeId AS ToOfficeId, f.OfficeUnitCode AS ToUnitCode,
                              COALESCE(f.OfficeUnitLabel, f.OfficeLabel, f.PrashakhaLabel, f.BranchLabel, '') AS ToLabel,
                              f.BranchLabel, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt, f.ID AS Seq
                       FROM Tbl_Applicant_Forward f
                       WHERE f.ApplicantId = @ApplicantId
                       UNION ALL
                       SELECT 'R' + CAST(rf.ID AS VARCHAR(20)), 'F' + CAST(rf.ForwardId AS VARCHAR(20)), 2,
-                             rf.FromOfficeLabel, rf.ToOfficeId, rf.ToOfficeLabel,
+                             rf.FromOfficeLabel, rf.ToOfficeId, rf.ToOfficeUnitCode, rf.ToOfficeLabel,
                              NULL, NULL, rf.Remarks, rf.ForwardedBy, rf.ForwardedDate, rf.ID
                       FROM Tbl_Applicant_Reforward rf
                       WHERE rf.ApplicantId = @ApplicantId

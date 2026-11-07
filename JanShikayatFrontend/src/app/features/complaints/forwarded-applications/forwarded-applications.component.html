@@ -49,6 +49,7 @@
           <th class="col-center">देखें<small>(View)</small></th>
           <th class="col-center" *ngIf="isRegional">भेजें<small>(Forward)</small></th>
           <th class="col-center col-remarks">टिप्पणी<small>(Remarks)</small></th>
+          <th class="col-center">ट्रैक<small>(Track)</small></th>
         </tr>
       </thead>
       <tbody>
@@ -101,6 +102,11 @@
               <i class="fa-solid fa-comment-dots"></i> Remarks
             </button>
           </td>
+          <td class="col-center" data-label="ट्रैक">
+            <button type="button" class="btn-track" (click)="tracking = row.record" title="अग्रेषण प्रगति देखें / View forward progress">
+              <i class="fa-solid fa-sitemap"></i> Track
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -116,6 +122,8 @@
                                [forward]="selectedForward"
                                [closure]="selectedForward?.isDisposed ? selectedForward : null"
                                (closed)="selected = null; selectedForward = null; load()"></app-applicant-details-modal>
+
+  <app-forward-track-dialog [record]="tracking" (closed)="tracking = null"></app-forward-track-dialog>
 
   <app-reforward-dialog *ngIf="isRegional" [record]="reforwarding?.record ?? null" [forward]="reforwarding?.forward ?? null"
                         (closed)="reforwarding = null" (reforwarded)="onReforwarded($event)"></app-reforward-dialog>

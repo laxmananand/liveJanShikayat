@@ -224,6 +224,9 @@ namespace janshikayat.Models
         public bool HasDocument { get; set; }
         // Office / section / branch of the login that wrote it (e.g. "Commissioner Patna"), when known
         public string? RemarkByOffice { get; set; }
+        // Writer's regional office (Mst_Regional_Office.Office_Id) and unit, to place the remark on the forward chain
+        public int? RemarkByOfficeId { get; set; }
+        public int? RemarkByUnitCode { get; set; }
     }
 
     // One hop of an application's forward chain: Admin -> office (level 1), Commissioner / IG / DIG -> DM / SP (level 2),
@@ -237,6 +240,7 @@ namespace janshikayat.Models
         public string FromLabel { get; set; } = string.Empty;
         // Mst_Regional_Office.Office_Id of the receiver, when it is a regional office (null: branch / section)
         public int? ToOfficeId { get; set; }
+        public int? ToUnitCode { get; set; }
         public string ToLabel { get; set; } = string.Empty;
         // शाखा (Mst_Branch) and complaint type picked when forwarding; level 1 only for now
         public string? BranchLabel { get; set; }

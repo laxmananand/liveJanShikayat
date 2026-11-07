@@ -162,6 +162,8 @@ export interface ApplicantRemark {
   createdDate: string;
   hasDocument: boolean; // a PDF is attached; fetch it with getRemarkDocument(id)
   remarkByOffice?: string | null; // office / section / branch of the writer's login
+  remarkByOfficeId?: number | null; // writer's Mst_Regional_Office.Office_Id, when a regional office
+  remarkByUnitCode?: number | null;
 }
 
 /**
@@ -174,6 +176,7 @@ export interface ForwardHop {
   level: number;
   fromLabel: string;
   toOfficeId: number | null; // Mst_Regional_Office.Office_Id, null for branch / section
+  toUnitCode?: number | null;
   toLabel: string;
   branchLabel?: string | null; // शाखा picked when forwarding (level 1)
   complaintTypeLabel?: string | null;

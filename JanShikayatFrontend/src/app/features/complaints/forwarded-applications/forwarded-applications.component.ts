@@ -7,6 +7,7 @@ import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
 import { ForwardRecord, ForwardService, ReforwardRecord, forwardRecipient, isRegionalOffice } from '../../../core/services/forward.service';
 import { ReforwardDialogComponent } from '../../../shared/reforward-dialog/reforward-dialog.component';
+import { ForwardTrackDialogComponent } from '../../../shared/forward-track-dialog/forward-track-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { applicationStatus, statusLabel } from '../../../core/utils/labels';
 import { openBase64Document } from '../../../core/utils/document';
@@ -26,7 +27,7 @@ interface ForwardedRow {
 @Component({
   selector: 'app-forwarded-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, ReforwardDialogComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, ReforwardDialogComponent, ForwardTrackDialogComponent],
   templateUrl: './forwarded-applications.component.html',
   styleUrl: '../applicant-records/applicant-records.component.scss'
 })
@@ -53,6 +54,9 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   applicationStatus = applicationStatus;
   statusLabel = statusLabel;
   readonly recipient = forwardRecipient;
+
+  /** Application whose "Forward Progress" (Track) popup is open */
+  tracking: ApplicantRecord | null = null;
 
   /** Row whose "Forward to DM / SP" popup is open */
   reforwarding: ForwardedRow | null = null;
