@@ -1,7 +1,7 @@
 import { Injectable, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { ApplicantRecord, ApplicantRemark, SaveApplicantPayload, SaveApplicantResponse } from '../models/models';
+import { ApplicantRecord, ApplicantRemark, ForwardHop, SaveApplicantPayload, SaveApplicantResponse } from '../models/models';
 import { environment } from '../../../environments/environment';
 import { CachedRequest } from '../utils/cached-request';
 import { AuthService } from './auth.service';
@@ -107,6 +107,13 @@ export class ApplicantService {
   getRemarks(applicantId: number): Observable<ApplicantRemark[]> {
     return this.http
       .get<{ data: ApplicantRemark[] }>(`${this.baseUrl}/get-remarks/${applicantId}`)
+      .pipe(map((res) => res.data ?? []));
+  }
+
+  /** API: GET /Applicant/forward-history/{id} → every hop of the forward chain, top level first (any logged-in role). */
+  getForwardHistory(applicantId: number): Observable<ForwardHop[]> {
+    return this.http
+      .get<{ data: ForwardHop[] }>(`${this.baseUrl}/forward-history/${applicantId}`)
       .pipe(map((res) => res.data ?? []));
   }
 

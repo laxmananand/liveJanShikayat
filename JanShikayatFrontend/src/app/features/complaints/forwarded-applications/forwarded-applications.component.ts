@@ -68,10 +68,6 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
     return f.reforwards?.length ?? 0;
   }
 
-  hasSent(f: ForwardRecord, officeId: number): boolean {
-    return !!f.reforwards?.some((r) => r.toOfficeId === officeId);
-  }
-
   openReforward(row: ForwardedRow): void {
     if (row.forward.isDisposed) return;
     this.reforwarding = row;

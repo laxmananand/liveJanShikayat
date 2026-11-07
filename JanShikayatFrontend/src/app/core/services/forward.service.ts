@@ -73,8 +73,10 @@ export interface ReforwardTarget {
 
 export interface ReforwardPayload {
   applicantId: number;
-  dmUnitCode: number | null;
-  spUnitCode: number | null;
+  /** DM offices (Dist_Code) to send to now; any number, each office once per application */
+  dmUnitCodes: number[];
+  /** SP offices (SP_Code) to send to now */
+  spUnitCodes: number[];
   remarks: string | null;
 }
 

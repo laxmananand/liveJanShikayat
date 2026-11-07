@@ -1,169 +1,170 @@
-<div class="details-backdrop" *ngIf="record as s" (click)="close()">
-  <div class="details-modal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle" (click)="$event.stopPropagation()">
-    <div class="details-head">
-      <div>
-        <span class="section-kicker"><i class="fa-solid fa-ticket"></i> आवेदन संख्या: {{ s.applicationNo || s.id }}</span>
-        <h2 id="detailsTitle">{{ s.applicantName }}</h2>
-      </div>
-      <button type="button" class="btn-close" (click)="close()" aria-label="बंद करें">
+<div class="vd-backdrop" *ngIf="record as s" (click)="close()">
+  <div class="vd-modal" role="dialog" aria-modal="true" aria-labelledby="detailsTitle" (click)="$event.stopPropagation()">
+    <div class="vd-head">
+      <h2 id="detailsTitle"><i class="fa-solid fa-eye"></i> टिकट संख्या: {{ s.applicationNo || s.id }}</h2>
+      <span class="vd-status" [attr.data-status]="status">{{ statusLabel(status) }}</span>
+      <button type="button" class="vd-x" (click)="close()" aria-label="बंद करें">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <div class="details-body">
-      <div class="pane pane-main">
-      <h3><i class="fa-solid fa-user"></i> शिकायतकर्ता की जानकारी</h3>
-      <dl class="details-grid cols-3">
-        <div><dt>आवेदक का नाम</dt><dd>{{ s.applicantName || '—' }}</dd></div>
+    <div class="vd-body">
+      <!-- Applicant and location -->
+      <dl class="vd-grid">
+        <div><dt>शिकायतकर्ता का नाम</dt><dd>{{ s.applicantName || '—' }}</dd></div>
         <div><dt>पिता / पति का नाम</dt><dd>{{ s.fatherHusbandName || '—' }}</dd></div>
-        <div><dt>मोबाइल नंबर</dt><dd>{{ s.mobileNumber || '—' }}</dd></div>
-        <div><dt>मोबाइल नंबर 2</dt><dd>{{ s.mobileNumber2 || '—' }}</dd></div>
-        <div><dt>ईमेल आईडी</dt><dd>{{ s.emailId || '—' }}</dd></div>
-        <div><dt>आवेदन प्राप्ति की तिथि</dt><dd>{{ s.applicationDate ? (s.applicationDate | date: 'dd-MM-yyyy') : '—' }}</dd></div>
-        <div class="full"><dt>पता</dt><dd>{{ s.address || '—' }}</dd></div>
-      </dl>
+        <div><dt>मोबाइल संख्या</dt><dd>{{ s.mobileNumber || '—' }}</dd></div>
+        <div><dt>{{ s.mobileNumber2 ? 'मोबाइल संख्या 2' : 'ईमेल' }}</dt><dd>{{ s.mobileNumber2 || s.emailId || '—' }}</dd></div>
+        <div *ngIf="s.mobileNumber2 && s.emailId"><dt>ईमेल</dt><dd>{{ s.emailId }}</dd></div>
 
-      <h3><i class="fa-solid fa-map-location-dot"></i> स्थान</h3>
-      <dl class="details-grid cols-3">
         <div><dt>जिला</dt><dd>{{ s.districtName || '—' }}</dd></div>
         <div><dt>अनुमंडल</dt><dd>{{ s.subDivisionName || '—' }}</dd></div>
         <div><dt>अंचल</dt><dd>{{ s.blockName || '—' }}</dd></div>
         <div><dt>थाना</dt><dd>{{ s.policeStation || '—' }}</dd></div>
+
         <div><dt>क्षेत्र का प्रकार</dt><dd>{{ s.areaType === 'U' ? 'Urban' : s.areaType === 'R' ? 'Rural' : '—' }}</dd></div>
-        <div><dt>{{ s.areaType === 'U' ? 'नगर निकाय' : 'ग्राम पंचायत' }}</dt><dd>{{ s.panchayatName || '—' }}</dd></div>
+        <div><dt>ग्राम पंचायत / नगर निकाय</dt><dd>{{ s.panchayatName || '—' }}</dd></div>
         <div *ngIf="s.areaType !== 'U'"><dt>राजस्व ग्राम</dt><dd>{{ s.villageName || '—' }}</dd></div>
-        <div><dt>वार्ड</dt><dd>{{ s.wardName || '—' }}</dd></div>
-        <div *ngIf="s.areaType === 'U'"><dt>मोहल्ला</dt><dd>{{ s.mohalla || '—' }}</dd></div>
-        <div><dt>पिन कोड</dt><dd>{{ s.pinCode || '—' }}</dd></div>
-      </dl>
-      </div>
+        <div><dt>वार्ड / मोहल्ला</dt><dd>{{ s.wardName || '—' }}<ng-container *ngIf="s.mohalla"> / {{ s.mohalla }}</ng-container></dd></div>
 
-      <div class="pane pane-side">
-      <ng-container *ngIf="forward as f">
-        <h3><i class="fa-solid fa-share-from-square"></i> अग्रेषण विवरण / Forwarding Details</h3>
-        <section class="fw-card" [attr.data-status]="applicationStatus(f)">
-          <div class="fw-card-head">
-            <span class="fw-avatar" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
-            <div class="fw-to">
-              <small>अग्रेषित किया गया / Forwarded to</small>
-              <strong>{{ recipient(f) }}</strong>
-            </div>
-            <span class="fw-status">
-              <i class="fa-solid" [ngClass]="applicationStatus(f) === 'Disposed' ? 'fa-circle-check' : applicationStatus(f) === 'Pending' ? 'fa-hourglass-half' : 'fa-paper-plane'"></i>
-              {{ statusLabel(applicationStatus(f)) }} / {{ applicationStatus(f) }}
-            </span>
-          </div>
+        <div><dt>पिनकोड</dt><dd>{{ s.pinCode || '—' }}</dd></div>
+        <div><dt>आवेदन प्राप्ति की तिथि</dt><dd>{{ s.applicationDate ? (s.applicationDate | date: 'dd/MM/yyyy') : '—' }}</dd></div>
+        <div><dt>अग्रेषण तिथि</dt><dd>{{ firstHop ? (firstHop.forwardedAt | date: 'dd/MM/yyyy') : (forward ? (forward.forwardedAt | date: 'dd/MM/yyyy') : '—') }}</dd></div>
+        <div><dt>अग्रेषित करने वाला विभाग</dt><dd class="hi">{{ firstHop?.fromLabel || (forward ? 'गृह विभाग' : '—') }}</dd></div>
 
-          <ol class="fw-route" aria-label="अग्रेषण मार्ग / Forwarding route">
-            <ng-container *ngFor="let step of route(f); let last = last">
-              <li>
-                <i class="fa-solid" [ngClass]="step.icon" aria-hidden="true"></i>
-                <span>
-                  <small>{{ step.label }}</small>
-                  {{ step.value }}
-                </span>
-              </li>
-              <li *ngIf="!last" class="sep" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></li>
-            </ng-container>
-          </ol>
-
-          <dl class="details-grid fw-grid">
-            <div class="full">
-              <dt>{{ isEmailForward(f) ? 'ईमेल / Email' : 'शिकायत का प्रकार / Complaint Type' }}</dt>
-              <dd>
-                <i class="fa-solid" [ngClass]="isEmailForward(f) ? 'fa-envelope' : 'fa-tag'"></i>
-                {{ f.complaintTypeLabel || '—' }}
-              </dd>
-            </div>
-            <div><dt>अग्रेषित दिनांक / Forwarded on</dt><dd>{{ f.forwardedAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
-            <div><dt>अग्रेषणकर्ता / Forwarded by</dt><dd>{{ f.forwardedBy || '—' }}</dd></div>
-            <div *ngIf="f.firstResponseAt"><dt>प्रथम प्रतिवेदन / First response</dt><dd>{{ f.firstResponseAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
-            <div *ngIf="f.closedAt"><dt>निष्पादन दिनांक / Disposed on</dt><dd>{{ f.closedAt | date: 'dd-MM-yyyy, hh:mm a' }}</dd></div>
-          </dl>
-
-          <div class="fw-onward" *ngIf="f.reforwards?.length">
-            <small class="fw-onward-title"><i class="fa-solid fa-share-nodes"></i> आगे अग्रेषित / Onward forwarded to</small>
-            <ul>
-              <li *ngFor="let rf of f.reforwards">
-                <span class="fw-onward-icon"><i class="fa-solid" [ngClass]="rf.toOfficeId === 5 ? 'fa-shield-halved' : 'fa-landmark'"></i></span>
-                <div>
-                  <strong>{{ rf.toOfficeLabel }}</strong>
-                  <small>{{ rf.fromOfficeLabel }} द्वारा • {{ rf.forwardedAt | date: 'dd-MM-yyyy, hh:mm a' }}</small>
-                  <p *ngIf="rf.remarks">{{ rf.remarks }}</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div class="fw-remarks">
-            <small><i class="fa-solid fa-quote-left"></i> अग्रेषण टिप्पणी / Forwarding remarks</small>
-            <p *ngIf="f.remarks?.trim(); else noFwRemarks">{{ f.remarks }}</p>
-            <ng-template #noFwRemarks><p class="muted">कोई टिप्पणी नहीं दी गई / No remarks given</p></ng-template>
-          </div>
-        </section>
-      </ng-container>
-
-      <h3><i class="fa-solid fa-file-pdf"></i> संलग्न दस्तावेज़</h3>
-      <div class="doc-row">
-        <button *ngIf="s.documentBase64" type="button" class="btn btn-primary-accent" (click)="openDoc(s)">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> PDF खोलें
-        </button>
-        <span *ngIf="!s.documentBase64" class="no-doc">कोई दस्तावेज़ उपलब्ध नहीं</span>
-      </div>
-
-      <h3><i class="fa-solid fa-comments"></i> टिप्पणियाँ / Remarks</h3>
-      <div class="remarks">
-        <p class="no-doc" *ngIf="remarksLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…</p>
-        <p class="no-doc" *ngIf="!remarksLoading && !remarks.length">अभी कोई टिप्पणी नहीं है।</p>
-        <ul class="remark-list" *ngIf="remarks.length">
-          <li *ngFor="let m of remarks">
-            <div class="remark-text">
-              <p>{{ m.remark }}</p>
-              <small>{{ m.remarkBy }}<ng-container *ngIf="m.remarkByRole"> ({{ m.remarkByRole }})</ng-container> • {{ m.createdDate | date: 'dd-MM-yyyy HH:mm' }}</small>
-            </div>
-            <button *ngIf="m.hasDocument" type="button" class="btn-view-doc" (click)="viewRemarkDoc(m)"
-                    [disabled]="openingDocId === m.id" title="संलग्न PDF देखें / View attached PDF" aria-label="संलग्न PDF देखें">
-              <i class="fa-solid" [ngClass]="openingDocId === m.id ? 'fa-circle-notch fa-spin' : 'fa-eye'"></i>
-              <span>PDF</span>
-            </button>
-          </li>
-        </ul>
-
-        <div class="closure-note" *ngIf="closure">
-          <i class="fa-solid fa-circle-check"></i>
-          <div>
-            <strong>निष्पादित / Disposed</strong> — यह आवेदन बंद किया जा चुका है, अब टिप्पणी नहीं जोड़ी जा सकती।
-            <small>{{ closure.closedBy }}<ng-container *ngIf="closure.closedAt"> • {{ closure.closedAt | date: 'dd-MM-yyyy HH:mm' }}</ng-container></small>
-            <p *ngIf="closure.closureRemarks">{{ closure.closureRemarks }}</p>
-          </div>
+        <div *ngIf="firstHop || forward" class="span-2"><dt>अग्रेषित किया गया</dt><dd>{{ firstHop?.toLabel || forwardTo || '—' }}</dd></div>
+        <div *ngIf="branch" class="span-2"><dt>शाखा</dt><dd>{{ branch }}</dd></div>
+        <div *ngIf="complaintType" class="span-2">
+          <dt>{{ forward && isEmailForward(forward) ? 'ईमेल' : 'शिकायत का प्रकार' }}</dt><dd>{{ complaintType }}</dd>
         </div>
-        <ng-container *ngIf="allowRemark && !closure">
-          <textarea rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
-                    placeholder="अपनी टिप्पणी लिखें / Write your remark" aria-label="टिप्पणी"></textarea>
-          <div class="remark-actions">
-            <input #remarkFileInput type="file" accept="application/pdf,.pdf" hidden (change)="onRemarkFile(remarkFileInput)">
-            <button *ngIf="!remarkFile" type="button" class="btn btn-ghost" (click)="remarkFileInput.click()" [disabled]="savingRemark">
-              <i class="fa-solid fa-paperclip"></i> PDF संलग्न करें / Attach PDF
-            </button>
-            <span *ngIf="remarkFile" class="remark-file">
-              <i class="fa-solid fa-file-pdf"></i> {{ remarkFile.name }}
-              <button type="button" (click)="remarkFile = null" [disabled]="savingRemark" aria-label="PDF हटाएँ / Remove PDF">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </span>
-            <button type="button" class="btn btn-primary-accent" (click)="addRemark()" [disabled]="savingRemark || !remarkText.trim()">
-              <i class="fa-solid" [ngClass]="savingRemark ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> टिप्पणी जोड़ें / Add remark
-            </button>
-          </div>
-        </ng-container>
-        <span class="remark-error" *ngIf="remarkError">{{ remarkError }}</span>
+
+        <div class="full"><dt>पता</dt><dd>{{ s.address || '—' }}</dd></div>
+      </dl>
+
+      <div class="vd-block">
+        <dt>दस्तावेज़</dt>
+        <button *ngIf="s.documentBase64" type="button" class="vd-pdf" (click)="openDoc(s)">
+          <i class="fa-solid fa-file-pdf"></i> View PDF
+        </button>
+        <dd *ngIf="!s.documentBase64" class="muted">कोई दस्तावेज़ उपलब्ध नहीं</dd>
       </div>
+
+      <div class="vd-block" *ngIf="firstHop || forward">
+        <dt>अग्रेषण टिप्पणी</dt>
+        <dd>{{ (firstHop?.remarks || forward?.remarks)?.trim() || '—' }}</dd>
       </div>
+
+      <!-- Forward history: every hop of the chain, each under the hop it continues -->
+      <div class="vd-block">
+        <dt>अग्रेषण विवरण <small>(Forward History)</small></dt>
+        <div class="vd-table-wrap">
+          <p class="vd-empty" *ngIf="historyLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…</p>
+          <p class="vd-empty" *ngIf="!historyLoading && historyError">{{ historyError }}</p>
+          <p class="vd-empty" *ngIf="!historyLoading && !historyError && !history.length">अभी तक अग्रेषित नहीं किया गया।</p>
+          <table class="vd-table" *ngIf="!historyLoading && history.length">
+            <thead>
+              <tr>
+                <th>स्तर</th>
+                <th>अग्रेषित किया गया (To)</th>
+                <th>टिप्पणी</th>
+                <th>अग्रेषित करने वाले</th>
+                <th>अग्रेषण तिथि</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of history" [attr.data-level]="h.level">
+                <td class="lvl">{{ h.level }}</td>
+                <td>
+                  <span class="to" [style.padding-left.rem]="(h.level - 1) * 1.1">
+                    <span>
+                      {{ h.toLabel }}
+                      <small *ngIf="officeKind(h)">{{ officeKind(h) }}</small>
+                      <small *ngIf="h.branchLabel && h.branchLabel !== h.toLabel">शाखा: {{ h.branchLabel }}</small>
+                    </span>
+                  </span>
+                </td>
+                <td>{{ h.remarks || '—' }}</td>
+                <td>{{ h.fromLabel }}</td>
+                <td class="nowrap">{{ h.forwardedAt | date: 'dd/MM/yyyy' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Every remark, oldest first, with the office that wrote it -->
+      <div class="vd-block">
+        <dt>टिप्पणी विवरण <small>(Remarks History)</small></dt>
+        <div class="vd-table-wrap">
+          <p class="vd-empty" *ngIf="remarksLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> लोड हो रहा है…</p>
+          <p class="vd-empty" *ngIf="!remarksLoading && !remarks.length">अभी कोई टिप्पणी नहीं है।</p>
+          <table class="vd-table" *ngIf="!remarksLoading && remarks.length">
+            <thead>
+              <tr>
+                <th>क्रम</th>
+                <th>टिप्पणी</th>
+                <th>टिप्पणी करने वाले</th>
+                <th>दिनांक</th>
+                <th>दस्तावेज़</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of remarks; let i = index">
+                <td class="lvl">{{ i + 1 }}</td>
+                <td class="wrap">{{ m.remark }}</td>
+                <td>
+                  {{ m.remarkByOffice || m.remarkBy }}
+                  <small *ngIf="m.remarkByRole">{{ m.remarkByRole }}<ng-container *ngIf="m.remarkByOffice"> • {{ m.remarkBy }}</ng-container></small>
+                </td>
+                <td class="nowrap">{{ m.createdDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <button *ngIf="m.hasDocument" type="button" class="vd-pdf sm" (click)="viewRemarkDoc(m)"
+                          [disabled]="openingDocId === m.id" title="संलग्न PDF देखें / View attached PDF">
+                    <i class="fa-solid" [ngClass]="openingDocId === m.id ? 'fa-circle-notch fa-spin' : 'fa-file-pdf'"></i> PDF
+                  </button>
+                  <span *ngIf="!m.hasDocument" class="muted">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="vd-closure" *ngIf="closure">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+          <strong>निष्पादित / Disposed</strong> — यह आवेदन बंद किया जा चुका है, अब टिप्पणी नहीं जोड़ी जा सकती।
+          <small>{{ closure.closedBy }}<ng-container *ngIf="closure.closedAt"> • {{ closure.closedAt | date: 'dd/MM/yyyy HH:mm' }}</ng-container></small>
+          <p *ngIf="closure.closureRemarks">{{ closure.closureRemarks }}</p>
+        </div>
+      </div>
+
+      <div class="vd-block vd-add" *ngIf="allowRemark && !closure">
+        <label for="vdRemark">टिप्पणी जोड़ें (वैकल्पिक PDF के साथ)</label>
+        <textarea id="vdRemark" rows="2" maxlength="1000" [(ngModel)]="remarkText" [disabled]="savingRemark"
+                  placeholder="अधिकतम 1000 अक्षर"></textarea>
+        <div class="vd-add-actions">
+          <input #remarkFileInput type="file" accept="application/pdf,.pdf" hidden (change)="onRemarkFile(remarkFileInput)">
+          <button *ngIf="!remarkFile" type="button" class="vd-btn vd-btn-light" (click)="remarkFileInput.click()" [disabled]="savingRemark">
+            <i class="fa-solid fa-paperclip"></i> Attach PDF
+          </button>
+          <span *ngIf="remarkFile" class="vd-file">
+            <i class="fa-solid fa-file-pdf"></i> {{ remarkFile.name }}
+            <button type="button" (click)="remarkFile = null" [disabled]="savingRemark" aria-label="PDF हटाएँ / Remove PDF">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </span>
+          <button type="button" class="vd-btn vd-btn-primary" (click)="addRemark()" [disabled]="savingRemark || !remarkText.trim()">
+            <i class="fa-solid" [ngClass]="savingRemark ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> Add Remark
+          </button>
+        </div>
+      </div>
+      <span class="vd-error" *ngIf="remarkError">{{ remarkError }}</span>
     </div>
 
-    <div class="details-foot">
-      <button type="button" class="btn btn-ghost" (click)="close()">
-        <i class="fa-solid fa-check"></i> बंद करें
+    <div class="vd-foot">
+      <button type="button" class="vd-btn vd-btn-close" (click)="close()">
+        <i class="fa-solid fa-xmark"></i> Close
       </button>
     </div>
   </div>

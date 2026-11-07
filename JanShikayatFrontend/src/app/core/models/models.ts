@@ -161,6 +161,25 @@ export interface ApplicantRemark {
   remarkByRole: string | null; // Mst_Role name: Admin / Saction / Branch
   createdDate: string;
   hasDocument: boolean; // a PDF is attached; fetch it with getRemarkDocument(id)
+  remarkByOffice?: string | null; // office / section / branch of the writer's login
+}
+
+/**
+ * One hop of an application's forward chain (GET /Applicant/forward-history/{id}): level 1 Admin → office,
+ * level 2 Commissioner / IG / DIG → DM / SP, and later levels below. parentId is the hop it continues.
+ */
+export interface ForwardHop {
+  id: string;
+  parentId: string | null;
+  level: number;
+  fromLabel: string;
+  toOfficeId: number | null; // Mst_Regional_Office.Office_Id, null for branch / section
+  toLabel: string;
+  branchLabel?: string | null; // शाखा picked when forwarding (level 1)
+  complaintTypeLabel?: string | null;
+  remarks: string | null;
+  forwardedBy: string;
+  forwardedAt: string;
 }
 
 export interface CompetentAuthorityDesignation {

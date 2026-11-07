@@ -1,5 +1,6 @@
 /* Regional officers (Commissioner / IG / DIG) forward an application they received onward to the DM and / or SP
-   of their jurisdiction. One row per onward forward; at most one DM and one SP per application.
+   of their jurisdiction. One row per onward forward; any number of DM / SP offices, each office once per application
+   (see 004_reforward_multiple_offices.sql, which upgrades databases that ran the older one-DM-one-SP version).
    Safe to run more than once. Existing tables are not changed.
    Run in SSMS or: sqlcmd -S <server> -E -C -f 65001 -b -i 002_regional_reforward.sql */
 USE JansikayatDB;
@@ -37,9 +38,9 @@ BEGIN
 END
 GO
 
--- One DM and one SP per application
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_Applicant_Reforward_Applicant_To' AND object_id = OBJECT_ID('dbo.Tbl_Applicant_Reforward'))
-    CREATE UNIQUE INDEX UX_Applicant_Reforward_Applicant_To ON dbo.Tbl_Applicant_Reforward (ApplicantId, ToOfficeId);
+-- Each DM / SP office receives an application at most once
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_Applicant_Reforward_Applicant_To_Unit' AND object_id = OBJECT_ID('dbo.Tbl_Applicant_Reforward'))
+    CREATE UNIQUE INDEX UX_Applicant_Reforward_Applicant_To_Unit ON dbo.Tbl_Applicant_Reforward (ApplicantId, ToOfficeId, ToOfficeUnitCode);
 GO
 
 -- DM / SP logins look up what was forwarded to them

@@ -1,4 +1,4 @@
-/* Deployment check for 001_entry_page_location.sql and 002_regional_reforward.sql.
+/* Deployment check for 001_entry_page_location.sql, 002_regional_reforward.sql and 004_reforward_multiple_offices.sql.
    Read-only: it changes nothing, so it can be run any number of times, before or after the other scripts.
      - Before 001/002: every "Prerequisite" row must be OK. If one is MISSING, do not run 001/002.
      - After 001/002:  every row must be OK.
@@ -55,8 +55,10 @@ FROM (VALUES
 
     /* Added by 002_regional_reforward.sql */
     (3, '002', 'Table Tbl_Applicant_Reforward',                   IIF(OBJECT_ID('dbo.Tbl_Applicant_Reforward', 'U') IS NULL, 0, 1)),
-    (3, '002', 'Index UX_Applicant_Reforward_Applicant_To',
-        IIF(EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.Tbl_Applicant_Reforward') AND name = 'UX_Applicant_Reforward_Applicant_To'), 1, 0)),
+    (3, '002/004', 'Index UX_Applicant_Reforward_Applicant_To_Unit (several DM / SP, once each)',
+        IIF(EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.Tbl_Applicant_Reforward') AND name = 'UX_Applicant_Reforward_Applicant_To_Unit'), 1, 0)),
+    (3, '004', 'Old index UX_Applicant_Reforward_Applicant_To removed (one DM / one SP limit)',
+        IIF(EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.Tbl_Applicant_Reforward') AND name = 'UX_Applicant_Reforward_Applicant_To'), 0, 1)),
     (3, '002', 'Index IX_Applicant_Reforward_To',
         IIF(EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.Tbl_Applicant_Reforward') AND name = 'IX_Applicant_Reforward_To'), 1, 0))
 ) c(SortOrder, Step, Item, Present)

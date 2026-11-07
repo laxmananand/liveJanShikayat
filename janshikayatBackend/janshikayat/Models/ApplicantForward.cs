@@ -92,17 +92,31 @@ namespace janshikayat.Models
             officeId is Commissioner or InspectorGeneral or DeputyInspectorGeneral;
     }
 
-    // Commissioner / IG / DIG: forward a received application onward to a DM and / or SP of its jurisdiction
+    // Commissioner / IG / DIG: forward a received application onward to one or more DM and / or SP offices of its
+    // jurisdiction (each office at most once per application)
     public class ReforwardRequest
     {
         [Range(1, long.MaxValue)]
         public long ApplicantId { get; set; }
-        // Dist_Code of the DM office (null = not sent to a DM now)
+        // Dist_Codes of the DM offices to send to now
+        public List<int>? DmUnitCodes { get; set; }
+        // SP_Codes of the SP offices to send to now
+        public List<int>? SpUnitCodes { get; set; }
+        // Older clients: a single DM / SP office (merged with the lists above)
         public int? DmUnitCode { get; set; }
-        // SP_Code of the SP office (null = not sent to an SP now)
         public int? SpUnitCode { get; set; }
         [StringLength(500)]
         public string? Remarks { get; set; }
+
+        // Every (office kind, unit) requested, without repeats
+        public IReadOnlyList<(int OfficeId, int UnitCode)> Targets()
+        {
+            var dm = (DmUnitCodes ?? new List<int>()).Concat(DmUnitCode is int d ? new[] { d } : Array.Empty<int>());
+            var sp = (SpUnitCodes ?? new List<int>()).Concat(SpUnitCode is int s ? new[] { s } : Array.Empty<int>());
+            return dm.Distinct().Select(u => (OfficeKind.DistrictMagistrate, u))
+                .Concat(sp.Distinct().Select(u => (OfficeKind.SuperintendentOfPolice, u)))
+                .ToList();
+        }
     }
     public class ReforwardDto
     {
@@ -208,5 +222,27 @@ namespace janshikayat.Models
         public DateTime CreatedDate { get; set; }
         // True when a PDF is attached; fetch it from get-remark-document/{ID}
         public bool HasDocument { get; set; }
+        // Office / section / branch of the login that wrote it (e.g. "Commissioner Patna"), when known
+        public string? RemarkByOffice { get; set; }
+    }
+
+    // One hop of an application's forward chain: Admin -> office (level 1), Commissioner / IG / DIG -> DM / SP (level 2),
+    // and later levels below them. ParentId links a hop to the one it continues, so the chain can be shown as a tree.
+    public class ForwardHopDto
+    {
+        // "F<id>" for Tbl_Applicant_Forward, "R<id>" for Tbl_Applicant_Reforward
+        public string Id { get; set; } = string.Empty;
+        public string? ParentId { get; set; }
+        public int Level { get; set; }
+        public string FromLabel { get; set; } = string.Empty;
+        // Mst_Regional_Office.Office_Id of the receiver, when it is a regional office (null: branch / section)
+        public int? ToOfficeId { get; set; }
+        public string ToLabel { get; set; } = string.Empty;
+        // शाखा (Mst_Branch) and complaint type picked when forwarding; level 1 only for now
+        public string? BranchLabel { get; set; }
+        public string? ComplaintTypeLabel { get; set; }
+        public string? Remarks { get; set; }
+        public string ForwardedBy { get; set; } = string.Empty;
+        public DateTime ForwardedAt { get; set; }
     }
 }

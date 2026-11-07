@@ -13,6 +13,7 @@ namespace janshikayat.BAL.Interfaces
         IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope, string adminRole);
         ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
+        IEnumerable<ForwardHopDto> GetForwardHistory(long applicantId);
         string? GetRemarkDocumentPath(long remarkId);
         IEnumerable<ApplicationResponseDto> GetResponses(string adminRole);
         int GetUnseenResponseCount(string adminRole);
@@ -23,7 +24,7 @@ namespace janshikayat.BAL.Interfaces
         PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);
         IEnumerable<PendencyRowDto> GetPendencyReport(PendencyReportRequest request, AccessScope scope, string adminRole);
         IEnumerable<ReforwardTargetDto> GetReforwardTargets(long applicantId, int fromOfficeId, int fromUnitCode);
-        IReadOnlyList<int> GetReforwardedKinds(long applicantId);
+        IReadOnlyList<(int OfficeId, int UnitCode)> GetReforwardedOffices(long applicantId);
         IReadOnlyList<ReforwardDto>? Reforward(ReforwardRequest request, int fromOfficeId, int fromUnitCode, string forwardedBy, string? ip);
         IEnumerable<PendencyApplicationDto> GetPendencyApplications(PendencyReportRequest request, AccessScope scope, string adminRole);
     }

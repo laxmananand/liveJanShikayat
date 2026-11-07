@@ -1,18 +1,20 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApplicantRecord, ApplicantRemark } from '../../core/models/models';
+import { ApplicantRecord, ApplicantRemark, ForwardHop } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
-import { ForwardRecord, ForwardService, forwardRecipient } from '../../core/services/forward.service';
+import { ForwardRecord, ForwardService, OFFICE_KIND } from '../../core/services/forward.service';
 import { openBase64Document, openBlobDocument } from '../../core/utils/document';
 import { applicationStatus, statusLabel } from '../../core/utils/labels';
 
-/** One hop of the forwarding route shown as a chip (Category → Office → Officer → Branch). */
-interface RouteStep {
-  label: string;
-  value: string;
-  icon: string;
-}
+/** Hindi name of a regional office kind, shown under the receiver in the forward history. */
+const OFFICE_KIND_LABEL: Record<number, string> = {
+  [OFFICE_KIND.Commissioner]: 'प्रमंडलीय आयुक्त',
+  [OFFICE_KIND.DM]: 'जिलाधिकारी',
+  [OFFICE_KIND.IG]: 'पुलिस महानिरीक्षक',
+  [OFFICE_KIND.DIG]: 'पुलिस उप-महानिरीक्षक',
+  [OFFICE_KIND.SP]: 'पुलिस अधीक्षक'
+};
 
 /** Closure details of a Disposed application (from ForwardRecord / ForwardResponse). */
 export interface ApplicationClosureInfo {
@@ -24,7 +26,10 @@ export interface ApplicationClosureInfo {
 /** Must match MaxRemarkDocumentSize in ApplicantController. */
 const MAX_REMARK_PDF_BYTES = 5 * 1024 * 1024;
 
-/** Popup with every field of one saved application (from GET /Applicant/get-all), plus its remarks. */
+/**
+ * Popup with every field of one saved application, its whole forward chain (Admin → office → DM / SP → …, loaded
+ * from GET /Applicant/forward-history) shown level by level, and every remark with the office that wrote it.
+ */
 @Component({
   selector: 'app-applicant-details-modal',
   standalone: true,
@@ -46,29 +51,67 @@ export class ApplicantDetailsModalComponent implements OnChanges {
   @Input() forward: ForwardRecord | null = null;
   @Output() closed = new EventEmitter<void>();
 
-  readonly recipient = forwardRecipient;
   readonly statusLabel = statusLabel;
   readonly applicationStatus = applicationStatus;
+
+  /** Forward chain in tree order: each hop followed by the hops that continue it. */
+  history: ForwardHop[] = [];
+  historyLoading = false;
+  historyError = '';
 
   /** Department forwards go by email: the "complaint type" then holds the address. */
   isEmailForward(f: ForwardRecord): boolean {
     return f.complaintTypeId === 'email';
   }
 
-  /** The path the application took, skipping levels this kind of forward doesn't have. */
-  route(f: ForwardRecord): RouteStep[] {
-    const steps: RouteStep[] = [
-      { label: 'श्रेणी / Category', value: f.categoryLabel, icon: 'fa-layer-group' },
-      { label: 'प्रशाखा / Prashakha', value: f.prashakhaLabel ?? '', icon: 'fa-sitemap' },
-      { label: 'कार्यालय / Office', value: f.officeLabel ?? '', icon: 'fa-building' },
-      { label: 'अधिकारी / Officer', value: f.officeUnitLabel ?? '', icon: 'fa-user-tie' },
-      {
-        label: this.isEmailForward(f) ? 'विभाग / Department' : 'शाखा / Branch',
-        value: f.branchLabel,
-        icon: this.isEmailForward(f) ? 'fa-landmark' : 'fa-code-branch'
+  /** The first forward (Admin → office) */
+  get firstHop(): ForwardHop | null {
+    return this.history.find((h) => h.level === 1) ?? null;
+  }
+
+  /** शाखा picked when forwarding */
+  get branch(): string {
+    return this.firstHop?.branchLabel || this.forward?.branchLabel || '';
+  }
+
+  get complaintType(): string {
+    return this.firstHop?.complaintTypeLabel || this.forward?.complaintTypeLabel || '';
+  }
+
+  /** Receiver of the first forward when only the forward record is known */
+  get forwardTo(): string {
+    const f = this.forward;
+    return f ? f.officeUnitLabel || f.officeLabel || f.prashakhaLabel || f.branchLabel || '' : '';
+  }
+
+  officeKind(h: ForwardHop): string {
+    return h.toOfficeId != null ? OFFICE_KIND_LABEL[h.toOfficeId] ?? '' : '';
+  }
+
+  /** Disposed / Pending / Forwarded / Registered, as far as this popup knows */
+  get status(): string {
+    if (this.closure) return 'Disposed';
+    if (this.forward) return this.applicationStatus(this.forward);
+    return this.history.length ? 'Forwarded' : 'Registered';
+  }
+
+  /** Orders hops depth-first, so every hop sits right under the one it continues. */
+  private toTree(hops: ForwardHop[]): ForwardHop[] {
+    const children = new Map<string | null, ForwardHop[]>();
+    const ids = new Set(hops.map((h) => h.id));
+    for (const h of hops) {
+      const parent = h.parentId && ids.has(h.parentId) ? h.parentId : null;
+      children.set(parent, [...(children.get(parent) ?? []), h]);
+    }
+    const out: ForwardHop[] = [];
+    const walk = (parent: string | null) => {
+      for (const h of children.get(parent) ?? []) {
+        out.push(h);
+        walk(h.id);
       }
-    ];
-    return steps.filter((s) => !!s.value?.trim());
+    };
+    walk(null);
+    return out;
   }
 
   remarks: ApplicantRemark[] = [];
@@ -86,9 +129,25 @@ export class ApplicantDetailsModalComponent implements OnChanges {
     this.remarkText = '';
     this.remarkFile = null;
     this.remarkError = '';
+    this.history = [];
+    this.historyError = '';
     if (!this.record) return;
 
     const id = this.record.id;
+    this.historyLoading = true;
+    this.applicantService.getForwardHistory(id).subscribe({
+      next: (hops) => {
+        if (this.record?.id !== id) return;
+        this.history = this.toTree(hops);
+        this.historyLoading = false;
+      },
+      error: () => {
+        if (this.record?.id !== id) return;
+        this.historyLoading = false;
+        this.historyError = 'अग्रेषण विवरण लोड नहीं हो सका। / Could not load the forward history.';
+      }
+    });
+
     this.remarksLoading = true;
     this.applicantService.getRemarks(id).subscribe({
       next: (list) => {
@@ -112,6 +171,7 @@ export class ApplicantDetailsModalComponent implements OnChanges {
     this.applicantService.addRemark(this.record.id, text, this.remarkFile).subscribe({
       next: (saved) => {
         this.remarks = [...this.remarks, saved];
+        this.reloadRemarks(); // fills in the writer's office
         this.forwardService.invalidate();
         this.remarkText = '';
         this.remarkFile = null;
@@ -121,6 +181,17 @@ export class ApplicantDetailsModalComponent implements OnChanges {
         this.savingRemark = false;
         this.remarkError = err?.error?.message || 'टिप्पणी सहेजी नहीं जा सकी। / Could not save the remark.';
       }
+    });
+  }
+
+  private reloadRemarks(): void {
+    const id = this.record?.id;
+    if (!id) return;
+    this.applicantService.getRemarks(id).subscribe({
+      next: (list) => {
+        if (this.record?.id === id) this.remarks = list;
+      },
+      error: () => {} // the remark is saved and already listed; only its office label is missing
     });
   }
 

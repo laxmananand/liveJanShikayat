@@ -301,23 +301,22 @@ namespace janshikayat.BAL.Services
                 new { ApplicantId = applicantId, FromOfficeId = fromOfficeId, FromUnitCode = fromUnitCode });
         }
 
-        // Office kinds (2 = DM, 5 = SP) this application was already forwarded onward to
-        public IReadOnlyList<int> GetReforwardedKinds(long applicantId)
+        // DM / SP offices (kind 2 = DM, 5 = SP, and unit) this application was already forwarded onward to
+        public IReadOnlyList<(int OfficeId, int UnitCode)> GetReforwardedOffices(long applicantId)
         {
             using var conn = _context.CreateConnection();
 
-            return conn.Query<int>(
-                "SELECT ToOfficeId FROM Tbl_Applicant_Reforward WHERE ApplicantId = @ApplicantId",
+            return conn.Query<(int, int)>(
+                "SELECT ToOfficeId, ToOfficeUnitCode FROM Tbl_Applicant_Reforward WHERE ApplicantId = @ApplicantId",
                 new { ApplicantId = applicantId }).ToList();
         }
 
-        // Saves one onward forward per requested office (DM and / or SP) in one transaction. Returns null when the
-        // application was not forwarded to this Commissioner / IG / DIG, is closed, or an office is outside its jurisdiction.
+        // Saves one onward forward per requested office (any number of DMs and / or SPs) in one transaction. Returns
+        // null when the application was not forwarded to this Commissioner / IG / DIG, is closed, or an office is
+        // outside its jurisdiction.
         public IReadOnlyList<ReforwardDto>? Reforward(ReforwardRequest request, int fromOfficeId, int fromUnitCode, string forwardedBy, string? ip)
         {
-            var targets = new List<(int OfficeId, int UnitCode)>();
-            if (request.DmUnitCode is int dm) targets.Add((OfficeKind.DistrictMagistrate, dm));
-            if (request.SpUnitCode is int sp) targets.Add((OfficeKind.SuperintendentOfPolice, sp));
+            var targets = request.Targets();
 
             using var conn = _context.CreateConnection();
             conn.Open();
@@ -517,12 +516,48 @@ namespace janshikayat.BAL.Services
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicantRemarkDto>(
-                @"SELECT ID, ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedDate,
-                         CAST(CASE WHEN DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument
-                  FROM Tbl_Applicant_Remarks
-                  WHERE ApplicantId = @ApplicantId
-                  ORDER BY CreatedDate, ID",
+                @"SELECT m.ID, m.ApplicantId, m.Remark, m.RemarkBy, m.RemarkByRole, m.CreatedDate,
+                         CAST(CASE WHEN m.DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument,
+                         o.RemarkByOffice
+                  FROM Tbl_Applicant_Remarks m
+                  -- The writer's office (Commissioner / DM / ...), section or branch, from its login
+                  OUTER APPLY (SELECT TOP 1 COALESCE(ou.Unit_Name, p.Name, b.Branch_Hindi) AS RemarkByOffice
+                               FROM Tbl_UserLogin u
+                               LEFT JOIN vw_Office_Unit ou ON ou.Office_Id = u.Office_Id AND ou.Unit_Code = u.Office_Unit_Code
+                               LEFT JOIN Mst_Prashakha p ON CAST(p.ID AS INT) = u.Prashakha_Id
+                               LEFT JOIN Mst_Branch b ON b.Complain_id = u.Branch_Id
+                               WHERE u.UserName = m.RemarkBy) o
+                  WHERE m.ApplicantId = @ApplicantId
+                  ORDER BY m.CreatedDate, m.ID",
                 new { ApplicantId = applicantId });
+        }
+
+        // Who forwards from the Admin login
+        private const string AdminDepartmentLabel = "गृह विभाग";
+
+        // Every hop of the forward chain, top level first, each level oldest first. A new level (e.g. DM / SP -> CO / thana)
+        // is one more UNION ALL block with Level 3 and ParentId pointing at the R<id> it continues.
+        public IEnumerable<ForwardHopDto> GetForwardHistory(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<ForwardHopDto>(
+                @"SELECT h.* FROM (
+                      SELECT 'F' + CAST(f.ID AS VARCHAR(20)) AS Id, CAST(NULL AS VARCHAR(21)) AS ParentId, 1 AS Level,
+                             @AdminDepartment AS FromLabel, f.OfficeId AS ToOfficeId,
+                             COALESCE(f.OfficeUnitLabel, f.OfficeLabel, f.PrashakhaLabel, f.BranchLabel, '') AS ToLabel,
+                             f.BranchLabel, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt, f.ID AS Seq
+                      FROM Tbl_Applicant_Forward f
+                      WHERE f.ApplicantId = @ApplicantId
+                      UNION ALL
+                      SELECT 'R' + CAST(rf.ID AS VARCHAR(20)), 'F' + CAST(rf.ForwardId AS VARCHAR(20)), 2,
+                             rf.FromOfficeLabel, rf.ToOfficeId, rf.ToOfficeLabel,
+                             NULL, NULL, rf.Remarks, rf.ForwardedBy, rf.ForwardedDate, rf.ID
+                      FROM Tbl_Applicant_Reforward rf
+                      WHERE rf.ApplicantId = @ApplicantId
+                  ) h
+                  ORDER BY h.Level, h.ForwardedAt, h.Seq",
+                new { ApplicantId = applicantId, AdminDepartment = AdminDepartmentLabel });
         }
 
         // Stored file name of the PDF attached to a remark, or null when there is none

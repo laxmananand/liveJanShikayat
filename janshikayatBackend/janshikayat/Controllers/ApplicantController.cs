@@ -207,8 +207,8 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data });
         }
 
-        // Commissioner / IG / DIG: forward an application received from Admin onward to a DM and / or SP of its
-        // jurisdiction. One-time per office kind: once sent to a DM (or SP) it is locked for that kind.
+        // Commissioner / IG / DIG: forward an application received from Admin onward to one or more DM and / or SP
+        // offices of its jurisdiction. It can be sent again later to other offices, but never twice to the same office.
         [Authorize]
         [HttpPost("reforward-applicant")]
         public IActionResult ReforwardApplicant([FromBody] ReforwardRequest request)
@@ -217,16 +217,16 @@ namespace janshikayat.Controllers
             if (!OfficeKind.IsRegional(scope.OfficeId) || scope.OfficeUnitCode == null)
                 return StatusCode(403, new { status = "false", message = ReforwardForbiddenMessage });
 
-            if (request.DmUnitCode == null && request.SpUnitCode == null)
+            var targets = request.Targets();
+            if (targets.Count == 0)
                 return BadRequest(new { status = "false", message = "Select a DM or SP office." });
 
             if (_IComplain.IsClosed(request.ApplicantId))
                 return Conflict(new { status = "false", message = DisposedMessage });
 
             const string alreadyMessage = "Application is already forwarded to this DM / SP and cannot be forwarded again.";
-            var sent = _IComplain.GetReforwardedKinds(request.ApplicantId);
-            if ((request.DmUnitCode != null && sent.Contains(OfficeKind.DistrictMagistrate)) ||
-                (request.SpUnitCode != null && sent.Contains(OfficeKind.SuperintendentOfPolice)))
+            var sent = _IComplain.GetReforwardedOffices(request.ApplicantId);
+            if (targets.Any(sent.Contains))
                 return Conflict(new { status = "false", message = alreadyMessage });
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
@@ -239,7 +239,7 @@ namespace janshikayat.Controllers
             }
             catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number is 2601 or 2627)
             {
-                // Another onward forward of the same kind won the race (unique index)
+                // Another onward forward to the same office won the race (unique index)
                 return Conflict(new { status = "false", message = alreadyMessage });
             }
             if (saved == null)
@@ -320,6 +320,14 @@ namespace janshikayat.Controllers
         public IActionResult GetRemarks(long applicantId)
         {
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetRemarks(applicantId) });
+        }
+
+        // The whole forward chain of an application (Admin -> office -> DM / SP -> ...), for the details popup
+        [Authorize]
+        [HttpGet("forward-history/{applicantId:long}")]
+        public IActionResult GetForwardHistory(long applicantId)
+        {
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwardHistory(applicantId) });
         }
 
         // PDF attached to a remark; served only to logged-in users (the folder is outside wwwroot)
