@@ -1,11 +1,11 @@
 <div class="fw-backdrop" *ngIf="record as r" (click)="close()">
   <div class="fw-modal rf-modal" role="dialog" aria-modal="true" aria-labelledby="reforwardTitle" (click)="$event.stopPropagation(); openGroup = null">
-    <div class="rf-head">
-      <h2 id="reforwardTitle">
-        <i class="fa-solid fa-share"></i>
-        आवेदन अग्रेषित करें <span>(Forward Application)</span>: {{ r.applicationNo || r.id }}
-      </h2>
-      <button type="button" class="rf-close" (click)="close()" aria-label="बंद करें">
+    <div class="fw-head">
+      <div>
+        <span class="fw-kicker"><i class="fa-solid fa-share"></i> आवेदन अग्रेषित करें / Forward Application</span>
+        <h2 id="reforwardTitle">{{ r.applicationNo || r.id }}</h2>
+      </div>
+      <button type="button" class="fw-close" (click)="close()" aria-label="बंद करें">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -64,12 +64,12 @@
         <span class="fw-error" *ngIf="errorMessage">{{ errorMessage }}</span>
       </div>
 
-      <div class="rf-foot">
-        <button type="button" class="rf-btn rf-btn-cancel" (click)="close()" [disabled]="submitting">
-          <i class="fa-solid fa-xmark"></i> {{ allSent ? 'Close' : 'Cancel' }}
+      <div class="fw-foot rf-foot">
+        <button type="button" class="fw-btn fw-btn-ghost" (click)="close()" [disabled]="submitting">
+          {{ allSent ? 'बंद करें / Close' : 'रद्द करें / Cancel' }}
         </button>
-        <button *ngIf="!allSent" type="submit" class="rf-btn rf-btn-forward" [disabled]="!canSubmit">
-          <i class="fa-solid" [ngClass]="submitting ? 'fa-circle-notch fa-spin' : 'fa-share'"></i> Forward
+        <button *ngIf="!allSent" type="submit" class="fw-btn fw-btn-primary" [disabled]="!canSubmit">
+          <i class="fa-solid" [ngClass]="submitting ? 'fa-circle-notch fa-spin' : 'fa-paper-plane'"></i> अग्रेषित करें / Forward
         </button>
       </div>
     </form>

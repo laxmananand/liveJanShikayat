@@ -306,7 +306,8 @@
             <th class="th-status">वर्तमान स्थिति</th>
             <th class="th-stepper" *ngIf="showProgressTracker">प्रगति ट्रैकर</th>
             <th class="th-pdf">संलग्न दस्तावेज़ (PDF)</th>
-            <th class="th-actions text-right">कार्यवाही</th>
+            <th class="th-actions text-right">देखें</th>
+            <th class="th-actions text-right">ट्रैक</th>
           </tr>
         </thead>
         <tbody>
@@ -442,7 +443,21 @@
                   (click)="openDetailsModal(item)"
                   title="पूरा आवेदन एवं टिप्पणियाँ देखें"
                 >
-                  <i class="fa-solid fa-arrow-right"></i>
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </td>
+
+            <!-- 10. Track: forward progress graph -->
+            <td class="td-actions text-right">
+              <div class="actions-inline-group">
+                <button
+                  type="button"
+                  class="btn btn-action-icon btn-link-action"
+                  (click)="trackingRecord = item.record"
+                  title="अग्रेषण प्रगति देखें / View forward progress"
+                >
+                  <i class="fa-solid fa-sitemap"></i>
                 </button>
               </div>
             </td>
@@ -802,4 +817,5 @@
 
   <app-applicant-details-modal [record]="detailsRecord" [forward]="detailsForward" [closure]="detailsForward?.isDisposed ? detailsForward : null"
                                (closed)="onDetailsClosed()"></app-applicant-details-modal>
+  <app-forward-track-dialog [record]="trackingRecord" (closed)="trackingRecord = null"></app-forward-track-dialog>
 </div>

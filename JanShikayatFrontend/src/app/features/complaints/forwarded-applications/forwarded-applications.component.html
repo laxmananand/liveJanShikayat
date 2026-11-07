@@ -47,9 +47,9 @@
           <th>शिकायत का प्रकार<small>(Complaint Type)</small></th>
           <th class="col-center">स्थिति<small>(Status)</small></th>
           <th class="col-center">देखें<small>(View)</small></th>
-          <th class="col-center" *ngIf="isRegional">भेजें<small>(Forward)</small></th>
           <th class="col-center col-remarks">टिप्पणी<small>(Remarks)</small></th>
           <th class="col-center">ट्रैक<small>(Track)</small></th>
+          <th class="col-center" *ngIf="isRegional">भेजें<small>(Forward)</small></th>
         </tr>
       </thead>
       <tbody>
@@ -88,6 +88,16 @@
               </button>
             </div>
           </td>
+          <td class="col-center col-remarks" data-label="टिप्पणी">
+            <button type="button" class="btn-send" (click)="openDetails(row, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+              <i class="fa-solid fa-comment-dots"></i> Remarks
+            </button>
+          </td>
+          <td class="col-center" data-label="ट्रैक">
+            <button type="button" class="btn-send" (click)="tracking = row.record" title="अग्रेषण प्रगति देखें / View forward progress">
+              <i class="fa-solid fa-sitemap"></i> Track
+            </button>
+          </td>
           <td class="col-center" data-label="भेजें" *ngIf="isRegional">
             <button *ngIf="!row.forward.isDisposed" type="button" class="btn-send" (click)="openReforward(row)"
                     [title]="sentCount(row.forward) ? 'और DM / SP को भेजें / Forward to more DM / SP' : 'जिलाधिकारी / पुलिस अधीक्षक को अग्रेषित करें / Forward to DM / SP'">
@@ -95,16 +105,6 @@
             </button>
             <button *ngIf="row.forward.isDisposed" type="button" class="btn-send locked" disabled title="निष्पादित / Disposed">
               <i class="fa-solid fa-lock"></i> Disposed
-            </button>
-          </td>
-          <td class="col-center col-remarks" data-label="टिप्पणी">
-            <button type="button" class="btn-send" (click)="openDetails(row, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
-              <i class="fa-solid fa-comment-dots"></i> Remarks
-            </button>
-          </td>
-          <td class="col-center" data-label="ट्रैक">
-            <button type="button" class="btn-track" (click)="tracking = row.record" title="अग्रेषण प्रगति देखें / View forward progress">
-              <i class="fa-solid fa-sitemap"></i> Track
             </button>
           </td>
         </tr>

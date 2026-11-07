@@ -1,4 +1,5 @@
 // Forward Progress popup: summary row, tree graph (left) and the selected office's action (right).
+// App theme: navy #17284a, accent #174bd9, borders #cad3e6 / #dae1f1, header #edf1f8, success #2f7d4f.
 
 .tk-backdrop {
   position: fixed;
@@ -13,7 +14,7 @@
 
 .tk-modal {
   background: #fff;
-  border-radius: 6px;
+  border-radius: 12px;
   width: min(1180px, 100%);
   max-height: calc(100vh - 32px);
   display: flex;
@@ -21,25 +22,27 @@
   overflow: hidden;
   box-shadow: 0 20px 50px rgba(8, 15, 30, 0.3);
   font-size: 0.9rem;
-  color: #333;
+  color: #101d3b;
 }
 
 .tk-head {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.9rem 1.1rem;
-  border-bottom: 1px solid #e3e6ec;
+  padding: 1rem 1.25rem;
+  background: #edf1f8;
+  border-bottom: 1px solid #dae1f1;
 
   h2 {
     flex: 1;
     margin: 0;
     font-size: 1.2rem;
-    font-weight: 500;
-    color: #555;
+    font-weight: 700;
+    color: #17284a;
 
     i {
       margin-right: 0.3rem;
+      color: #174bd9;
     }
   }
 }
@@ -47,33 +50,33 @@
 .tk-x {
   background: none;
   border: none;
-  font-size: 1.15rem;
-  color: #666;
+  font-size: 1.3rem;
+  color: #424e6d;
   cursor: pointer;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
 
   &:hover {
-    background: #f1f2f5;
-    color: #222;
+    background: #dae1f1;
   }
 }
 
 .tk-body {
-  padding: 1rem 1.1rem;
+  padding: 1.1rem 1.25rem;
   overflow-y: auto;
 }
 
 dt {
   font-size: 0.8rem;
-  color: #666;
+  font-weight: 500;
+  color: #4a5a7c;
   margin-bottom: 0.2rem;
 }
 
 dd {
   margin: 0;
   font-weight: 700;
-  color: #444;
+  color: #101d3b;
   overflow-wrap: anywhere;
 }
 
@@ -90,7 +93,7 @@ dd {
 
 .tk-msg {
   padding: 1rem 0;
-  color: #666;
+  color: #4a5a7c;
 
   &.error {
     color: #dc2626;
@@ -105,8 +108,9 @@ dd {
 }
 
 .tk-panel {
-  border: 1px solid #e0e3e9;
-  border-radius: 4px;
+  border: 1px solid #cad3e6;
+  border-radius: 8px;
+  overflow: hidden;
   background: #fff;
   min-width: 0;
 
@@ -114,17 +118,18 @@ dd {
     margin: 0;
     padding: 0.6rem 0.8rem;
     font-size: 0.95rem;
-    font-weight: 600;
-    color: #444;
-    background: #f7f8fa;
-    border-bottom: 1px solid #e0e3e9;
+    font-weight: 700;
+    color: #17284a;
+    background: #edf1f8;
+    border-bottom: 1px solid #dae1f1;
 
     small {
-      font-weight: 400;
-      color: #777;
+      font-weight: 500;
+      color: #707b9d;
     }
     i {
       margin-right: 0.25rem;
+      color: #174bd9;
     }
   }
 }
@@ -144,11 +149,11 @@ svg {
 
 .edge {
   fill: none;
-  stroke: #d3d6de;
+  stroke: #cad3e6;
   stroke-width: 3;
 
   &.done {
-    stroke: #2bbf7e;
+    stroke: #2f7d4f;
   }
 }
 
@@ -162,7 +167,7 @@ svg {
     stroke-width: 2.5;
   }
   .dot {
-    fill: #2bbf7e;
+    fill: #2f7d4f;
     stroke: #fff;
     stroke-width: 2;
   }
@@ -177,7 +182,7 @@ svg {
     text-anchor: middle;
     font-size: 12px;
     font-weight: 700;
-    fill: #9aa0ad;
+    fill: #8992a9;
   }
   text {
     text-anchor: middle;
@@ -185,36 +190,36 @@ svg {
   .t1 {
     font-size: 12px;
     font-weight: 700;
-    fill: #333;
+    fill: #17284a;
   }
   .t2 {
     font-size: 10.5px;
-    fill: #3b6fd8;
+    fill: #174bd9;
   }
   .t3 {
     font-size: 10.5px;
-    fill: #666;
+    fill: #4a5a7c;
   }
 
   &.pending {
     .dot {
       fill: #fff;
-      stroke: #d3d6de;
+      stroke: #cad3e6;
       stroke-width: 2.5;
     }
     .t1,
     .t2 {
-      fill: #a3a8b4;
+      fill: #8992a9;
       font-weight: 400;
     }
   }
 
   &:hover .ring,
   &:focus .ring {
-    stroke: #c7d7f5;
+    stroke: #d4dffb;
   }
   &.sel .ring {
-    stroke: #3b6fd8;
+    stroke: #174bd9;
   }
 }
 
@@ -223,19 +228,19 @@ svg {
   flex-wrap: wrap;
   gap: 0.4rem 1rem;
   padding: 0.5rem 0.8rem;
-  border-top: 1px solid #e0e3e9;
+  border-top: 1px solid #dae1f1;
   font-size: 0.78rem;
-  color: #555;
+  color: #4a5a7c;
 
   .done {
-    color: #2bbf7e;
+    color: #2f7d4f;
   }
   .pending {
-    color: #d3d6de;
+    color: #cad3e6;
   }
   .hint {
     margin-left: auto;
-    color: #888;
+    color: #707b9d;
   }
 }
 
@@ -246,13 +251,13 @@ svg {
 
 .tk-card {
   margin: 0.8rem 0.8rem 0;
-  border: 1px solid #e0e3e9;
-  border-left: 4px solid #2bbf7e;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #dae1f1;
+  border-left: 4px solid #2f7d4f;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(16, 29, 59, 0.06);
 
   &.pending {
-    border-left-color: #d3d6de;
+    border-left-color: #cad3e6;
   }
 }
 
@@ -262,15 +267,15 @@ svg {
   align-items: flex-start;
   gap: 0.4rem;
   padding: 0.7rem 0.8rem;
-  border-bottom: 1px solid #eef0f3;
+  border-bottom: 1px solid #edf1f8;
 
   strong {
     font-size: 1rem;
-    color: #444;
+    color: #17284a;
 
     i {
       margin-right: 0.25rem;
-      color: #666;
+      color: #174bd9;
     }
   }
 }
@@ -280,12 +285,12 @@ svg {
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
-  background: #fff4e0;
-  color: #9a5b00;
+  background: #d4dffb;
+  color: #174bd9;
 
   &.ok {
-    background: #2bbf7e;
-    color: #fff;
+    background: #e2f3e7;
+    color: #2f7d4f;
   }
 }
 
@@ -301,8 +306,8 @@ svg {
   }
   .box {
     padding: 0.5rem 0.65rem;
-    background: #f5f6f8;
-    border-radius: 4px;
+    background: #f3f5fb;
+    border-radius: 6px;
     font-weight: 500;
     white-space: pre-line;
   }
@@ -311,22 +316,22 @@ svg {
 .tk-note {
   margin: 0;
   padding: 0.6rem 0.8rem;
-  color: #777;
+  color: #707b9d;
   font-size: 0.85rem;
 }
 
 .tk-replies {
-  border-top: 1px solid #eef0f3;
+  border-top: 1px solid #edf1f8;
 
   h4 {
     margin: 0;
     padding: 0.6rem 0.8rem 0.2rem;
     font-size: 0.85rem;
-    color: #555;
+    color: #17284a;
 
     small {
-      font-weight: 400;
-      color: #888;
+      font-weight: 500;
+      color: #707b9d;
     }
   }
   ul {
@@ -339,15 +344,15 @@ svg {
   }
   li {
     padding: 0.5rem 0.65rem;
-    background: #f5f6f8;
-    border-radius: 4px;
+    background: #f3f5fb;
+    border-radius: 6px;
 
     p {
       margin: 0 0 0.2rem;
       white-space: pre-line;
     }
     small {
-      color: #777;
+      color: #707b9d;
       font-size: 0.75rem;
     }
   }
@@ -356,10 +361,10 @@ svg {
 .tk-pdf {
   margin-left: 0.5rem;
   padding: 0.1rem 0.45rem;
-  border: 1px solid #e05a4f;
-  border-radius: 4px;
+  border: 1px solid #b42318;
+  border-radius: 6px;
   background: #fff;
-  color: #e05a4f;
+  color: #b42318;
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
@@ -368,24 +373,27 @@ svg {
 .tk-foot {
   display: flex;
   justify-content: flex-end;
-  padding: 0.75rem 1.1rem;
-  border-top: 1px solid #e3e6ec;
+  padding: 0.85rem 1.25rem 1rem;
+  border-top: 1px solid #dae1f1;
 }
 
+// App ghost button (white with border), as in the other popups
 .tk-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.9rem;
-  border: none;
-  border-radius: 4px;
-  background: #737373;
-  color: #fff;
+  gap: 0.45rem;
+  padding: 0.6rem 1.1rem;
+  border: 1.5px solid #cad3e6;
+  border-radius: 8px;
+  background: #fff;
+  color: #26324a;
   font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    background: #5e5e5e;
+    background: #f3f5fb;
   }
 }
 

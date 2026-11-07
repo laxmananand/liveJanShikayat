@@ -16,6 +16,7 @@ import {
 } from '../../../core/models/models';
 import { STATUS_STAGES, applicationStatus, statusLabel, statusStageIndex, sourceLabel, statusProgress } from '../../../core/utils/labels';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
+import { ForwardTrackDialogComponent } from '../../../shared/forward-track-dialog/forward-track-dialog.component';
 
 /** One live application (Tbl_Applicant_Details) plus its latest forward (Tbl_Applicant_Forward). */
 export interface TrackedGrievanceItem extends ComplaintListItem {
@@ -63,7 +64,7 @@ function base64Size(documentBase64: string): string {
 @Component({
   selector: 'app-tracking-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardTrackDialogComponent],
   templateUrl: './tracking-page.component.html',
   styleUrl: './tracking-page.component.scss'
 })
@@ -124,6 +125,8 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   detailsRecord: ApplicantRecord | null = null;
   /** Latest forward of detailsRecord; its closure (Disposed) locks the remarks */
   detailsForward: ForwardRecord | null = null;
+  /** Application whose "Forward Progress" (Track) popup is open */
+  trackingRecord: ApplicantRecord | null = null;
 
   // Status mapping options
   statusOptions = [
