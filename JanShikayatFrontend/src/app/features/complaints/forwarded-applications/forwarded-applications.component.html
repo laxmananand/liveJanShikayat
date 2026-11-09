@@ -3,7 +3,7 @@
     <div>
       <span class="section-kicker"><i class="fa-solid fa-share-from-square"></i> अग्रेषित आवेदन / Forwarded Applications</span>
       <h1>अग्रेषित आवेदन</h1>
-      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।' : isRegional ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) को आगे भेज सकते हैं।' : 'आपकी शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
+      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।' : canForward ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित ' + onwardTo.hi + ' को आगे भेज सकते हैं।' : 'आपके कार्यालय / शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
     </div>
   </header>
 
@@ -49,7 +49,7 @@
           <th class="col-center">देखें<small>(View)</small></th>
           <th class="col-center col-remarks">टिप्पणी<small>(Remarks)</small></th>
           <th class="col-center">ट्रैक<small>(Track)</small></th>
-          <th class="col-center" *ngIf="isRegional">भेजें<small>(Forward)</small></th>
+          <th class="col-center" *ngIf="canForward">भेजें<small>(Forward)</small></th>
         </tr>
       </thead>
       <tbody>
@@ -98,9 +98,9 @@
               <i class="fa-solid fa-sitemap"></i> Track
             </button>
           </td>
-          <td class="col-center" data-label="भेजें" *ngIf="isRegional">
+          <td class="col-center" data-label="भेजें" *ngIf="canForward">
             <button *ngIf="!row.forward.isDisposed" type="button" class="btn-send" (click)="openReforward(row)"
-                    [title]="sentCount(row.forward) ? 'और DM / SP को भेजें / Forward to more DM / SP' : 'जिलाधिकारी / पुलिस अधीक्षक को अग्रेषित करें / Forward to DM / SP'">
+                    [title]="sentCount(row.forward) ? 'और ' + onwardTo.en + ' को भेजें / Forward to more ' + onwardTo.en : onwardTo.hi + ' को अग्रेषित करें / Forward to ' + onwardTo.en">
               <i class="fa-solid fa-share"></i> Forward
             </button>
             <button *ngIf="row.forward.isDisposed" type="button" class="btn-send locked" disabled title="निष्पादित / Disposed">
@@ -125,6 +125,6 @@
 
   <app-forward-track-dialog [record]="tracking" (closed)="tracking = null"></app-forward-track-dialog>
 
-  <app-reforward-dialog *ngIf="isRegional" [record]="reforwarding?.record ?? null" [forward]="reforwarding?.forward ?? null"
+  <app-reforward-dialog *ngIf="canForward" [record]="reforwarding?.record ?? null" [forward]="reforwarding?.forward ?? null"
                         (closed)="reforwarding = null" (reforwarded)="onReforwarded($event)"></app-reforward-dialog>
 </section>

@@ -86,14 +86,25 @@ namespace janshikayat.Models
         public const int InspectorGeneral = 3;
         public const int DeputyInspectorGeneral = 4;
         public const int SuperintendentOfPolice = 5;
+        // Below a DM (Mst_SDO_Office / Mst_DCLR_Office, unit = SubDivisions.Sd_Code2) and an SP (Mst_SDPO_Office)
+        public const int SubDivisionalOfficer = 6;
+        public const int Dclr = 7;
+        public const int Sdpo = 8;
 
         // Logins that may forward what they received onward to DM / SP
         public static bool IsRegional(int? officeId) =>
             officeId is Commissioner or InspectorGeneral or DeputyInspectorGeneral;
+
+        // DM / SP logins forward onward to the offices under them (vw_Office_Hierarchy): DM -> SDO / DCLR, SP -> SDPO
+        public static bool IsDistrictLevel(int? officeId) =>
+            officeId is DistrictMagistrate or SuperintendentOfPolice;
+
+        public static bool CanForwardOnward(int? officeId) => IsRegional(officeId) || IsDistrictLevel(officeId);
     }
 
-    // Commissioner / IG / DIG: forward a received application onward to one or more DM and / or SP offices of its
-    // jurisdiction (each office at most once per application)
+    // Onward forward of a received application to one or more offices below the sender, each office at most once per
+    // application: Commissioner / IG / DIG -> DM / SP of its jurisdiction, DM -> SDO / DCLR of its district,
+    // SP -> DSP / SDPO of its police district. The server rejects any office not under the sender.
     public class ReforwardRequest
     {
         [Range(1, long.MaxValue)]
@@ -105,6 +116,11 @@ namespace janshikayat.Models
         // Older clients: a single DM / SP office (merged with the lists above)
         public int? DmUnitCode { get; set; }
         public int? SpUnitCode { get; set; }
+        // Sd_Code2 of the SDO / DCLR offices (sent by a DM)
+        public List<int>? SdoUnitCodes { get; set; }
+        public List<int>? DclrUnitCodes { get; set; }
+        // SDPO_Codes of the DSP / SDPO offices (sent by an SP)
+        public List<int>? SdpoUnitCodes { get; set; }
         [StringLength(500)]
         public string? Remarks { get; set; }
 
@@ -113,8 +129,13 @@ namespace janshikayat.Models
         {
             var dm = (DmUnitCodes ?? new List<int>()).Concat(DmUnitCode is int d ? new[] { d } : Array.Empty<int>());
             var sp = (SpUnitCodes ?? new List<int>()).Concat(SpUnitCode is int s ? new[] { s } : Array.Empty<int>());
-            return dm.Distinct().Select(u => (OfficeKind.DistrictMagistrate, u))
-                .Concat(sp.Distinct().Select(u => (OfficeKind.SuperintendentOfPolice, u)))
+            IEnumerable<(int, int)> Of(int officeId, IEnumerable<int>? units) =>
+                (units ?? Enumerable.Empty<int>()).Distinct().Select(u => (officeId, u));
+            return Of(OfficeKind.DistrictMagistrate, dm)
+                .Concat(Of(OfficeKind.SuperintendentOfPolice, sp))
+                .Concat(Of(OfficeKind.SubDivisionalOfficer, SdoUnitCodes))
+                .Concat(Of(OfficeKind.Dclr, DclrUnitCodes))
+                .Concat(Of(OfficeKind.Sdpo, SdpoUnitCodes))
                 .ToList();
         }
     }
@@ -131,14 +152,18 @@ namespace janshikayat.Models
         public string? Remarks { get; set; }
         public string ForwardedBy { get; set; } = string.Empty;
         public DateTime ForwardedAt { get; set; }
+        // The onward forward that brought the application to the sender (DM / SP -> SDO / DCLR / SDPO);
+        // null when the sender got it straight from Admin, or for Commissioner / IG / DIG -> DM / SP
+        public long? ParentReforwardId { get; set; }
     }
-    // A DM / SP office the logged-in Commissioner / IG / DIG may forward to
+    // An office the logged-in Commissioner / IG / DIG (DM / SP) or DM (SDO / DCLR) or SP (DSP / SDPO) may forward to
     public class ReforwardTargetDto
     {
         public int OfficeId { get; set; }
         public int UnitCode { get; set; }
         public string UnitLabel { get; set; } = string.Empty;
-        // The office of the application's own district (preselected in the popup)
+        // The office of the application's own area (preselected in the popup): its district's DM / SP, its
+        // subdivision's SDO / DCLR, or the SDPO of its thana
         public bool IsApplicantDistrict { get; set; }
     }
 
@@ -230,7 +255,7 @@ namespace janshikayat.Models
     }
 
     // One hop of an application's forward chain: Admin -> office (level 1), Commissioner / IG / DIG -> DM / SP (level 2),
-    // and later levels below them. ParentId links a hop to the one it continues, so the chain can be shown as a tree.
+    // DM -> SDO / DCLR and SP -> DSP / SDPO (level 2 when Admin sent it to the DM / SP directly, else 3), and so on. ParentId links a hop to the one it continues, so the chain can be shown as a tree.
     public class ForwardHopDto
     {
         // "F<id>" for Tbl_Applicant_Forward, "R<id>" for Tbl_Applicant_Reforward

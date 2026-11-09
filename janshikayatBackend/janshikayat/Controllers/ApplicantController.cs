@@ -194,37 +194,38 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data });
         }
 
-        // Commissioner / IG / DIG: the DM and SP offices of its division / range this application may be forwarded to
+        // Offices this application may be forwarded onward to: Commissioner / IG / DIG -> DM / SP of its division /
+        // range, DM -> SDO / DCLR of its district, SP -> DSP / SDPO of its police district
         [Authorize]
         [HttpGet("reforward-targets/{applicantId:long}")]
         public IActionResult GetReforwardTargets(long applicantId)
         {
             var scope = CurrentScope();
-            if (!OfficeKind.IsRegional(scope.OfficeId) || scope.OfficeUnitCode == null)
+            if (!OfficeKind.CanForwardOnward(scope.OfficeId) || scope.OfficeUnitCode == null)
                 return StatusCode(403, new { status = "false", message = ReforwardForbiddenMessage });
 
             var data = _IComplain.GetReforwardTargets(applicantId, scope.OfficeId!.Value, scope.OfficeUnitCode.Value);
             return Ok(new { status = "true", message = "Success", data });
         }
 
-        // Commissioner / IG / DIG: forward an application received from Admin onward to one or more DM and / or SP
-        // offices of its jurisdiction. It can be sent again later to other offices, but never twice to the same office.
+        // Forward a received application onward to one or more offices under the sender (see GetReforwardTargets).
+        // It can be sent again later to other offices, but never twice to the same office.
         [Authorize]
         [HttpPost("reforward-applicant")]
         public IActionResult ReforwardApplicant([FromBody] ReforwardRequest request)
         {
             var scope = CurrentScope();
-            if (!OfficeKind.IsRegional(scope.OfficeId) || scope.OfficeUnitCode == null)
+            if (!OfficeKind.CanForwardOnward(scope.OfficeId) || scope.OfficeUnitCode == null)
                 return StatusCode(403, new { status = "false", message = ReforwardForbiddenMessage });
 
             var targets = request.Targets();
             if (targets.Count == 0)
-                return BadRequest(new { status = "false", message = "Select a DM or SP office." });
+                return BadRequest(new { status = "false", message = "Select an office." });
 
             if (_IComplain.IsClosed(request.ApplicantId))
                 return Conflict(new { status = "false", message = DisposedMessage });
 
-            const string alreadyMessage = "Application is already forwarded to this DM / SP and cannot be forwarded again.";
+            const string alreadyMessage = "Application is already forwarded to this office and cannot be forwarded again.";
             var sent = _IComplain.GetReforwardedOffices(request.ApplicantId);
             if (targets.Any(sent.Contains))
                 return Conflict(new { status = "false", message = alreadyMessage });
@@ -244,12 +245,13 @@ namespace janshikayat.Controllers
             }
             if (saved == null)
             {
-                return NotFound(new { status = "false", message = "Application not forwarded to your office, or the DM / SP office is outside your jurisdiction." });
+                return NotFound(new { status = "false", message = "Application not forwarded to your office, or the selected office is not under your office." });
             }
             return Ok(new { status = "true", message = "Application forwarded.", data = saved });
         }
 
-        private const string ReforwardForbiddenMessage = "Only Commissioner, IG and DIG logins can forward to DM / SP.";
+        private const string ReforwardForbiddenMessage =
+            "Only Commissioner, IG, DIG (to DM / SP), DM (to SDO / DCLR) and SP (to DSP / SDPO) logins can forward onward.";
 
         // What the logged-in user may see, from the claims AuthService puts in the JWT
         private AccessScope CurrentScope()

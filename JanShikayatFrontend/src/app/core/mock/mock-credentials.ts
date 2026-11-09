@@ -74,5 +74,8 @@ export const DEMO_ROLE_LABELS: Record<AppRole, string> = {
   DistrictMagistrate: 'जिलाधिकारी',
   InspectorGeneral: 'पुलिस महानिरीक्षक',
   DeputyInspectorGeneral: 'पुलिस उप-महानिरीक्षक',
-  SuperintendentOfPolice: 'पुलिस अधीक्षक'
+  SuperintendentOfPolice: 'पुलिस अधीक्षक',
+  SubDivisionalOfficer: 'अनुमंडल पदाधिकारी',
+  Dclr: 'भूमि सुधार उप समाहर्ता',
+  Sdpo: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी'
 };

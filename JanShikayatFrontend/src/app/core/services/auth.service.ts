@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 
 const TOKEN_KEY = 'js_auth_token';
 const USER_KEY = 'js_auth_user';
-const ALL_ROLES: AppRole[] = ['SuperAdmin', 'BranchOfficer', 'DepartmentHead', 'CompetentAuthority', 'Commissioner', 'DistrictMagistrate', 'InspectorGeneral', 'DeputyInspectorGeneral', 'SuperintendentOfPolice'];
+const ALL_ROLES: AppRole[] = ['SuperAdmin', 'BranchOfficer', 'DepartmentHead', 'CompetentAuthority', 'Commissioner', 'DistrictMagistrate', 'InspectorGeneral', 'DeputyInspectorGeneral', 'SuperintendentOfPolice', 'SubDivisionalOfficer', 'Dclr', 'Sdpo'];
 
 /** Expiry time (ms since epoch) from the JWT's `exp` claim; null if the token cannot be read. */
 function tokenExpiry(token: string): number | null {
@@ -45,8 +45,8 @@ interface BackendLoginEnvelope {
     role: string; // Mst_Role.Role name ("Admin", "Branch", "Saction"); older builds sent the numeric Id
     branchId?: number | null; // Tbl_UserLogin.Branch_Id (Mst_Branch.Complain_id) for branch logins
     prashakhaId?: number | null; // Tbl_UserLogin.Prashakha_Id (Mst_Prashakha.ID) for Prashakha logins
-    officeId?: number | null; // Tbl_UserLogin.Office_Id (1 = Commissionary, 2 = DM, 3 = IG, 4 = DIG, 5 = SP) for those logins
-    officeUnitCode?: number | null; // Tbl_UserLogin.Office_Unit_Code (division / district / range / SP code)
+    officeId?: number | null; // Tbl_UserLogin.Office_Id (1 = Commissionary, 2 = DM, 3 = IG, 4 = DIG, 5 = SP, 6 = SDO, 7 = DCLR, 8 = SDPO)
+    officeUnitCode?: number | null; // Tbl_UserLogin.Office_Unit_Code (division / district / range / SP / subdivision / SDPO code)
     mobileRequired?: boolean; // Tbl_UserLogin.MobileNo missing: ask for one after login
   };
 }
@@ -84,6 +84,12 @@ function mapRole(code: string | null | undefined): AppRole {
       return 'DeputyInspectorGeneral';
     case 'sp':
       return 'SuperintendentOfPolice';
+    case 'sdo':
+      return 'SubDivisionalOfficer';
+    case 'dclr':
+      return 'Dclr';
+    case 'sdpo':
+      return 'Sdpo';
     case 'saction':
     case '1':
     default:

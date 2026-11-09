@@ -49,7 +49,7 @@
           </div>
         </div>
 
-        <span class="fw-error" *ngIf="missingOffice">कृपया चुने गए DM / SP का कार्यालय चुनें।</span>
+        <span class="fw-error" *ngIf="missingOffice">कृपया चुने गए {{ kindNames }} का कार्यालय चुनें।</span>
 
         <div class="rf-field" *ngIf="!allSent">
           <label for="rfRemarks">टिप्पणी (वैकल्पिक)</label>
@@ -58,7 +58,7 @@
         </div>
 
         <p class="rf-all-sent" *ngIf="allSent && !loading">
-          <i class="fa-solid fa-circle-check"></i> यह आवेदन सभी उपलब्ध DM / SP कार्यालयों को भेजा जा चुका है।
+          <i class="fa-solid fa-circle-check"></i> यह आवेदन सभी उपलब्ध {{ kindNames }} कार्यालयों को भेजा जा चुका है।
         </p>
 
         <span class="fw-error" *ngIf="errorMessage">{{ errorMessage }}</span>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { ApplicantRecord, ApplicantRemark, ForwardHop } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
-import { OFFICE_KIND } from '../../core/services/forward.service';
+import { OFFICE_KIND, ONWARD_KINDS } from '../../core/services/forward.service';
 import { openBlobDocument } from '../../core/utils/document';
 
 /** Short name of a regional office kind, shown under its node */
@@ -12,7 +12,10 @@ const KIND_SHORT: Record<number, string> = {
   [OFFICE_KIND.DM]: 'DM',
   [OFFICE_KIND.IG]: 'IG',
   [OFFICE_KIND.DIG]: 'DIG',
-  [OFFICE_KIND.SP]: 'SP'
+  [OFFICE_KIND.SP]: 'SP',
+  [OFFICE_KIND.SDO]: 'SDO',
+  [OFFICE_KIND.DCLR]: 'DCLR',
+  [OFFICE_KIND.SDPO]: 'DSP/SDPO'
 };
 
 const KIND_LONG: Record<number, string> = {
@@ -20,18 +23,17 @@ const KIND_LONG: Record<number, string> = {
   [OFFICE_KIND.DM]: 'जिलाधिकारी',
   [OFFICE_KIND.IG]: 'पुलिस महानिरीक्षक',
   [OFFICE_KIND.DIG]: 'पुलिस उप-महानिरीक्षक',
-  [OFFICE_KIND.SP]: 'पुलिस अधीक्षक'
+  [OFFICE_KIND.SP]: 'पुलिस अधीक्षक',
+  [OFFICE_KIND.SDO]: 'अनुमंडल पदाधिकारी',
+  [OFFICE_KIND.DCLR]: 'भूमि सुधार उप समाहर्ता',
+  [OFFICE_KIND.SDPO]: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी'
 };
 
 /**
- * Next level each office kind forwards to. A hop to such an office that has not yet sent to one of these kinds gets
- * a grey "pending" node. When CO / थाना is added, list it here (e.g. DM → CO, SP → थाना).
+ * Next level each office kind forwards to (the same list the Forward popup uses). A hop to such an office that has not
+ * yet sent to one of these kinds gets a grey "pending" node. CO / थाना later: add them to ONWARD_KINDS.
  */
-const NEXT_LEVEL: Record<number, number[]> = {
-  [OFFICE_KIND.Commissioner]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
-  [OFFICE_KIND.IG]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
-  [OFFICE_KIND.DIG]: [OFFICE_KIND.DM, OFFICE_KIND.SP]
-};
+const NEXT_LEVEL = ONWARD_KINDS;
 
 /** One circle of the graph: the application, a forward (done) or an expected next step (pending). */
 interface TrackNode {
@@ -142,7 +144,8 @@ export class ForwardTrackDialogComponent implements OnChanges {
       byId.set(h.id, n);
     }
 
-    // Pending placeholders: not forwarded at all yet, or a regional office that has not sent to a DM / SP yet
+    // Pending placeholders: not forwarded at all yet, or an office that has not sent to the level below it yet
+    // (Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP/SDPO)
     if (!root.children.length) {
       root.children.push(this.node('p-root', null, true, 'अग्रेषण', 'लंबित', null, 1));
     }

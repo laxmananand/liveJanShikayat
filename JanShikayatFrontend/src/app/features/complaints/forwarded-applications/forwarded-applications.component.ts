@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
-import { ForwardRecord, ForwardService, ReforwardRecord, forwardRecipient, isRegionalOffice } from '../../../core/services/forward.service';
+import { ForwardRecord, ForwardService, OFFICE_KIND, ReforwardRecord, canForwardOnward, forwardRecipient } from '../../../core/services/forward.service';
 import { ReforwardDialogComponent } from '../../../shared/reforward-dialog/reforward-dialog.component';
 import { ForwardTrackDialogComponent } from '../../../shared/forward-track-dialog/forward-track-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
@@ -58,18 +58,32 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   /** Application whose "Forward Progress" (Track) popup is open */
   tracking: ApplicantRecord | null = null;
 
-  /** Row whose "Forward to DM / SP" popup is open */
+  /** Row whose onward "Forward" popup is open */
   reforwarding: ForwardedRow | null = null;
   infoMessage = '';
   private infoTimer?: ReturnType<typeof setTimeout>;
 
-  /** Commissioner / IG / DIG logins forward what they received onward to DM / SP. */
-  get isRegional(): boolean {
-    return !this.isAdmin && isRegionalOffice(this.auth.currentUser()?.officeId);
+  /** Commissioner / IG / DIG (→ DM / SP), DM (→ SDO / DCLR) and SP (→ DSP / SDPO) forward what they received onward. */
+  get canForward(): boolean {
+    return !this.isAdmin && canForwardOnward(this.auth.currentUser()?.officeId);
   }
 
+  /** Who this login forwards to, for the page text and button tooltip */
+  get onwardTo(): { hi: string; en: string } {
+    switch (this.auth.currentUser()?.officeId) {
+      case OFFICE_KIND.DM:
+        return { hi: 'अनुमंडल पदाधिकारी (SDO) / भूमि सुधार उप समाहर्ता (DCLR)', en: 'SDO / DCLR' };
+      case OFFICE_KIND.SP:
+        return { hi: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी (DSP/SDPO)', en: 'DSP / SDPO' };
+      default:
+        return { hi: 'जिलाधिकारी (DM) / पुलिस अधीक्षक (SP)', en: 'DM / SP' };
+    }
+  }
+
+  /** Onward forwards made by this login's office kind (a DM counts its SDO / DCLR forwards, not the DM forwards above it) */
   sentCount(f: ForwardRecord): number {
-    return f.reforwards?.length ?? 0;
+    const u = this.auth.currentUser();
+    return (f.reforwards ?? []).filter((r) => r.fromOfficeId === u?.officeId && r.fromOfficeUnitCode === u?.officeUnitCode).length;
   }
 
   openReforward(row: ForwardedRow): void {

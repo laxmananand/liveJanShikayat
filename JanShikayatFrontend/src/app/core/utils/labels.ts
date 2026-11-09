@@ -22,7 +22,10 @@ export const ROLE_LABELS: Record<string, string> = {
   DistrictMagistrate: 'जिलाधिकारी',
   InspectorGeneral: 'पुलिस महानिरीक्षक',
   DeputyInspectorGeneral: 'पुलिस उप-महानिरीक्षक',
-  SuperintendentOfPolice: 'पुलिस अधीक्षक'
+  SuperintendentOfPolice: 'पुलिस अधीक्षक',
+  SubDivisionalOfficer: 'अनुमंडल पदाधिकारी',
+  Dclr: 'भूमि सुधार उप समाहर्ता',
+  Sdpo: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी'
 };
 
 export const SOURCE_LABELS: Record<string, string> = {

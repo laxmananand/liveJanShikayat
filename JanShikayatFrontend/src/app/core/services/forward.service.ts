@@ -40,14 +40,31 @@ export interface ForwardRecord {
 }
 
 /** Mst_Regional_Office.Office_Id */
-export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5 } as const;
+export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5, SDO: 6, DCLR: 7, SDPO: 8 } as const;
 
 /** Commissioner / IG / DIG logins can forward what they received onward to DM / SP. */
 export function isRegionalOffice(officeId: number | null | undefined): boolean {
   return officeId === OFFICE_KIND.Commissioner || officeId === OFFICE_KIND.IG || officeId === OFFICE_KIND.DIG;
 }
 
-/** One onward forward (Tbl_Applicant_Reforward): regional office → DM (2) or SP (5). */
+/**
+ * Office kinds each sender forwards onward to: Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP / SDPO.
+ * The next level (e.g. SDO / DCLR → CO, SDPO → थाना) is one more entry here plus its rows on the server.
+ */
+export const ONWARD_KINDS: Record<number, number[]> = {
+  [OFFICE_KIND.Commissioner]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
+  [OFFICE_KIND.IG]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
+  [OFFICE_KIND.DIG]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
+  [OFFICE_KIND.DM]: [OFFICE_KIND.SDO, OFFICE_KIND.DCLR],
+  [OFFICE_KIND.SP]: [OFFICE_KIND.SDPO]
+};
+
+/** Logins that can forward what they received onward to the offices under them. */
+export function canForwardOnward(officeId: number | null | undefined): boolean {
+  return officeId != null && !!ONWARD_KINDS[officeId]?.length;
+}
+
+/** One onward forward (Tbl_Applicant_Reforward): regional office → DM / SP, DM → SDO / DCLR, SP → DSP / SDPO. */
 export interface ReforwardRecord {
   id: number;
   applicantId: number;
@@ -60,25 +77,42 @@ export interface ReforwardRecord {
   remarks: string | null;
   forwardedBy: string;
   forwardedAt: string;
+  /** The onward forward that brought it to the sender (DM / SP → SDO / DCLR / SDPO), when there was one */
+  parentReforwardId?: number | null;
 }
 
-/** A DM / SP office in the logged-in regional officer's division / range. */
+/** An office under the logged-in user that it may forward to (see ONWARD_KINDS). */
 export interface ReforwardTarget {
-  officeId: number; // 2 = DM, 5 = SP
+  officeId: number; // OFFICE_KIND: 2 DM, 5 SP, 6 SDO, 7 DCLR, 8 SDPO
   unitCode: number;
   unitLabel: string;
-  /** The office of the application's own district */
+  /** The office of the application's own area: its district's DM / SP, subdivision's SDO / DCLR, thana's SDPO */
   isApplicantDistrict: boolean;
 }
 
+/** Offices to send to now, per kind; any number, each office once per application. */
 export interface ReforwardPayload {
   applicantId: number;
-  /** DM offices (Dist_Code) to send to now; any number, each office once per application */
-  dmUnitCodes: number[];
-  /** SP offices (SP_Code) to send to now */
-  spUnitCodes: number[];
+  /** DM offices (Dist_Code) */
+  dmUnitCodes?: number[];
+  /** SP offices (SP_Code) */
+  spUnitCodes?: number[];
+  /** SDO / DCLR offices (subdivision code) */
+  sdoUnitCodes?: number[];
+  dclrUnitCodes?: number[];
+  /** DSP / SDPO offices (SDPO_Code) */
+  sdpoUnitCodes?: number[];
   remarks: string | null;
 }
+
+/** ReforwardPayload field that carries each office kind's picks */
+export const PAYLOAD_FIELD: Record<number, keyof Omit<ReforwardPayload, 'applicantId' | 'remarks'>> = {
+  [OFFICE_KIND.DM]: 'dmUnitCodes',
+  [OFFICE_KIND.SP]: 'spUnitCodes',
+  [OFFICE_KIND.SDO]: 'sdoUnitCodes',
+  [OFFICE_KIND.DCLR]: 'dclrUnitCodes',
+  [OFFICE_KIND.SDPO]: 'sdpoUnitCodes'
+};
 
 /**
  * Who actually receives a forward: the officer / office (District Administration), else the
@@ -170,14 +204,14 @@ export class ForwardService {
       );
   }
 
-  /** API: GET /Applicant/reforward-targets/{id} (Commissioner / IG / DIG) → DM / SP offices of its jurisdiction */
+  /** API: GET /Applicant/reforward-targets/{id} (Commissioner / IG / DIG / DM / SP) → the offices under the login */
   reforwardTargets(applicantId: number): Observable<ReforwardTarget[]> {
     return this.http
       .get<ApiEnvelope<ReforwardTarget[]>>(`${this.baseUrl}/reforward-targets/${applicantId}`)
       .pipe(map((res) => res.data ?? []));
   }
 
-  /** API: POST /Applicant/reforward-applicant (Commissioner / IG / DIG) → the onward forwards saved */
+  /** API: POST /Applicant/reforward-applicant (Commissioner / IG / DIG / DM / SP) → the onward forwards saved */
   reforward(payload: ReforwardPayload): Observable<ReforwardRecord[]> {
     return this.http
       .post<ApiEnvelope<ReforwardRecord[]>>(`${this.baseUrl}/reforward-applicant`, payload)

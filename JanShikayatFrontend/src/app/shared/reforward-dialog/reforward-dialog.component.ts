@@ -2,18 +2,31 @@ import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApplicantRecord } from '../../core/models/models';
+import { AuthService } from '../../core/services/auth.service';
 import {
   ForwardRecord,
   ForwardService,
   OFFICE_KIND,
+  ONWARD_KINDS,
+  PAYLOAD_FIELD,
+  ReforwardPayload,
   ReforwardRecord,
   ReforwardTarget
 } from '../../core/services/forward.service';
 
-/** One of the two receiver kinds a regional officer can pick: DM offices or SP offices. */
+/** How each receiver kind is shown in the popup */
+const KIND_INFO: Record<number, { short: string; title: string; subtitle: string }> = {
+  [OFFICE_KIND.DM]: { short: 'DM', title: 'जिलाधिकारी', subtitle: 'District Magistrate' },
+  [OFFICE_KIND.SP]: { short: 'SP', title: 'पुलिस अधीक्षक', subtitle: 'Superintendent of Police' },
+  [OFFICE_KIND.SDO]: { short: 'SDO', title: 'अनुमंडल पदाधिकारी', subtitle: 'Sub Divisional Officer' },
+  [OFFICE_KIND.DCLR]: { short: 'DCLR', title: 'भूमि सुधार उप समाहर्ता', subtitle: 'Deputy Collector Land Reforms' },
+  [OFFICE_KIND.SDPO]: { short: 'DSP/SDPO', title: 'अनुमंडल पुलिस पदाधिकारी', subtitle: 'DSP / Sub Divisional Police Officer' }
+};
+
+/** One receiver kind the sender can pick (e.g. DM and SP for a Commissioner, SDO and DCLR for a DM). */
 interface TargetGroup {
   officeId: number;
-  /** Short label on the checkbox: DM / SP */
+  /** Short label on the checkbox: DM / SP / SDO / DCLR / DSP/SDPO */
   short: string;
   title: string;
   subtitle: string;
@@ -27,10 +40,11 @@ interface TargetGroup {
 }
 
 /**
- * Commissioner / IG / DIG: forward an application received from Admin onward to any number of DM and / or SP
- * offices of its division (Commissioner) or range (IG / DIG). The server supplies only offices of that jurisdiction;
- * the office of the application's own district is preselected. It can be forwarded again later to more offices, but
- * an office that already received it is shown locked.
+ * Forward a received application onward to any number of offices under the logged-in office (ONWARD_KINDS):
+ * Commissioner / IG / DIG → DM / SP of its division / range, DM → SDO / DCLR of its district, SP → DSP / SDPO of its
+ * police district. The server supplies only those offices; the one covering the application's own area (district,
+ * subdivision or thana) is preselected. It can be forwarded again later to more offices, but an office that already
+ * received it is shown locked.
  */
 @Component({
   selector: 'app-reforward-dialog',
@@ -41,6 +55,7 @@ interface TargetGroup {
 })
 export class ReforwardDialogComponent implements OnChanges {
   private forwardService = inject(ForwardService);
+  private auth = inject(AuthService);
 
   /** The application to forward; null keeps the popup closed. */
   @Input() record: ApplicantRecord | null = null;
@@ -83,18 +98,29 @@ export class ReforwardDialogComponent implements OnChanges {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err?.error?.message || 'DM / SP कार्यालयों की सूची लोड नहीं हो सकी। / Could not load DM / SP offices.';
+        this.errorMessage = err?.error?.message || 'कार्यालयों की सूची लोड नहीं हो सकी। / Could not load the offices.';
       }
     });
   }
 
+  /** The receiver kinds of the logged-in office, each with the offices that already received the application */
   private emptyGroups(): TargetGroup[] {
     const sent = (officeId: number) =>
       new Map((this.forward?.reforwards ?? []).filter((r) => r.toOfficeId === officeId).map((r) => [r.toOfficeUnitCode, r]));
-    return [
-      { officeId: OFFICE_KIND.DM, short: 'DM', title: 'जिलाधिकारी', subtitle: 'District Magistrate', options: [], selected: false, picked: [], sent: sent(OFFICE_KIND.DM) },
-      { officeId: OFFICE_KIND.SP, short: 'SP', title: 'पुलिस अधीक्षक', subtitle: 'Superintendent of Police', options: [], selected: false, picked: [], sent: sent(OFFICE_KIND.SP) }
-    ];
+    const kinds = ONWARD_KINDS[this.auth.currentUser()?.officeId ?? -1] ?? [];
+    return kinds.map((officeId) => ({
+      officeId,
+      ...KIND_INFO[officeId],
+      options: [],
+      selected: false,
+      picked: [],
+      sent: sent(officeId)
+    }));
+  }
+
+  /** "DM / SP", "SDO / DCLR" or "DSP/SDPO": the kinds this login sends to, for messages */
+  get kindNames(): string {
+    return this.groups.map((g) => g.short).join(' / ');
   }
 
   /** Offices of this kind it can still be sent to */
@@ -151,21 +177,16 @@ export class ReforwardDialogComponent implements OnChanges {
 
   submit(): void {
     if (!this.record || !this.canSubmit) return;
-    const picks = (officeId: number) => {
-      const g = this.groups.find((x) => x.officeId === officeId)!;
-      return g.selected ? g.picked.filter((u) => !g.sent.has(u)) : [];
-    };
+    const payload: ReforwardPayload = { applicantId: this.record.id, remarks: this.remarks.trim() || null };
+    for (const g of this.groups) {
+      payload[PAYLOAD_FIELD[g.officeId]] = g.selected ? g.picked.filter((u) => !g.sent.has(u)) : [];
+    }
 
     this.submitting = true;
     this.openGroup = null;
     this.errorMessage = '';
     this.forwardService
-      .reforward({
-        applicantId: this.record.id,
-        dmUnitCodes: picks(OFFICE_KIND.DM),
-        spUnitCodes: picks(OFFICE_KIND.SP),
-        remarks: this.remarks.trim() || null
-      })
+      .reforward(payload)
       .subscribe({
         next: (saved) => {
           this.submitting = false;
