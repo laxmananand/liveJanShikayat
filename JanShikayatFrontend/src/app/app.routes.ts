@@ -68,8 +68,9 @@ export const routes: Routes = [
       {
         path: 'complaints/responses',
         component: ForwardResponsesComponent,
-        // Replies to Admin's forwards; only Admin closes applications (the backend enforces the same rule)
-        canActivate: [roleGuard(['SuperAdmin'])],
+        // Admin: replies to its forwards. DM / SP: replies by the offices under them (SDO / DCLR / SDPO / CO / थाना).
+        // The backend decides which rows each sees and who may close.
+        canActivate: [roleGuard(['SuperAdmin', 'DistrictMagistrate', 'SuperintendentOfPolice'])],
         title: 'प्राप्त प्रतिवेदन | जन शिकायत निदान पोर्टल'
       },
       {

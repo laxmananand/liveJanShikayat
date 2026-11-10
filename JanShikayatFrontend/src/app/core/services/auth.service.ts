@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 
 const TOKEN_KEY = 'js_auth_token';
 const USER_KEY = 'js_auth_user';
-const ALL_ROLES: AppRole[] = ['SuperAdmin', 'BranchOfficer', 'DepartmentHead', 'CompetentAuthority', 'Commissioner', 'DistrictMagistrate', 'InspectorGeneral', 'DeputyInspectorGeneral', 'SuperintendentOfPolice', 'SubDivisionalOfficer', 'Dclr', 'Sdpo'];
+const ALL_ROLES: AppRole[] = ['SuperAdmin', 'BranchOfficer', 'DepartmentHead', 'CompetentAuthority', 'Commissioner', 'DistrictMagistrate', 'InspectorGeneral', 'DeputyInspectorGeneral', 'SuperintendentOfPolice', 'SubDivisionalOfficer', 'Dclr', 'Sdpo', 'CircleOfficer', 'ThanaOfficer'];
 
 /** Expiry time (ms since epoch) from the JWT's `exp` claim; null if the token cannot be read. */
 function tokenExpiry(token: string): number | null {
@@ -90,6 +90,10 @@ function mapRole(code: string | null | undefined): AppRole {
       return 'Dclr';
     case 'sdpo':
       return 'Sdpo';
+    case 'co':
+      return 'CircleOfficer';
+    case 'thana':
+      return 'ThanaOfficer';
     case 'saction':
     case '1':
     default:

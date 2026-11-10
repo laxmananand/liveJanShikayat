@@ -16,7 +16,9 @@ const OFFICE_KIND_LABEL: Record<number, string> = {
   [OFFICE_KIND.SP]: 'पुलिस अधीक्षक',
   [OFFICE_KIND.SDO]: 'अनुमंडल पदाधिकारी',
   [OFFICE_KIND.DCLR]: 'भूमि सुधार उप समाहर्ता',
-  [OFFICE_KIND.SDPO]: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी'
+  [OFFICE_KIND.SDPO]: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी',
+  [OFFICE_KIND.CO]: 'अंचल अधिकारी',
+  [OFFICE_KIND.Thana]: 'थाना'
 };
 
 /** Closure details of a Disposed application (from ForwardRecord / ForwardResponse). */

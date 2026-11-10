@@ -11,14 +11,16 @@ namespace janshikayat.BAL.Interfaces
         IEnumerable<ApplicantForwardDto> GetForwards(string adminRole);
         bool IsForwarded(long applicantId);
         IEnumerable<ApplicantForwardDto> GetLatestForwards(AccessScope scope, string adminRole);
-        ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath);
+        ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath,
+                                      int? writerOfficeId, int? writerUnitCode);
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
         IEnumerable<ForwardHopDto> GetForwardHistory(long applicantId);
         string? GetRemarkDocumentPath(long remarkId);
-        IEnumerable<ApplicationResponseDto> GetResponses(string adminRole);
-        int GetUnseenResponseCount(string adminRole);
-        void MarkResponsesSeen(long applicantId, string adminRole);
+        IEnumerable<ApplicationResponseDto> GetResponses(AccessScope scope, string adminRole);
+        int GetUnseenResponseCount(AccessScope scope, string adminRole);
+        void MarkResponsesSeen(long applicantId, AccessScope scope, string adminRole);
         bool IsClosed(long applicantId);
+        bool CanClose(long applicantId, AccessScope scope);
         ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
         (string? ApplicationNo, string? MobileNumber, string? MobileNumber2) GetSmsContact(long applicantId);
         PublicTrackingDto? TrackApplication(string applicationNo, string adminRole);

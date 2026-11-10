@@ -15,7 +15,9 @@ const KIND_SHORT: Record<number, string> = {
   [OFFICE_KIND.SP]: 'SP',
   [OFFICE_KIND.SDO]: 'SDO',
   [OFFICE_KIND.DCLR]: 'DCLR',
-  [OFFICE_KIND.SDPO]: 'DSP/SDPO'
+  [OFFICE_KIND.SDPO]: 'DSP/SDPO',
+  [OFFICE_KIND.CO]: 'CO',
+  [OFFICE_KIND.Thana]: 'थाना'
 };
 
 const KIND_LONG: Record<number, string> = {
@@ -26,12 +28,14 @@ const KIND_LONG: Record<number, string> = {
   [OFFICE_KIND.SP]: 'पुलिस अधीक्षक',
   [OFFICE_KIND.SDO]: 'अनुमंडल पदाधिकारी',
   [OFFICE_KIND.DCLR]: 'भूमि सुधार उप समाहर्ता',
-  [OFFICE_KIND.SDPO]: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी'
+  [OFFICE_KIND.SDPO]: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी',
+  [OFFICE_KIND.CO]: 'अंचल अधिकारी',
+  [OFFICE_KIND.Thana]: 'थाना'
 };
 
 /**
  * Next level each office kind forwards to (the same list the Forward popup uses). A hop to such an office that has not
- * yet sent to one of these kinds gets a grey "pending" node. CO / थाना later: add them to ONWARD_KINDS.
+ * yet sent to one of these kinds gets a grey "pending" node, and so on down to CO / थाना.
  */
 const NEXT_LEVEL = ONWARD_KINDS;
 
@@ -39,6 +43,8 @@ const NEXT_LEVEL = ONWARD_KINDS;
 interface TrackNode {
   id: string;
   hop: ForwardHop | null; // null: the application itself, or a pending step
+  /** Office kind of a forward or a pending forward (null: the application, a branch) */
+  kind: number | null;
   pending: boolean;
   title: string;
   sub: string;
@@ -59,16 +65,17 @@ interface TrackEdge {
   done: boolean;
 }
 
-const COL_W = 165;
-const ROW_H = 92;
-const PAD_X = 70;
-const PAD_Y = 34;
+const COL_W = 108;
+const ROW_H = 80;
+const PAD_X = 52;
+const PAD_Y = 28;
 export const NODE_R = 15;
 
 /**
  * "अग्रेषण प्रगति (Forward Progress)": the forward chain of one application as a tree (Admin → Commissioner / IG /
- * DIG → DM / SP → …), with grey placeholders for levels not reached yet, and the selected office's details and
- * remarks beside it. An application can branch out to several offices at every level.
+ * DIG → DM / SP → SDO / DCLR / SDPO → CO / थाना), with grey placeholders for levels not reached yet, and beside it
+ * the action history of every office reached (forwarding note and remarks). The chart itself is display-only.
+ * An application can branch out to several offices at every level.
  */
 @Component({
   selector: 'app-forward-track-dialog',
@@ -91,14 +98,15 @@ export class ForwardTrackDialogComponent implements OnChanges {
   edges: TrackEdge[] = [];
   width = 400;
   height = 160;
-  selected: TrackNode | null = null;
+  /** Right-hand "Action History": every office the application reached, with its remarks */
+  history: TrackNode[] = [];
   private remarks: ApplicantRemark[] = [];
   openingDocId: number | null = null;
 
   ngOnChanges(): void {
     this.nodes = [];
     this.edges = [];
-    this.selected = null;
+    this.history = [];
     this.errorMessage = '';
     if (!this.record) return;
 
@@ -136,6 +144,7 @@ export class ForwardTrackDialogComponent implements OnChanges {
     for (const h of hops) {
       const parent = (h.parentId && byId.get(h.parentId)) || root;
       const n = this.node(h.id, h, false, this.kindShort(h), h.toLabel, h.forwardedAt, parent.depth + 1);
+      n.kind = h.toOfficeId ?? null;
       n.replies =
         h === branchHop
           ? branchReplies
@@ -145,18 +154,12 @@ export class ForwardTrackDialogComponent implements OnChanges {
     }
 
     // Pending placeholders: not forwarded at all yet, or an office that has not sent to the level below it yet
-    // (Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP/SDPO)
+    // (Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP/SDPO, SDO / DCLR → CO, DSP/SDPO → थाना), each
+    // with the rest of its chain greyed out down to CO / थाना.
     if (!root.children.length) {
       root.children.push(this.node('p-root', null, true, 'अग्रेषण', 'लंबित', null, 1));
     }
-    for (const n of byId.values()) {
-      const next = n.hop?.toOfficeId != null ? NEXT_LEVEL[n.hop.toOfficeId] ?? [] : [];
-      for (const kind of next) {
-        if (!n.children.some((c) => c.hop?.toOfficeId === kind)) {
-          n.children.push(this.node(`p-${n.id}-${kind}`, null, true, KIND_SHORT[kind], 'लंबित', null, n.depth + 1));
-        }
-      }
-    }
+    for (const n of [...byId.values()]) this.addNextSteps(n);
 
     // Layout: leaves one per row in tree order, a parent centred on its children
     const all: TrackNode[] = [];
@@ -176,25 +179,43 @@ export class ForwardTrackDialogComponent implements OnChanges {
     place(root);
 
     this.nodes = all;
-    this.edges = all.flatMap((p) =>
-      p.children.map((c) => {
-        const mid = p.x + COL_W / 2;
-        return {
-          d: `M ${p.x + NODE_R} ${p.y} H ${mid} V ${c.y} H ${c.x - NODE_R}`,
-          done: !c.pending
-        };
-      })
-    );
+    // Sibling edges share the stub out of the parent and the vertical spine, so draw the grey (pending) ones first
+    // and the green (done) ones on top — otherwise grey paints over green and the trunk looks broken.
+    this.edges = all
+      .flatMap((p) =>
+        p.children.map((c) => {
+          const mid = p.x + COL_W / 2;
+          return {
+            d: `M ${p.x + NODE_R} ${p.y} H ${mid} V ${c.y} H ${c.x - NODE_R}`,
+            done: !c.pending
+          };
+        })
+      )
+      .sort((a, b) => Number(a.done) - Number(b.done));
     this.width = PAD_X * 2 + maxDepth * COL_W;
     this.height = PAD_Y + (row - 1) * ROW_H + 70;
 
-    // Open on the latest forward
-    const done = all.filter((n) => n.hop);
-    this.selected = done.sort((a, b) => (a.hop!.forwardedAt < b.hop!.forwardedAt ? 1 : -1))[0] ?? root;
+    // Action history: Admin's own remarks (when any), then every office reached, in the chart's top-to-bottom order
+    this.history = [...(root.replies.length ? [root] : []), ...all.filter((n) => n.hop)];
+  }
+
+  /**
+   * Grey steps below node n: each office kind it forwards to that it has not sent to yet (and that kind's own chain).
+   * CO / थाना are the last step; their action is their remarks, shown in the action history.
+   */
+  private addNextSteps(n: TrackNode): void {
+    if (n.kind == null) return;
+    for (const kind of NEXT_LEVEL[n.kind] ?? []) {
+      if (n.children.some((c) => c.kind === kind)) continue;
+      const p = this.node(`p-${n.id}-${kind}`, null, true, KIND_SHORT[kind], 'लंबित', null, n.depth + 1);
+      p.kind = kind;
+      n.children.push(p);
+      this.addNextSteps(p);
+    }
   }
 
   private node(id: string, hop: ForwardHop | null, pending: boolean, title: string, sub: string, date: string | null, depth: number): TrackNode {
-    return { id, hop, pending, title, sub, date, depth, children: [], step: depth + 1, x: 0, y: 0, replies: [] };
+    return { id, hop, kind: null, pending, title, sub, date, depth, children: [], step: depth + 1, x: 0, y: 0, replies: [] };
   }
 
   private kindShort(h: ForwardHop): string {
@@ -208,10 +229,6 @@ export class ForwardTrackDialogComponent implements OnChanges {
   /** SVG text has no ellipsis: cut long office names */
   clip(text: string, max = 24): string {
     return text.length > max ? text.slice(0, max - 1) + '…' : text;
-  }
-
-  select(n: TrackNode): void {
-    this.selected = n;
   }
 
   /** Done nodes count towards the "x of y" summary */

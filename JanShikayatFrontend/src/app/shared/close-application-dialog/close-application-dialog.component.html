@@ -1,0 +1,19 @@
+<div class="confirm-backdrop" *ngIf="record as c" (click)="cancel()">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="closeTitle" (click)="$event.stopPropagation()">
+    <h2 id="closeTitle"><i class="fa-solid fa-lock"></i> आवेदन बंद करें / Close application</h2>
+    <p>
+      आवेदन संख्या <strong>{{ c.applicationNo || c.id }}</strong> ({{ c.applicantName }}) बंद करने पर
+      इसकी स्थिति <strong>निष्पादित (Disposed)</strong> हो जाएगी और इस पर आगे कोई टिप्पणी या अग्रेषण नहीं हो सकेगा।
+    </p>
+    <label for="closeRemarks">समापन टिप्पणी / Closing remark <small>(वैकल्पिक / optional)</small></label>
+    <textarea id="closeRemarks" rows="3" maxlength="1000" [(ngModel)]="remarks" [disabled]="saving"
+              placeholder="जैसे: प्रतिवेदन के आधार पर मामला निष्पादित किया गया"></textarea>
+    <span class="close-error" *ngIf="errorMessage">{{ errorMessage }}</span>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-ghost" (click)="cancel()" [disabled]="saving">रद्द करें / Cancel</button>
+      <button type="button" class="btn btn-danger" (click)="confirm()" [disabled]="saving">
+        <i class="fa-solid" [ngClass]="saving ? 'fa-circle-notch fa-spin' : 'fa-lock'"></i> बंद करें / Close
+      </button>
+    </div>
+  </div>
+</div>

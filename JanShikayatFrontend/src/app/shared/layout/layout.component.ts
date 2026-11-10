@@ -5,7 +5,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter, interval, map, merge, startWith } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { FontSizeService } from '../../core/services/font-size.service';
-import { ForwardService } from '../../core/services/forward.service';
+import { ForwardService, canCloseApplications } from '../../core/services/forward.service';
 import { roleLabel } from '../../core/utils/labels';
 import { FEATURES } from '../../core/config/features';
 import { WatermarkComponent } from '../watermark/watermark.component';
@@ -38,7 +38,7 @@ export class LayoutComponent {
   );
 
   private forwardService = inject(ForwardService);
-  /** Admin's प्राप्त प्रतिवेदन badge: pending applications with a reply not opened yet. */
+  /** प्राप्त प्रतिवेदन badge (Admin, DM, SP): pending applications with a reply not opened yet. */
   unseenResponses = this.forwardService.unseenResponses;
 
   constructor() {
@@ -46,8 +46,16 @@ export class LayoutComponent {
     merge(this.router.events.pipe(filter((e) => e instanceof NavigationEnd)), interval(60_000))
       .pipe(startWith(null), takeUntilDestroyed())
       .subscribe(() => {
-        if (this.isAdmin) this.forwardService.refreshUnseenResponses();
+        if (this.hasResponses) this.forwardService.refreshUnseenResponses();
       });
+  }
+
+  /**
+   * प्राप्त प्रतिवेदन page: Admin (replies to its forwards) and DM / SP (replies by the SDO / DCLR / SDPO / CO / थाना
+   * under them).
+   */
+  get hasResponses(): boolean {
+    return this.isAdmin || canCloseApplications(this.auth.currentUser()?.officeId);
   }
 
   get isComplaintsPage(): boolean {

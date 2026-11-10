@@ -20,7 +20,9 @@ const KIND_INFO: Record<number, { short: string; title: string; subtitle: string
   [OFFICE_KIND.SP]: { short: 'SP', title: 'पुलिस अधीक्षक', subtitle: 'Superintendent of Police' },
   [OFFICE_KIND.SDO]: { short: 'SDO', title: 'अनुमंडल पदाधिकारी', subtitle: 'Sub Divisional Officer' },
   [OFFICE_KIND.DCLR]: { short: 'DCLR', title: 'भूमि सुधार उप समाहर्ता', subtitle: 'Deputy Collector Land Reforms' },
-  [OFFICE_KIND.SDPO]: { short: 'DSP/SDPO', title: 'अनुमंडल पुलिस पदाधिकारी', subtitle: 'DSP / Sub Divisional Police Officer' }
+  [OFFICE_KIND.SDPO]: { short: 'DSP/SDPO', title: 'अनुमंडल पुलिस पदाधिकारी', subtitle: 'DSP / Sub Divisional Police Officer' },
+  [OFFICE_KIND.CO]: { short: 'CO', title: 'अंचल अधिकारी', subtitle: 'Circle Officer' },
+  [OFFICE_KIND.Thana]: { short: 'थाना', title: 'थाना', subtitle: 'Police Station' }
 };
 
 /** One receiver kind the sender can pick (e.g. DM and SP for a Commissioner, SDO and DCLR for a DM). */
@@ -42,9 +44,10 @@ interface TargetGroup {
 /**
  * Forward a received application onward to any number of offices under the logged-in office (ONWARD_KINDS):
  * Commissioner / IG / DIG → DM / SP of its division / range, DM → SDO / DCLR of its district, SP → DSP / SDPO of its
- * police district. The server supplies only those offices; the one covering the application's own area (district,
- * subdivision or thana) is preselected. It can be forwarded again later to more offices, but an office that already
- * received it is shown locked.
+ * police district, SDO / DCLR → CO of its subdivision, DSP / SDPO → थाना under it. The server supplies only those
+ * offices; the one covering the application's own area (district, subdivision, anchal or thana) is preselected. It can
+ * be forwarded again later to more offices, but an office that already received it is shown locked (a CO the SDO sent
+ * it to is locked for the DCLR too: a CO receives an application once).
  */
 @Component({
   selector: 'app-reforward-dialog',
@@ -118,7 +121,7 @@ export class ReforwardDialogComponent implements OnChanges {
     }));
   }
 
-  /** "DM / SP", "SDO / DCLR" or "DSP/SDPO": the kinds this login sends to, for messages */
+  /** "DM / SP", "SDO / DCLR", "DSP/SDPO", "CO" or "थाना": the kinds this login sends to, for messages */
   get kindNames(): string {
     return this.groups.map((g) => g.short).join(' / ');
   }

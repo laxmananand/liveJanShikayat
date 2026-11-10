@@ -5,7 +5,16 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
-import { ForwardRecord, ForwardService, OFFICE_KIND, ReforwardRecord, canForwardOnward, forwardRecipient } from '../../../core/services/forward.service';
+import {
+  ForwardRecord,
+  ForwardService,
+  OFFICE_KIND,
+  ReforwardRecord,
+  canCloseApplications,
+  canForwardOnward,
+  forwardRecipient,
+  isLastLevelOffice
+} from '../../../core/services/forward.service';
 import { ReforwardDialogComponent } from '../../../shared/reforward-dialog/reforward-dialog.component';
 import { ForwardTrackDialogComponent } from '../../../shared/forward-track-dialog/forward-track-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
@@ -27,7 +36,14 @@ interface ForwardedRow {
 @Component({
   selector: 'app-forwarded-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, ReforwardDialogComponent, ForwardTrackDialogComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ApplicantDetailsModalComponent,
+    DateRangeFilterComponent,
+    ReforwardDialogComponent,
+    ForwardTrackDialogComponent
+  ],
   templateUrl: './forwarded-applications.component.html',
   styleUrl: '../applicant-records/applicant-records.component.scss'
 })
@@ -63,9 +79,25 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   infoMessage = '';
   private infoTimer?: ReturnType<typeof setTimeout>;
 
-  /** Commissioner / IG / DIG (→ DM / SP), DM (→ SDO / DCLR) and SP (→ DSP / SDPO) forward what they received onward. */
+  /**
+   * Commissioner / IG / DIG (→ DM / SP), DM (→ SDO / DCLR), SP (→ DSP / SDPO), SDO / DCLR (→ CO) and DSP / SDPO
+   * (→ थाना) forward what they received onward.
+   */
   get canForward(): boolean {
     return !this.isAdmin && canForwardOnward(this.auth.currentUser()?.officeId);
+  }
+
+  /**
+   * DM / SP: once they forward an application onward or it gets a remark, it moves to their प्राप्त प्रतिवेदन page,
+   * where they close it (no Close here)
+   */
+  get isDistrictHead(): boolean {
+    return !this.isAdmin && canCloseApplications(this.auth.currentUser()?.officeId);
+  }
+
+  /** CO / थाना: the last level, which replies with a remark (optional PDF) */
+  get isLastLevel(): boolean {
+    return isLastLevelOffice(this.auth.currentUser()?.officeId);
   }
 
   /** Who this login forwards to, for the page text and button tooltip */
@@ -75,9 +107,20 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
         return { hi: 'अनुमंडल पदाधिकारी (SDO) / भूमि सुधार उप समाहर्ता (DCLR)', en: 'SDO / DCLR' };
       case OFFICE_KIND.SP:
         return { hi: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी (DSP/SDPO)', en: 'DSP / SDPO' };
+      case OFFICE_KIND.SDO:
+      case OFFICE_KIND.DCLR:
+        return { hi: 'अंचल अधिकारी (CO)', en: 'CO' };
+      case OFFICE_KIND.SDPO:
+        return { hi: 'थाना', en: 'Thana' };
       default:
         return { hi: 'जिलाधिकारी (DM) / पुलिस अधीक्षक (SP)', en: 'DM / SP' };
     }
+  }
+
+  private showInfo(message: string): void {
+    this.infoMessage = message;
+    clearTimeout(this.infoTimer);
+    this.infoTimer = setTimeout(() => (this.infoMessage = ''), MESSAGE_DURATION_MS);
   }
 
   /** Onward forwards made by this login's office kind (a DM counts its SDO / DCLR forwards, not the DM forwards above it) */
@@ -96,11 +139,11 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
     this.reforwarding = null;
     if (!row) return;
     row.forward = { ...row.forward, reforwards: [...(row.forward.reforwards ?? []), ...saved] };
-    this.infoMessage = `आवेदन संख्या ${row.record.applicationNo || row.record.id} (${row.record.applicantName}) ${saved
-      .map((r) => `"${r.toOfficeLabel}"`)
-      .join(' व ')} को अग्रेषित किया गया। / Forwarded successfully.`;
-    clearTimeout(this.infoTimer);
-    this.infoTimer = setTimeout(() => (this.infoMessage = ''), MESSAGE_DURATION_MS);
+    this.showInfo(
+      `आवेदन संख्या ${row.record.applicationNo || row.record.id} (${row.record.applicantName}) ${saved
+        .map((r) => `"${r.toOfficeLabel}"`)
+        .join(' व ')} को अग्रेषित किया गया। / Forwarded successfully.`
+    );
   }
 
   ngOnDestroy(): void {

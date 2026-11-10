@@ -289,19 +289,19 @@ namespace janshikayat.BAL.Services
         // Offices the logged-in user may forward this application to:
         //   Commissioner / IG / DIG: DM / SP offices of its division / range. The office of the application's own
         //     district comes first and is marked (for SP its main office, e.g. not SP Bagaha).
-        //   DM / SP: the offices under it (vw_Office_Hierarchy). The SDO / DCLR of the application's subdivision, or
-        //     the SDPO of its thana (Mst_Thana_SDPO), comes first and is marked.
+        //   DM / SP / SDO / DCLR / SDPO: the offices under it (vw_Office_Hierarchy). The office of the application's own
+        //     area (its subdivision's SDO / DCLR, its thana's SDPO, its anchal's CO, its thana) comes first and is marked.
         public IEnumerable<ReforwardTargetDto> GetReforwardTargets(long applicantId, int fromOfficeId, int fromUnitCode)
         {
             using var conn = _context.CreateConnection();
 
-            if (OfficeKind.IsDistrictLevel(fromOfficeId))
+            if (OfficeKind.ForwardsDownHierarchy(fromOfficeId))
             {
                 return conn.Query<ReforwardTargetDto>(
                     @"SELECT h.Office_Id AS OfficeId, h.Unit_Code AS UnitCode, h.Unit_Name AS UnitLabel,
                              CAST(" + OwnAreaCase + @" AS BIT) AS IsApplicantDistrict
                       FROM vw_Office_Hierarchy h
-                      CROSS JOIN (SELECT SubDivision, Thana FROM Tbl_Applicant_Details WHERE ID = @ApplicantId) d
+                      CROSS JOIN (SELECT SubDivision, Thana, Block FROM Tbl_Applicant_Details WHERE ID = @ApplicantId) d
                       WHERE h.Parent_Office_Id = @FromOfficeId AND h.Parent_Unit_Code = @FromUnitCode
                       ORDER BY h.Office_Id, " + OwnAreaCase + @" DESC, h.Unit_Name",
                     new { ApplicantId = applicantId, FromOfficeId = fromOfficeId, FromUnitCode = fromUnitCode });
@@ -317,12 +317,14 @@ namespace janshikayat.BAL.Services
                 new { ApplicantId = applicantId, FromOfficeId = fromOfficeId, FromUnitCode = fromUnitCode });
         }
 
-        // 1 when office h (vw_Office_Hierarchy) covers the application d (SubDivision, Thana) itself, else 0:
-        // SDO / DCLR (6 / 7) of its subdivision, SDPO (8) of its thana
+        // 1 when office h (vw_Office_Hierarchy) covers the application d (SubDivision, Thana, Block) itself, else 0:
+        // SDO / DCLR (6 / 7) of its subdivision, SDPO (8) of its thana, CO (9) of its anchal, थाना (10) itself
         private const string OwnAreaCase =
             @"CASE WHEN h.Office_Id IN (6, 7) AND h.Unit_Code = d.SubDivision THEN 1
                    WHEN h.Office_Id = 8 AND EXISTS (SELECT 1 FROM Mst_Thana_SDPO ts
                                                      WHERE ts.PS_Code = d.Thana AND ts.SDPO_Code = h.Unit_Code) THEN 1
+                   WHEN h.Office_Id = 9 AND h.Unit_Code = d.Block THEN 1
+                   WHEN h.Office_Id = 10 AND h.Unit_Code = d.Thana THEN 1
                    ELSE 0 END";
 
         // Offices (kind and unit) this application was already forwarded onward to
@@ -359,10 +361,10 @@ namespace janshikayat.BAL.Services
                 AND f.OfficeId = @FromOfficeId AND f.OfficeUnitCode = @FromUnitCode
                 AND " + OpenApplication;
 
-        // DM / SP -> an office directly under it (vw_Office_Hierarchy). The DM / SP must have received the application,
-        // from Admin (Tbl_Applicant_Forward) or from a Commissioner / IG / DIG (Tbl_Applicant_Reforward, which becomes
-        // the parent of this forward).
-        private const string DistrictReforwardInsert =
+        // DM / SP / SDO / DCLR / SDPO -> an office directly under it (vw_Office_Hierarchy). The sender must have received
+        // the application, from Admin (Tbl_Applicant_Forward) or from the office above it (Tbl_Applicant_Reforward, which
+        // becomes the parent of this forward): Commissioner / IG / DIG -> DM / SP, DM -> SDO / DCLR, SP -> SDPO.
+        private const string HierarchyReforwardInsert =
             @"INSERT INTO Tbl_Applicant_Reforward
                    (ApplicantId, ForwardId, FromOfficeId, FromOfficeUnitCode, FromOfficeLabel,
                     ToOfficeId, ToOfficeUnitCode, ToOfficeLabel, Remarks, ForwardedBy, ForwardedIp, ParentReforwardId)
@@ -388,7 +390,7 @@ namespace janshikayat.BAL.Services
         public IReadOnlyList<ReforwardDto>? Reforward(ReforwardRequest request, int fromOfficeId, int fromUnitCode, string forwardedBy, string? ip)
         {
             var targets = request.Targets();
-            var insertSql = OfficeKind.IsDistrictLevel(fromOfficeId) ? DistrictReforwardInsert : RegionalReforwardInsert;
+            var insertSql = OfficeKind.ForwardsDownHierarchy(fromOfficeId) ? HierarchyReforwardInsert : RegionalReforwardInsert;
 
             using var conn = _context.CreateConnection();
             conn.Open();
@@ -427,7 +429,8 @@ namespace janshikayat.BAL.Services
         // where unforwarded applications count) and whose parameters are an AccessScope:
         //   Admin all; Branch / Prashakha their forwards; Commissioner its own forwards and those to the DM offices
         //   of its division; DM / IG / DIG / SP their own forwards; every office also those forwarded onward to it
-        //   (Tbl_Applicant_Reforward: DM / SP from Commissioner / IG / DIG, SDO / DCLR from DM, SDPO from SP)
+        //   (Tbl_Applicant_Reforward: DM / SP from Commissioner / IG / DIG, SDO / DCLR from DM, SDPO from SP,
+        //   CO from SDO / DCLR, थाना from SDPO)
         private const string ScopeFilter =
             @"(@All = 1
                OR (@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
@@ -545,8 +548,11 @@ namespace janshikayat.BAL.Services
                 parameters);
         }
 
-        // Returns null when the application does not exist (or is inactive)
-        public ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath)
+        // Returns null when the application does not exist (or is inactive). A remark by an office below a DM / SP
+        // (SDO / DCLR / SDPO / CO / थाना: writerOfficeId 6-10) is also a response to the DM / SP above it in this
+        // application's chain (fn_Remark_NotifyOffice), which then sees it on its Responses page.
+        public ApplicantRemarkDto? AddRemark(ApplicantRemarkRequest request, string remarkBy, string? role, string? ip, string? documentPath,
+                                             int? writerOfficeId, int? writerUnitCode)
         {
             using var conn = _context.CreateConnection();
 
@@ -557,13 +563,19 @@ namespace janshikayat.BAL.Services
             parameters.Add("@RemarkByRole", role);
             parameters.Add("@CreatedIp", ip);
             parameters.Add("@DocumentPath", documentPath);
+            parameters.Add("@WriterOfficeId", writerOfficeId);
+            parameters.Add("@WriterUnitCode", writerUnitCode);
 
             return conn.QueryFirstOrDefault<ApplicantRemarkDto>(
-                @"INSERT INTO Tbl_Applicant_Remarks (ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedIp, DocumentPath)
+                @"INSERT INTO Tbl_Applicant_Remarks (ApplicantId, Remark, RemarkBy, RemarkByRole, CreatedIp, DocumentPath,
+                                                     NotifyOfficeId, NotifyUnitCode)
                   OUTPUT inserted.ID, inserted.ApplicantId, inserted.Remark, inserted.RemarkBy,
                          inserted.RemarkByRole, inserted.CreatedDate,
                          CAST(CASE WHEN inserted.DocumentPath IS NULL THEN 0 ELSE 1 END AS BIT) AS HasDocument
-                  SELECT @ApplicantId, @Remark, @RemarkBy, @RemarkByRole, @CreatedIp, @DocumentPath
+                  SELECT @ApplicantId, @Remark, @RemarkBy, @RemarkByRole, @CreatedIp, @DocumentPath,
+                         n.NotifyOfficeId, n.NotifyUnitCode
+                  FROM (SELECT 1 AS One) x
+                  OUTER APPLY dbo.fn_Remark_NotifyOffice(@ApplicantId, @WriterOfficeId, @WriterUnitCode) n
                   WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
                     AND NOT EXISTS (SELECT 1 FROM Tbl_Applicant_Closure WHERE ApplicantId = @ApplicantId)",
                 parameters);
@@ -703,10 +715,31 @@ namespace janshikayat.BAL.Services
             @"CAST(CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END AS BIT) AS IsDisposed,
               c.ClosedDate AS ClosedAt, c.ClosedBy, c.ClosureRemarks";
 
-        // Forwarded applications with at least one reply (a remark by a role other than Admin).
-        // Pending ones first, each group with the latest reply first.
-        public IEnumerable<ApplicationResponseDto> GetResponses(string adminRole)
+        // The remarks (m) that are responses for the login (needs @All, @OfficeId, @OfficeUnitCode, @AdminRole):
+        //   Admin: every remark by a role other than Admin;
+        //   DM / SP: remarks by the offices under it in that application's chain (Tbl_Applicant_Remarks.NotifyOfficeId)
+        private const string ResponseRemark =
+            @"((@All = 1 AND ISNULL(m.RemarkByRole, '') <> @AdminRole)
+               OR (@All = 0 AND m.NotifyOfficeId = @OfficeId AND m.NotifyUnitCode = @OfficeUnitCode))";
+
+        // Not yet opened by that login: Admin and the DM / SP each mark their own
+        private const string ResponseUnseen =
+            "(CASE WHEN @All = 1 THEN m.SeenByAdminDate ELSE m.SeenByNotifyOfficeDate END) IS NULL";
+
+        private static DynamicParameters ResponseParameters(AccessScope scope, string adminRole)
         {
+            var parameters = new DynamicParameters(scope);
+            parameters.Add("@AdminRole", adminRole);
+            return parameters;
+        }
+
+        // Admin: forwarded applications with at least one response (ResponseRemark).
+        // DM / SP: see GetDistrictResponses. Pending ones first, each group with the latest activity first.
+        public IEnumerable<ApplicationResponseDto> GetResponses(AccessScope scope, string adminRole)
+        {
+            if (!scope.All)
+                return GetDistrictResponses(scope, adminRole);
+
             using var conn = _context.CreateConnection();
 
             return conn.Query<ApplicationResponseDto>(
@@ -714,25 +747,80 @@ namespace janshikayat.BAL.Services
                          f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel, f.ForwardedDate AS ForwardedAt,
                          r.ResponseCount, r.UnseenCount, r.LastResponseAt,
                          lr.Remark AS LastRemark, lr.RemarkBy AS LastRemarkBy, lr.RemarkByRole AS LastRemarkByRole,
+                         lr.LastRemarkByOffice,
+                         -- Admin closes branch / section forwards only; the DM / SP closes what reached it
+                         CAST(CASE WHEN @All = 1 AND f.OfficeId IS NOT NULL THEN 0 ELSE 1 END AS BIT) AS CanClose,
                          " + ClosureColumns + @"
                   FROM Tbl_Applicant_Forward f
                   CROSS APPLY (SELECT COUNT(*) AS ResponseCount,
-                                      SUM(CASE WHEN m.SeenByAdminDate IS NULL THEN 1 ELSE 0 END) AS UnseenCount,
+                                      SUM(CASE WHEN " + ResponseUnseen + @" THEN 1 ELSE 0 END) AS UnseenCount,
                                       MAX(m.CreatedDate) AS LastResponseAt
                                FROM Tbl_Applicant_Remarks m
-                               WHERE m.ApplicantId = f.ApplicantId AND ISNULL(m.RemarkByRole, '') <> @AdminRole) r
-                  OUTER APPLY (SELECT TOP 1 m.Remark, m.RemarkBy, m.RemarkByRole
+                               WHERE m.ApplicantId = f.ApplicantId AND " + ResponseRemark + @") r
+                  OUTER APPLY (SELECT TOP 1 m.Remark, m.RemarkBy, m.RemarkByRole, ou.Unit_Name AS LastRemarkByOffice
                                FROM Tbl_Applicant_Remarks m
-                               WHERE m.ApplicantId = f.ApplicantId AND ISNULL(m.RemarkByRole, '') <> @AdminRole
+                               LEFT JOIN Tbl_UserLogin u ON u.UserName = m.RemarkBy
+                               LEFT JOIN vw_Office_Unit ou ON ou.Office_Id = u.Office_Id AND ou.Unit_Code = u.Office_Unit_Code
+                               WHERE m.ApplicantId = f.ApplicantId AND " + ResponseRemark + @"
                                ORDER BY m.CreatedDate DESC, m.ID DESC) lr
                   LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
                   WHERE r.ResponseCount > 0
                   ORDER BY CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END, r.LastResponseAt DESC",
-                new { AdminRole = adminRole });
+                ResponseParameters(scope, adminRole));
         }
 
-        // Pending applications with a reply Admin has not opened yet (the sidebar badge)
-        public int GetUnseenResponseCount(string adminRole)
+        // DM / SP Responses page (where it closes applications): applications that reached this DM / SP (from Admin or a
+        // Commissioner / IG / DIG) once it has acted on them or got an answer, i.e. it forwarded them onward (to SDO / DCLR
+        // / SDPO), it added a remark itself, or an office under it added one (Tbl_Applicant_Remarks.NotifyOfficeId).
+        // ResponseCount / UnseenCount count the remarks of the offices under it (the badge); the latest remark shown may
+        // also be its own. LastResponseAt is the latest remark, else the latest onward forward.
+        private IEnumerable<ApplicationResponseDto> GetDistrictResponses(AccessScope scope, string adminRole)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.Query<ApplicationResponseDto>(
+                @"SELECT f.ApplicantId, f.CategoryLabel, f.BranchLabel, f.ComplaintTypeLabel,
+                         f.PrashakhaLabel, f.OfficeLabel, f.OfficeUnitLabel, f.ForwardedDate AS ForwardedAt,
+                         r.ResponseCount, ISNULL(r.UnseenCount, 0) AS UnseenCount,
+                         COALESCE(lr.CreatedDate, fw.LastForwardAt) AS LastResponseAt,
+                         ISNULL(lr.Remark, '') AS LastRemark, ISNULL(lr.RemarkBy, '') AS LastRemarkBy,
+                         lr.RemarkByRole AS LastRemarkByRole, lr.LastRemarkByOffice,
+                         fw.OnwardCount,
+                         CAST(1 AS BIT) AS CanClose,
+                         " + ClosureColumns + @"
+                  FROM Tbl_Applicant_Forward f
+                  -- Remarks by the offices under this DM / SP
+                  CROSS APPLY (SELECT COUNT(*) AS ResponseCount,
+                                      SUM(CASE WHEN m.SeenByNotifyOfficeDate IS NULL THEN 1 ELSE 0 END) AS UnseenCount
+                               FROM Tbl_Applicant_Remarks m
+                               WHERE m.ApplicantId = f.ApplicantId
+                                 AND m.NotifyOfficeId = @OfficeId AND m.NotifyUnitCode = @OfficeUnitCode) r
+                  -- Its own onward forwards
+                  CROSS APPLY (SELECT COUNT(*) AS OnwardCount, MAX(rf.ForwardedDate) AS LastForwardAt
+                               FROM Tbl_Applicant_Reforward rf
+                               WHERE rf.ApplicantId = f.ApplicantId
+                                 AND rf.FromOfficeId = @OfficeId AND rf.FromOfficeUnitCode = @OfficeUnitCode) fw
+                  -- Latest remark by an office under it, or by its own login
+                  OUTER APPLY (SELECT TOP 1 m.Remark, m.RemarkBy, m.RemarkByRole, m.CreatedDate, ou.Unit_Name AS LastRemarkByOffice
+                               FROM Tbl_Applicant_Remarks m
+                               LEFT JOIN Tbl_UserLogin u ON u.UserName = m.RemarkBy
+                               LEFT JOIN vw_Office_Unit ou ON ou.Office_Id = u.Office_Id AND ou.Unit_Code = u.Office_Unit_Code
+                               WHERE m.ApplicantId = f.ApplicantId
+                                 AND ((m.NotifyOfficeId = @OfficeId AND m.NotifyUnitCode = @OfficeUnitCode)
+                                      OR (u.Office_Id = @OfficeId AND u.Office_Unit_Code = @OfficeUnitCode))
+                               ORDER BY m.CreatedDate DESC, m.ID DESC) lr
+                  LEFT JOIN Tbl_Applicant_Closure c ON c.ApplicantId = f.ApplicantId
+                  WHERE ((f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode)
+                         OR EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward rr
+                                    WHERE rr.ApplicantId = f.ApplicantId
+                                      AND rr.ToOfficeId = @OfficeId AND rr.ToOfficeUnitCode = @OfficeUnitCode))
+                    AND (fw.OnwardCount > 0 OR lr.CreatedDate IS NOT NULL)
+                  ORDER BY CASE WHEN c.ID IS NULL THEN 0 ELSE 1 END, COALESCE(lr.CreatedDate, fw.LastForwardAt) DESC",
+                ResponseParameters(scope, adminRole));
+        }
+
+        // Pending applications with a response the login has not opened yet (the sidebar badge)
+        public int GetUnseenResponseCount(AccessScope scope, string adminRole)
         {
             using var conn = _context.CreateConnection();
 
@@ -740,19 +828,24 @@ namespace janshikayat.BAL.Services
                 @"SELECT COUNT(DISTINCT m.ApplicantId)
                   FROM Tbl_Applicant_Remarks m
                   JOIN Tbl_Applicant_Forward f ON f.ApplicantId = m.ApplicantId
-                  WHERE m.SeenByAdminDate IS NULL AND ISNULL(m.RemarkByRole, '') <> @AdminRole
+                  WHERE " + ResponseUnseen + " AND " + ResponseRemark + @"
                     AND NOT EXISTS (SELECT 1 FROM Tbl_Applicant_Closure c WHERE c.ApplicantId = m.ApplicantId)",
-                new { AdminRole = adminRole });
+                ResponseParameters(scope, adminRole));
         }
 
-        public void MarkResponsesSeen(long applicantId, string adminRole)
+        public void MarkResponsesSeen(long applicantId, AccessScope scope, string adminRole)
         {
             using var conn = _context.CreateConnection();
 
+            var parameters = ResponseParameters(scope, adminRole);
+            parameters.Add("@ApplicantId", applicantId);
             conn.Execute(
-                @"UPDATE Tbl_Applicant_Remarks SET SeenByAdminDate = GETDATE()
-                  WHERE ApplicantId = @ApplicantId AND SeenByAdminDate IS NULL AND ISNULL(RemarkByRole, '') <> @AdminRole",
-                new { ApplicantId = applicantId, AdminRole = adminRole });
+                scope.All
+                    ? @"UPDATE m SET m.SeenByAdminDate = GETDATE() FROM Tbl_Applicant_Remarks m
+                        WHERE m.ApplicantId = @ApplicantId AND m.SeenByAdminDate IS NULL AND " + ResponseRemark
+                    : @"UPDATE m SET m.SeenByNotifyOfficeDate = GETDATE() FROM Tbl_Applicant_Remarks m
+                        WHERE m.ApplicantId = @ApplicantId AND m.SeenByNotifyOfficeDate IS NULL AND " + ResponseRemark,
+                parameters);
         }
 
         // An application is closed only once (UX_Applicant_Closure_ApplicantId)
@@ -763,6 +856,31 @@ namespace janshikayat.BAL.Services
             return conn.ExecuteScalar<bool>(
                 "SELECT CASE WHEN EXISTS (SELECT 1 FROM Tbl_Applicant_Closure WHERE ApplicantId = @ApplicantId) THEN 1 ELSE 0 END",
                 new { ApplicantId = applicantId });
+        }
+
+        // Who may close: when Admin sent the application to a regional office or a DM / SP (Tbl_Applicant_Forward.OfficeId
+        // set), only a DM / SP it reached, straight from Admin or from a Commissioner / IG / DIG; when Admin sent it to a
+        // branch / section, only Admin (nobody below would ever receive it).
+        public bool CanClose(long applicantId, AccessScope scope)
+        {
+            using var conn = _context.CreateConnection();
+
+            var parameters = new DynamicParameters(scope);
+            parameters.Add("@ApplicantId", applicantId);
+            parameters.Add("@CloserKind", OfficeKind.CanCloseApplications(scope.OfficeId) ? 1 : 0);
+
+            return conn.ExecuteScalar<bool>(
+                @"SELECT CASE WHEN EXISTS (
+                      SELECT 1 FROM Tbl_Applicant_Forward f
+                      WHERE f.ApplicantId = @ApplicantId
+                        AND ((@All = 1 AND f.OfficeId IS NULL)
+                             OR (@CloserKind = 1 AND f.OfficeId IS NOT NULL
+                                 AND ((f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode)
+                                      OR EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward rf
+                                                 WHERE rf.ApplicantId = f.ApplicantId
+                                                   AND rf.ToOfficeId = @OfficeId AND rf.ToOfficeUnitCode = @OfficeUnitCode))))
+                  ) THEN 1 ELSE 0 END",
+                parameters);
         }
 
         // Returns null when the application does not exist (or is inactive) or has not been forwarded

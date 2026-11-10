@@ -1,4 +1,4 @@
-export type AppRole = 'SuperAdmin' | 'BranchOfficer' | 'DepartmentHead' | 'CompetentAuthority' | 'Commissioner' | 'DistrictMagistrate' | 'InspectorGeneral' | 'DeputyInspectorGeneral' | 'SuperintendentOfPolice' | 'SubDivisionalOfficer' | 'Dclr' | 'Sdpo';
+export type AppRole = 'SuperAdmin' | 'BranchOfficer' | 'DepartmentHead' | 'CompetentAuthority' | 'Commissioner' | 'DistrictMagistrate' | 'InspectorGeneral' | 'DeputyInspectorGeneral' | 'SuperintendentOfPolice' | 'SubDivisionalOfficer' | 'Dclr' | 'Sdpo' | 'CircleOfficer' | 'ThanaOfficer';
 
 export interface LoginResponse {
   token: string;

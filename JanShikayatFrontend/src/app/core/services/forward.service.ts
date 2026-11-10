@@ -30,7 +30,7 @@ export interface ForwardRecord {
   status?: ComplaintStatus;
   /** When the receiving office first replied: Forwarded → Pending */
   firstResponseAt?: string | null;
-  /** Closed by Admin: the application is Disposed */
+  /** Closed (by the DM / SP, or Admin for a branch / section): the application is Disposed */
   isDisposed?: boolean;
   closedAt?: string | null;
   closedBy?: string | null;
@@ -40,7 +40,20 @@ export interface ForwardRecord {
 }
 
 /** Mst_Regional_Office.Office_Id */
-export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5, SDO: 6, DCLR: 7, SDPO: 8 } as const;
+export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5, SDO: 6, DCLR: 7, SDPO: 8, CO: 9, Thana: 10 } as const;
+
+/** The last level: CO / थाना receive and reply (remark, optional PDF) but forward no further. */
+export function isLastLevelOffice(officeId: number | null | undefined): boolean {
+  return officeId === OFFICE_KIND.CO || officeId === OFFICE_KIND.Thana;
+}
+
+/**
+ * DM / SP close an application they received (Admin sent it to a regional office or straight to them).
+ * The server checks the application actually reached the office.
+ */
+export function canCloseApplications(officeId: number | null | undefined): boolean {
+  return officeId === OFFICE_KIND.DM || officeId === OFFICE_KIND.SP;
+}
 
 /** Commissioner / IG / DIG logins can forward what they received onward to DM / SP. */
 export function isRegionalOffice(officeId: number | null | undefined): boolean {
@@ -48,15 +61,18 @@ export function isRegionalOffice(officeId: number | null | undefined): boolean {
 }
 
 /**
- * Office kinds each sender forwards onward to: Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP / SDPO.
- * The next level (e.g. SDO / DCLR → CO, SDPO → थाना) is one more entry here plus its rows on the server.
+ * Office kinds each sender forwards onward to: Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP / SDPO,
+ * SDO / DCLR → CO, DSP / SDPO → थाना. A new level is one more entry here plus its rows on the server.
  */
 export const ONWARD_KINDS: Record<number, number[]> = {
   [OFFICE_KIND.Commissioner]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
   [OFFICE_KIND.IG]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
   [OFFICE_KIND.DIG]: [OFFICE_KIND.DM, OFFICE_KIND.SP],
   [OFFICE_KIND.DM]: [OFFICE_KIND.SDO, OFFICE_KIND.DCLR],
-  [OFFICE_KIND.SP]: [OFFICE_KIND.SDPO]
+  [OFFICE_KIND.SP]: [OFFICE_KIND.SDPO],
+  [OFFICE_KIND.SDO]: [OFFICE_KIND.CO],
+  [OFFICE_KIND.DCLR]: [OFFICE_KIND.CO],
+  [OFFICE_KIND.SDPO]: [OFFICE_KIND.Thana]
 };
 
 /** Logins that can forward what they received onward to the offices under them. */
@@ -83,7 +99,7 @@ export interface ReforwardRecord {
 
 /** An office under the logged-in user that it may forward to (see ONWARD_KINDS). */
 export interface ReforwardTarget {
-  officeId: number; // OFFICE_KIND: 2 DM, 5 SP, 6 SDO, 7 DCLR, 8 SDPO
+  officeId: number; // OFFICE_KIND: 2 DM, 5 SP, 6 SDO, 7 DCLR, 8 SDPO, 9 CO, 10 थाना
   unitCode: number;
   unitLabel: string;
   /** The office of the application's own area: its district's DM / SP, subdivision's SDO / DCLR, thana's SDPO */
@@ -102,6 +118,10 @@ export interface ReforwardPayload {
   dclrUnitCodes?: number[];
   /** DSP / SDPO offices (SDPO_Code) */
   sdpoUnitCodes?: number[];
+  /** CO offices (anchal BlockCode), sent by an SDO / DCLR */
+  coUnitCodes?: number[];
+  /** Police stations (PS_Code), sent by an SDPO */
+  thanaUnitCodes?: number[];
   remarks: string | null;
 }
 
@@ -111,7 +131,9 @@ export const PAYLOAD_FIELD: Record<number, keyof Omit<ReforwardPayload, 'applica
   [OFFICE_KIND.SP]: 'spUnitCodes',
   [OFFICE_KIND.SDO]: 'sdoUnitCodes',
   [OFFICE_KIND.DCLR]: 'dclrUnitCodes',
-  [OFFICE_KIND.SDPO]: 'sdpoUnitCodes'
+  [OFFICE_KIND.SDPO]: 'sdpoUnitCodes',
+  [OFFICE_KIND.CO]: 'coUnitCodes',
+  [OFFICE_KIND.Thana]: 'thanaUnitCodes'
 };
 
 /**
@@ -125,7 +147,10 @@ export function forwardRecipient(f: Pick<ForwardRecord, 'branchLabel' | 'prashak
 /** Fields the client sends; the server fills in who forwarded it and when. */
 export type ForwardPayload = Omit<ForwardRecord, 'forwardedBy' | 'forwardedAt' | 'status' | 'firstResponseAt' | 'isDisposed' | 'closedAt' | 'closedBy' | 'closureRemarks'>;
 
-/** Admin's Responses page: a forwarded application the receiving office has replied to. */
+/**
+ * Responses page: a forwarded application with replies. Admin: replies by any receiving office; DM / SP: replies by
+ * the offices under it in that application's chain (SDO / DCLR / SDPO / CO / थाना).
+ */
 export interface ForwardResponse {
   applicantId: number;
   categoryLabel: string;
@@ -146,6 +171,15 @@ export interface ForwardResponse {
   closedAt: string | null;
   closedBy: string | null;
   closureRemarks: string | null;
+  /**
+   * Whether this login may close it: Admin only branch / section forwards (one sent to a regional office / DM / SP
+   * is closed by that DM / SP); a DM / SP the applications that reached it
+   */
+  canClose: boolean;
+  /** Office of the login that wrote the last response, e.g. "CO Office, Araria, ARARIA" */
+  lastRemarkByOffice?: string | null;
+  /** DM / SP page: offices it forwarded onward to; listed even before any remark (lastRemark is then empty) */
+  onwardCount?: number;
 }
 
 export interface ClosureRecord {
@@ -174,7 +208,7 @@ export class ForwardService {
     60_000
   );
 
-  /** Admin's sidebar badge: pending applications with a reply not opened yet. */
+  /** Responses badge (Admin, DM, SP): pending applications with a reply not opened yet. */
   readonly unseenResponses = signal(0);
 
   constructor() {
@@ -234,14 +268,14 @@ export class ForwardService {
     return this.latestCache.get(force);
   }
 
-  /** API: GET /Applicant/get-responses (Admin only) → replied-to forwarded applications, pending first. */
+  /** API: GET /Applicant/get-responses (Admin, DM, SP) → replied-to forwarded applications, pending first. */
   responses(): Observable<ForwardResponse[]> {
     return this.http
       .get<ApiEnvelope<ForwardResponse[]>>(`${this.baseUrl}/get-responses`)
       .pipe(map((res) => res.data ?? []));
   }
 
-  /** API: GET /Applicant/get-unseen-response-count (Admin only) → updates unseenResponses. */
+  /** API: GET /Applicant/get-unseen-response-count (Admin, DM, SP) → updates unseenResponses. */
   refreshUnseenResponses(): void {
     this.http.get<ApiEnvelope<number>>(`${this.baseUrl}/get-unseen-response-count`).subscribe({
       next: (res) => this.unseenResponses.set(res.data ?? 0),
@@ -249,14 +283,17 @@ export class ForwardService {
     });
   }
 
-  /** API: POST /Applicant/mark-responses-seen/{id} (Admin only) */
+  /** API: POST /Applicant/mark-responses-seen/{id} (Admin, DM, SP: each marks its own) */
   markResponsesSeen(applicantId: number): Observable<unknown> {
     return this.http
       .post(`${this.baseUrl}/mark-responses-seen/${applicantId}`, null)
       .pipe(tap(() => this.refreshUnseenResponses()));
   }
 
-  /** API: POST /Applicant/close-application (Admin only) → the application moves from Pending to Disposed. */
+  /**
+   * API: POST /Applicant/close-application → the application moves to Disposed. The DM / SP it reached closes it
+   * when Admin sent it to a regional office / DM / SP; Admin only for a branch / section (others get 403).
+   */
   closeApplication(applicantId: number, remarks: string): Observable<ClosureRecord> {
     return this.http
       .post<ApiEnvelope<ClosureRecord>>(`${this.baseUrl}/close-application`, { applicantId, remarks: remarks || null })

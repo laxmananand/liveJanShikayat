@@ -20,20 +20,19 @@
         <section class="tk-panel tk-graph">
           <h3><i class="fa-solid fa-sitemap"></i> अग्रेषण पथ <small>(Forward Path)</small></h3>
           <div class="tk-canvas">
-            <svg [attr.width]="width" [attr.height]="height" [attr.viewBox]="'0 0 ' + width + ' ' + height" role="img"
+            <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" preserveAspectRatio="xMidYMid meet"
+                 [style.max-width.px]="width" [style.aspect-ratio]="width + ' / ' + height" role="img"
                  aria-label="अग्रेषण पथ / Forward path">
               <path *ngFor="let e of edges" [attr.d]="e.d" class="edge" [class.done]="e.done" />
 
               <g *ngFor="let n of nodes" class="node" [class.done]="!n.pending" [class.pending]="n.pending"
-                 [class.sel]="selected === n" (click)="select(n)" [attr.transform]="'translate(' + n.x + ',' + n.y + ')'"
-                 tabindex="0" (keydown.enter)="select(n)" role="button">
+                 [attr.transform]="'translate(' + n.x + ',' + n.y + ')'">
                 <title>{{ n.title }} — {{ n.sub }}</title>
-                <circle class="ring" [attr.r]="r + 5" />
                 <circle class="dot" [attr.r]="r" />
                 <path *ngIf="!n.pending" class="tick" d="M -6 0 L -2 4 L 6 -4" />
                 <text *ngIf="n.pending" class="num" y="4">{{ n.step }}</text>
-                <text class="t1" [attr.y]="r + 15">{{ clip(n.title, 18) }}</text>
-                <text class="t2" [attr.y]="r + 28">{{ clip(n.sub) }}</text>
+                <text class="t1" [attr.y]="r + 15">{{ clip(n.title, 14) }}</text>
+                <text class="t2" [attr.y]="r + 28">{{ clip(n.sub, 18) }}</text>
                 <text class="t3" *ngIf="n.date" [attr.y]="r + 40">{{ n.date | date: 'dd/MM/yyyy' }}</text>
               </g>
             </svg>
@@ -41,48 +40,50 @@
           <div class="tk-legend">
             <span><i class="fa-solid fa-circle-check done"></i> अग्रेषित / पूर्ण (Done) — {{ doneCount }}</span>
             <span><i class="fa-solid fa-circle pending"></i> लंबित (Pending) — {{ pendingCount }}</span>
-            <span class="hint">किसी भी स्तर पर क्लिक करें / Click a step for details</span>
           </div>
         </section>
 
-        <!-- Selected step -->
-        <section class="tk-panel tk-detail" *ngIf="selected as n">
-          <h3><i class="fa-solid fa-clipboard-check"></i> कार्यालय की कार्रवाई <small>(Office Action)</small></h3>
+        <!-- Every office it reached, in the chart's order, with its forwarding note and remarks -->
+        <section class="tk-panel tk-detail">
+          <h3><i class="fa-solid fa-clipboard-check"></i> कार्रवाई विवरण <small>(Action History)</small></h3>
 
-          <div class="tk-card" [class.pending]="n.pending">
-            <ng-container *ngIf="n.hop as h; else rootOrPending">
-              <div class="tk-card-head">
-                <strong><i class="fa-solid fa-user-tie"></i> {{ kindLong(h) }} - {{ h.toLabel }}</strong>
-                <span class="chip" [class.ok]="n.replies.length">
-                  {{ n.replies.length ? 'उत्तर प्राप्त (' + n.replies.length + ')' : 'अग्रेषित — उत्तर प्रतीक्षित' }}
-                </span>
-              </div>
-              <dl class="tk-grid">
-                <div><dt>अग्रेषण तिथि</dt><dd>{{ h.forwardedAt | date: 'dd/MM/yyyy' }}</dd></div>
-                <div><dt>अग्रेषित करने वाले</dt><dd>{{ h.fromLabel }}</dd></div>
-                <div><dt>स्तर</dt><dd>{{ h.level }}</dd></div>
-                <div class="full" *ngIf="h.branchLabel && h.branchLabel !== h.toLabel"><dt>शाखा</dt><dd>{{ h.branchLabel }}</dd></div>
-                <div class="full" *ngIf="h.complaintTypeLabel"><dt>शिकायत का प्रकार</dt><dd>{{ h.complaintTypeLabel }}</dd></div>
-                <div class="full"><dt>अग्रेषण टिप्पणी / निर्देश</dt><dd class="box">{{ h.remarks || '—' }}</dd></div>
-              </dl>
-            </ng-container>
+          <div class="tk-history">
+            <p class="tk-note" *ngIf="!history.length">आवेदन अभी अग्रेषित नहीं किया गया है। / Not forwarded yet.</p>
 
-            <ng-template #rootOrPending>
-              <div class="tk-card-head">
-                <strong *ngIf="!n.pending"><i class="fa-solid fa-file-lines"></i> आवेदन {{ n.title }}</strong>
-                <strong *ngIf="n.pending"><i class="fa-solid fa-hourglass-half"></i> {{ n.title }} — लंबित</strong>
-              </div>
-              <p class="tk-note" *ngIf="!n.pending">आवेदन प्राप्त हुआ: {{ n.date ? (n.date | date: 'dd/MM/yyyy') : '—' }}</p>
-              <p class="tk-note" *ngIf="n.pending">इस स्तर पर अभी तक अग्रेषित नहीं किया गया है।</p>
-            </ng-template>
+            <div class="tk-card" *ngFor="let n of history" [class.idle]="!n.replies.length">
+              <ng-container *ngIf="n.hop as h; else appCard">
+                <div class="tk-card-head">
+                  <strong><span class="lvl">{{ h.level }}</span> {{ kindLong(h) }} - {{ h.toLabel }}</strong>
+                  <span class="chip" [class.ok]="n.replies.length">
+                    {{ n.replies.length ? 'उत्तर प्राप्त (' + n.replies.length + ')' : 'उत्तर प्रतीक्षित' }}
+                  </span>
+                </div>
+                <p class="tk-meta">
+                  <span title="अग्रेषित करने वाले / Forwarded by"><i class="fa-solid fa-user-pen"></i> {{ h.fromLabel }} द्वारा अग्रेषित</span>
+                  <span title="अग्रेषण तिथि / Forwarded on"><i class="fa-regular fa-calendar"></i> {{ h.forwardedAt | date: 'dd/MM/yyyy' }}</span>
+                  <span *ngIf="h.complaintTypeLabel" title="शिकायत का प्रकार / Complaint type"><i class="fa-solid fa-tag"></i> {{ h.complaintTypeLabel }}</span>
+                </p>
+                <div class="tk-fwd" *ngIf="h.remarks">
+                  <span class="tk-label"><i class="fa-solid fa-paper-plane"></i> अग्रेषण निर्देश <small>(Forwarding note)</small></span>
+                  <p>{{ h.remarks }}</p>
+                </div>
+              </ng-container>
+              <ng-template #appCard>
+                <div class="tk-card-head">
+                  <strong><i class="fa-solid fa-file-lines"></i> आवेदन {{ n.title }} — विभाग की टिप्पणियाँ</strong>
+                </div>
+              </ng-template>
 
-            <div class="tk-replies" *ngIf="!n.pending">
-              <h4>{{ n.hop ? 'कार्यालय की टिप्पणियाँ' : 'विभाग की टिप्पणियाँ' }} <small>(Remarks)</small></h4>
-              <p class="tk-note" *ngIf="!n.replies.length">अभी कोई टिप्पणी नहीं है।</p>
-              <ul *ngIf="n.replies.length">
+              <span class="tk-label reply" *ngIf="n.replies.length">
+                <i class="fa-solid fa-reply"></i> {{ n.hop ? 'कार्यालय की टिप्पणी / प्रतिवेदन' : 'विभाग की टिप्पणी' }} <small>(Remarks)</small>
+              </span>
+              <ul class="tk-replies" *ngIf="n.replies.length">
                 <li *ngFor="let m of n.replies">
-                  <p>{{ m.remark }}</p>
-                  <small>{{ m.remarkByOffice || m.remarkBy }} • {{ m.createdDate | date: 'dd/MM/yyyy HH:mm' }}</small>
+                  <p><i class="fa-solid fa-comment-dots"></i> {{ m.remark }}</p>
+                  <small>
+                    <span><i class="fa-solid fa-building-user"></i> {{ m.remarkByOffice || m.remarkBy }}</span>
+                    <span><i class="fa-regular fa-clock"></i> {{ m.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  </small>
                   <button *ngIf="m.hasDocument" type="button" class="tk-pdf" (click)="viewRemarkDoc(m)" [disabled]="openingDocId === m.id">
                     <i class="fa-solid" [ngClass]="openingDocId === m.id ? 'fa-circle-notch fa-spin' : 'fa-file-pdf'"></i> PDF
                   </button>

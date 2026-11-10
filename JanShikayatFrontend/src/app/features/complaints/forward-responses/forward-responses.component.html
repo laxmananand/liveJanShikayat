@@ -3,7 +3,8 @@
     <div>
       <span class="section-kicker"><i class="fa-solid fa-inbox"></i> प्राप्त प्रतिवेदन / Responses Received</span>
       <h1>प्राप्त प्रतिवेदन</h1>
-      <p class="sub">अग्रेषित आवेदनों पर शाखा / प्रशाखा / कार्यालय द्वारा दी गई टिप्पणियाँ। प्रतिवेदन देखकर आवेदन बंद करें।</p>
+      <p class="sub" *ngIf="isAdmin">अग्रेषित आवेदनों पर शाखा / प्रशाखा / कार्यालय द्वारा दी गई टिप्पणियाँ। प्रतिवेदन देखकर आवेदन बंद करें।</p>
+      <p class="sub" *ngIf="!isAdmin">आपके द्वारा आगे अग्रेषित या टिप्पणी किए गए आवेदन, तथा अधीनस्थ कार्यालयों (SDO / DCLR / DSP-SDPO / अंचल अधिकारी / थाना) के प्रतिवेदन। प्रतिवेदन देखकर आवेदन बंद करें।</p>
     </div>
   </header>
 
@@ -76,12 +77,10 @@
           </td>
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.response.forwardedAt | date: 'dd/MM/yyyy' }}</td>
           <td data-label="नवीनतम प्रतिवेदन" class="col-response">
-            <span class="response-text" [title]="row.response.lastRemark">{{ row.response.lastRemark }}</span>
-            <small class="sub">
-              {{ row.response.lastRemarkBy }}<ng-container *ngIf="row.response.lastRemarkByRole"> ({{ row.response.lastRemarkByRole }})</ng-container>
-              • {{ row.response.lastResponseAt | date: 'dd/MM/yyyy HH:mm' }}
-              <ng-container *ngIf="row.response.responseCount > 1"> • कुल {{ row.response.responseCount }} टिप्पणियाँ</ng-container>
-            </small>
+            <span class="response-text" *ngIf="row.response.lastRemark" [title]="row.response.lastRemark">{{ row.response.lastRemark }}</span>
+            <span class="sub" *ngIf="!row.response.lastRemark">
+              <i class="fa-solid fa-share"></i> आगे अग्रेषित ({{ row.response.onwardCount }}) — प्रतिवेदन प्रतीक्षित
+            </span>
           </td>
           <td class="col-center" data-label="स्थिति">
             <span class="state-badge" [ngClass]="row.response.isDisposed ? 'state-disposed' : 'state-pending'">
@@ -94,9 +93,13 @@
               <button type="button" class="btn-send" (click)="openDetails(row)" title="प्रतिवेदन / टिप्पणियाँ देखें — View responses">
                 <i class="fa-solid fa-comment-dots"></i> देखें
               </button>
-              <button type="button" class="btn-close-app" *ngIf="!row.response.isDisposed" (click)="askClose(row)" title="आवेदन बंद करें — Close application">
+              <button type="button" class="btn-close-app" *ngIf="!row.response.isDisposed && row.response.canClose" (click)="askClose(row)" title="आवेदन बंद करें — Close application">
                 <i class="fa-solid fa-lock"></i> बंद करें / Close
               </button>
+              <small class="sub" *ngIf="!row.response.isDisposed && !row.response.canClose"
+                     title="यह आवेदन संबंधित जिलाधिकारी / पुलिस अधीक्षक बंद करेंगे / Closed by the DM / SP">
+                DM / SP द्वारा बंद होगा
+              </small>
             </div>
           </td>
         </tr>
@@ -116,24 +119,6 @@
     [closure]="selected?.response?.isDisposed ? selected!.response : null"
     (closed)="selected = null"></app-applicant-details-modal>
 
-  <!-- Close confirmation -->
-  <div class="confirm-backdrop" *ngIf="closing as c" (click)="cancelClose()">
-    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="closeTitle" (click)="$event.stopPropagation()">
-      <h2 id="closeTitle"><i class="fa-solid fa-lock"></i> आवेदन बंद करें / Close application</h2>
-      <p>
-        आवेदन संख्या <strong>{{ c.record.applicationNo || c.record.id }}</strong> ({{ c.record.applicantName }}) बंद करने पर
-        इसकी स्थिति <strong>लंबित</strong> से <strong>निष्पादित (Disposed)</strong> हो जाएगी और इस पर आगे कोई टिप्पणी नहीं जोड़ी जा सकेगी।
-      </p>
-      <label for="closeRemarks">समापन टिप्पणी / Closing remark <small>(वैकल्पिक / optional)</small></label>
-      <textarea id="closeRemarks" rows="3" maxlength="1000" [(ngModel)]="closeRemarks" [disabled]="savingClose"
-                placeholder="जैसे: प्रतिवेदन के आधार पर मामला निष्पादित किया गया"></textarea>
-      <span class="close-error" *ngIf="closeError">{{ closeError }}</span>
-      <div class="confirm-actions">
-        <button type="button" class="btn btn-ghost" (click)="cancelClose()" [disabled]="savingClose">रद्द करें / Cancel</button>
-        <button type="button" class="btn btn-danger" (click)="confirmClose()" [disabled]="savingClose">
-          <i class="fa-solid" [ngClass]="savingClose ? 'fa-circle-notch fa-spin' : 'fa-lock'"></i> बंद करें / Close
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-close-application-dialog [record]="closing?.record ?? null" (cancelled)="closing = null"
+                                (closedApplication)="onClosed($event)"></app-close-application-dialog>
 </section>

@@ -195,7 +195,8 @@ namespace janshikayat.Controllers
         }
 
         // Offices this application may be forwarded onward to: Commissioner / IG / DIG -> DM / SP of its division /
-        // range, DM -> SDO / DCLR of its district, SP -> DSP / SDPO of its police district
+        // range, DM -> SDO / DCLR of its district, SP -> DSP / SDPO of its police district, SDO / DCLR -> CO of its
+        // subdivision, DSP / SDPO -> थाना under it
         [Authorize]
         [HttpGet("reforward-targets/{applicantId:long}")]
         public IActionResult GetReforwardTargets(long applicantId)
@@ -251,7 +252,7 @@ namespace janshikayat.Controllers
         }
 
         private const string ReforwardForbiddenMessage =
-            "Only Commissioner, IG, DIG (to DM / SP), DM (to SDO / DCLR) and SP (to DSP / SDPO) logins can forward onward.";
+            "Only Commissioner, IG, DIG (to DM / SP), DM (to SDO / DCLR), SP (to DSP / SDPO), SDO / DCLR (to CO) and DSP / SDPO (to Thana) logins can forward onward.";
 
         // What the logged-in user may see, from the claims AuthService puts in the JWT
         private AccessScope CurrentScope()
@@ -306,7 +307,12 @@ namespace janshikayat.Controllers
             var role = User.FindFirstValue(ClaimTypes.Role);
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            var saved = _IComplain.AddRemark(request, userId, role, ip, documentPath);
+            // An office below a DM / SP (SDO / DCLR / SDPO / CO / थाना) also answers to that DM / SP
+            var scope = CurrentScope();
+            var belowDistrict = scope.OfficeId is OfficeKind.SubDivisionalOfficer or OfficeKind.Dclr or OfficeKind.Sdpo
+                                               or OfficeKind.CircleOfficer or OfficeKind.Thana;
+            var saved = _IComplain.AddRemark(request, userId, role, ip, documentPath,
+                                             belowDistrict ? scope.OfficeId : null, belowDistrict ? scope.OfficeUnitCode : null);
             if (saved == null)
             {
                 // Nothing references the uploaded file, so it is removed again
@@ -346,38 +352,69 @@ namespace janshikayat.Controllers
             return PhysicalFile(fullPath, "application/pdf");
         }
 
-        // Responses page: forwarded applications the receiving office has replied to (remarks by non-Admin roles)
-        [Authorize(Roles = AdminRole)]
+        // Responses page: forwarded applications with replies. Admin: remarks by any non-Admin role; DM / SP: remarks
+        // by the offices under it in that application's chain (SDO / DCLR / SDPO / CO / थाना)
+        [Authorize]
         [HttpGet("get-responses")]
         public IActionResult GetResponses()
         {
-            return Ok(new { status = "true", message = "Success", data = _IComplain.GetResponses(AdminRole) });
+            var scope = ResponsesScope();
+            if (scope == null)
+                return StatusCode(403, new { status = "false", message = ResponsesForbiddenMessage });
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetResponses(scope, AdminRole) });
         }
 
-        // Sidebar badge: pending applications with a reply Admin has not opened yet
-        [Authorize(Roles = AdminRole)]
+        // Sidebar badge: pending applications with a reply this login (Admin / DM / SP) has not opened yet
+        [Authorize]
         [HttpGet("get-unseen-response-count")]
         public IActionResult GetUnseenResponseCount()
         {
-            return Ok(new { status = "true", message = "Success", data = _IComplain.GetUnseenResponseCount(AdminRole) });
+            var scope = ResponsesScope();
+            if (scope == null)
+                return StatusCode(403, new { status = "false", message = ResponsesForbiddenMessage });
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetUnseenResponseCount(scope, AdminRole) });
         }
 
-        [Authorize(Roles = AdminRole)]
+        [Authorize]
         [HttpPost("mark-responses-seen/{applicantId:long}")]
         public IActionResult MarkResponsesSeen(long applicantId)
         {
-            _IComplain.MarkResponsesSeen(applicantId, AdminRole);
+            var scope = ResponsesScope();
+            if (scope == null)
+                return StatusCode(403, new { status = "false", message = ResponsesForbiddenMessage });
+            _IComplain.MarkResponsesSeen(applicantId, scope, AdminRole);
             return Ok(new { status = "true", message = "Marked as seen." });
         }
 
-        // Closing is one-time and moves the application from Pending to Disposed; no remarks can be added after it
-        [Authorize(Roles = AdminRole)]
+        // Admin, or a DM / SP login (with its office unit); null for everyone else
+        private AccessScope? ResponsesScope()
+        {
+            var scope = CurrentScope();
+            if (scope.All)
+                return scope;
+            return OfficeKind.CanCloseApplications(scope.OfficeId) && scope.OfficeUnitCode != null ? scope : null;
+        }
+
+        private const string ResponsesForbiddenMessage = "Only Admin, DM and SP logins have a Responses page.";
+
+        // Closing is one-time and moves the application to Disposed; no remarks or forwards can be added after it.
+        // The DM / SP it reached closes it when Admin sent it to a regional office or a DM / SP; Admin closes only
+        // forwards to a branch / section (IComplain.CanClose).
+        [Authorize]
         [HttpPost("close-application")]
         public IActionResult CloseApplication([FromBody] ApplicationCloseRequest request)
         {
             if (_IComplain.IsClosed(request.ApplicantId))
             {
                 return Conflict(new { status = "false", message = DisposedMessage });
+            }
+            if (!_IComplain.CanClose(request.ApplicantId, CurrentScope()))
+            {
+                return StatusCode(403, new
+                {
+                    status = "false",
+                    message = "यह आवेदन केवल संबंधित जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) बंद कर सकते हैं। / Only the DM / SP this application was forwarded to can close it."
+                });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";

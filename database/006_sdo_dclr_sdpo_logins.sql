@@ -1,7 +1,8 @@
 /* Logins for the offices added by 005_sdo_dclr_sdpo_forward.sql (run that first):
      SDO-<SUBDIVISION>   e.g. SDO-KAHALGAON, SDO-MUZAFFARPUR-EAST   (Mst_SDO_Office, 102)
      DCLR-<SUBDIVISION>  e.g. DCLR-KAHALGAON                        (Mst_DCLR_Office, 102)
-     SDPO-<SDPO_Code>    e.g. SDPO-1087 (S.D.P.O Kahalgaon-01)      (Mst_SDPO_Office, 159; SDPO names repeat across districts)
+     SDPO-<name>         e.g. SDPO-Bagaha, DSP-Purnia, SDPO-Sadar-1-Purnia (Mst_SDPO_Office, 159; a name used in more
+                         than one district gets the district added; same naming as 009_rename_sdpo_logins.sql)
    The full office name is shown after login (vw_Office_Unit).
 
    Password for every new login: 1234 (Tbl_UserLogin.Password holds it encrypted the way Encryptor.cs does: Fyue8t3OLVc=).
@@ -51,8 +52,30 @@ BEGIN TRY
     JOIN dbo.SubDivisions s ON s.Sd_Code2 = o.SD_Code
     CROSS APPLY (SELECT UPPER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(s.Sd_Name_En)), ' ', '-'), '(', '-'), ')', '')) AS Name) u
     UNION ALL
-    SELECT 'SDPO-' + CAST(o.SDPO_Code AS varchar(10)), 'SDPO', 8, o.SDPO_Code
-    FROM dbo.Mst_SDPO_Office o;
+    SELECT u.UserName, 'SDPO', 8, u.SDPO_Code
+    FROM (
+        -- Same naming as 009_rename_sdpo_logins.sql (SDPO-Bagaha, DSP-Purnia, SDPO-Sadar-1-Purnia, SDPO-Jehanabad-1)
+        SELECT b.SDPO_Code, b.Prefix + '-' +
+               CASE WHEN b.Base NOT LIKE '%[^0-9]%' THEN b.District + '-' + b.Base
+                    WHEN COUNT(*) OVER (PARTITION BY b.Prefix, b.Base) > 1 THEN b.Base + '-' + b.District
+                    ELSE b.Base END AS UserName
+        FROM (
+            SELECT n.SDPO_Code, n.Prefix, n.District,
+                   CASE WHEN LEFT(n.Base0, 1) = '-' THEN STUFF(n.Base0, 1, 1, '') ELSE n.Base0 END AS Base
+            FROM (
+                SELECT o.SDPO_Code,
+                       CASE WHEN o.SDPO_Name LIKE 'D.S.P%' THEN 'DSP' ELSE 'SDPO' END AS Prefix,
+                       REPLACE(REPLACE(LTRIM(RTRIM(
+                           CASE WHEN o.SDPO_Name LIKE 'S.D.P.O%' THEN STUFF(o.SDPO_Name, 1, 7, '')
+                                WHEN o.SDPO_Name LIKE 'S.D.PO%'  THEN STUFF(o.SDPO_Name, 1, 6, '')
+                                WHEN o.SDPO_Name LIKE 'D.S.P%'   THEN STUFF(o.SDPO_Name, 1, 5, '')
+                                ELSE o.SDPO_Name END)), ' & ', '-'), ' ', '-') AS Base0,
+                       REPLACE(LTRIM(RTRIM(LEFT(d.D, CHARINDEX('(', d.D + '(') - 1))), ' ', '-') AS District
+                FROM dbo.Mst_SDPO_Office o
+                CROSS APPLY (SELECT LTRIM(RIGHT(o.Head, CHARINDEX(',', REVERSE(o.Head)) - 1)) AS D) d
+            ) n
+        ) b
+    ) u;
 
     -- A UserName already used by a different office would log that person into the wrong office: stop instead
     IF EXISTS (SELECT 1 FROM dbo.Tbl_UserLogin t JOIN @wanted w ON w.UserName = t.UserName

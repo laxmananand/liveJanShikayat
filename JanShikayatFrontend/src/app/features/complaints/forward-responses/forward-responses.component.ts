@@ -1,12 +1,14 @@
-import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { MESSAGE_DURATION_MS } from '../../../core/config/messages';
 import { ApplicantService } from '../../../core/services/applicant.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ApplicantRecord } from '../../../core/models/models';
-import { ForwardResponse, ForwardService } from '../../../core/services/forward.service';
+import { ClosureRecord, ForwardResponse, ForwardService } from '../../../core/services/forward.service';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
+import { CloseApplicationDialogComponent } from '../../../shared/close-application-dialog/close-application-dialog.component';
 import { DateRange, inDateRange } from '../../../core/utils/date-range';
 import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
 
@@ -18,20 +20,28 @@ interface ResponseRow {
 type StatusTab = 'Pending' | 'Disposed' | '';
 
 /**
- * Admin only: forwarded applications the receiving office (Branch / Section / District Administration)
- * has replied to with remarks. Admin reads the replies and closes the application, which moves it
- * from Pending to Disposed.
+ * Responses received (Admin, DM, SP): forwarded applications with replies (remarks).
+ *   Admin: replies by any receiving office (Branch / Section / District Administration); closes branch / section
+ *     forwards, which moves them from Pending to Disposed.
+ *   DM / SP: replies by the offices under it in that application's chain (SDO / DCLR / DSP-SDPO / CO / थाना);
+ *     closes the applications that reached it.
+ * Opening a row's remarks marks its replies as seen for this login only.
  */
 @Component({
   selector: 'app-forward-responses',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, CloseApplicationDialogComponent],
   templateUrl: './forward-responses.component.html',
   styleUrls: ['../applicant-records/applicant-records.component.scss', './forward-responses.component.scss']
 })
 export class ForwardResponsesComponent implements OnInit, OnDestroy {
   private applicantService = inject(ApplicantService);
   private forwardService = inject(ForwardService);
+  private auth = inject(AuthService);
+
+  get isAdmin(): boolean {
+    return this.auth.hasRole('SuperAdmin');
+  }
 
   rows: ResponseRow[] = [];
   loading = true;
@@ -51,9 +61,6 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
   selected: ResponseRow | null = null;
   /** Row waiting for the close confirmation */
   closing: ResponseRow | null = null;
-  closeRemarks = '';
-  savingClose = false;
-  closeError = '';
 
   ngOnInit(): void {
     this.load();
@@ -135,44 +142,26 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Admin closes only branch / section forwards; one sent to a regional office / DM / SP is closed by that DM / SP. */
   askClose(row: ResponseRow): void {
-    if (row.response.isDisposed) return;
+    if (row.response.isDisposed || !row.response.canClose) return;
     this.closing = row;
-    this.closeRemarks = '';
-    this.closeError = '';
   }
 
-  @HostListener('document:keydown.escape')
-  cancelClose(): void {
-    if (!this.savingClose) this.closing = null;
-  }
-
-  confirmClose(): void {
+  onClosed(c: ClosureRecord): void {
     const row = this.closing;
-    if (!row || this.savingClose) return;
-
-    this.savingClose = true;
-    this.closeError = '';
-    this.forwardService.closeApplication(row.response.applicantId, this.closeRemarks.trim()).subscribe({
-      next: (c) => {
-        row.response = {
-          ...row.response,
-          isDisposed: true,
-          unseenCount: 0,
-          closedAt: c.closedAt,
-          closedBy: c.closedBy,
-          closureRemarks: c.closureRemarks
-        };
-        this.rows = [...this.rows];
-        this.savingClose = false;
-        this.closing = null;
-        this.showSuccess(`आवेदन संख्या ${row.record.applicationNo || row.record.id} (${row.record.applicantName}) बंद कर दिया गया — स्थिति: निष्पादित (Disposed)।`);
-      },
-      error: (err) => {
-        this.savingClose = false;
-        this.closeError = err?.error?.message || 'आवेदन बंद नहीं हो सका। / Could not close the application.';
-      }
-    });
+    this.closing = null;
+    if (!row) return;
+    row.response = {
+      ...row.response,
+      isDisposed: true,
+      unseenCount: 0,
+      closedAt: c.closedAt,
+      closedBy: c.closedBy,
+      closureRemarks: c.closureRemarks
+    };
+    this.rows = [...this.rows];
+    this.showSuccess(`आवेदन संख्या ${row.record.applicationNo || row.record.id} (${row.record.applicantName}) बंद कर दिया गया — स्थिति: निष्पादित (Disposed)।`);
   }
 
   /** The success alert hides itself after MESSAGE_DURATION_MS; a newer message restarts the timer. */

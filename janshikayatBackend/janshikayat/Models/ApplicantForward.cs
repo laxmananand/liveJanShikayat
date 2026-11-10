@@ -7,7 +7,7 @@ namespace janshikayat.Models
     //   Registered: saved in Tbl_Applicant_Details, not forwarded yet
     //   Forwarded : has a Tbl_Applicant_Forward row, the receiving office has not replied
     //   Pending   : the office replied (a Tbl_Applicant_Remarks row by a non-Admin role), waiting for Admin to close it
-    //   Disposed  : closed by Admin (a Tbl_Applicant_Closure row)
+    //   Disposed  : closed by the DM / SP, or by Admin for a branch / section (a Tbl_Applicant_Closure row)
     public static class ApplicationStatus
     {
         public const string Registered = "Registered";
@@ -90,16 +90,24 @@ namespace janshikayat.Models
         public const int SubDivisionalOfficer = 6;
         public const int Dclr = 7;
         public const int Sdpo = 8;
+        // Last level (010_co_thana_forward.sql): CO under SDO / DCLR (unit = Blocks.BlockCode), थाना under SDPO (mst_thana.PS_Code)
+        public const int CircleOfficer = 9;
+        public const int Thana = 10;
 
         // Logins that may forward what they received onward to DM / SP
         public static bool IsRegional(int? officeId) =>
             officeId is Commissioner or InspectorGeneral or DeputyInspectorGeneral;
 
-        // DM / SP logins forward onward to the offices under them (vw_Office_Hierarchy): DM -> SDO / DCLR, SP -> SDPO
-        public static bool IsDistrictLevel(int? officeId) =>
-            officeId is DistrictMagistrate or SuperintendentOfPolice;
+        // Logins that forward onward to the offices under them (vw_Office_Hierarchy):
+        // DM -> SDO / DCLR, SP -> SDPO, SDO / DCLR -> CO, SDPO -> थाना
+        public static bool ForwardsDownHierarchy(int? officeId) =>
+            officeId is DistrictMagistrate or SuperintendentOfPolice or SubDivisionalOfficer or Dclr or Sdpo;
 
-        public static bool CanForwardOnward(int? officeId) => IsRegional(officeId) || IsDistrictLevel(officeId);
+        public static bool CanForwardOnward(int? officeId) => IsRegional(officeId) || ForwardsDownHierarchy(officeId);
+
+        // Only the DM / SP that received an application closes it, when Admin sent it to a regional office or a DM / SP
+        public static bool CanCloseApplications(int? officeId) =>
+            officeId is DistrictMagistrate or SuperintendentOfPolice;
     }
 
     // Onward forward of a received application to one or more offices below the sender, each office at most once per
@@ -121,6 +129,10 @@ namespace janshikayat.Models
         public List<int>? DclrUnitCodes { get; set; }
         // SDPO_Codes of the DSP / SDPO offices (sent by an SP)
         public List<int>? SdpoUnitCodes { get; set; }
+        // BlockCodes of the CO offices (sent by an SDO / DCLR)
+        public List<int>? CoUnitCodes { get; set; }
+        // PS_Codes of the police stations (sent by an SDPO)
+        public List<int>? ThanaUnitCodes { get; set; }
         [StringLength(500)]
         public string? Remarks { get; set; }
 
@@ -136,6 +148,8 @@ namespace janshikayat.Models
                 .Concat(Of(OfficeKind.SubDivisionalOfficer, SdoUnitCodes))
                 .Concat(Of(OfficeKind.Dclr, DclrUnitCodes))
                 .Concat(Of(OfficeKind.Sdpo, SdpoUnitCodes))
+                .Concat(Of(OfficeKind.CircleOfficer, CoUnitCodes))
+                .Concat(Of(OfficeKind.Thana, ThanaUnitCodes))
                 .ToList();
         }
     }
@@ -156,18 +170,20 @@ namespace janshikayat.Models
         // null when the sender got it straight from Admin, or for Commissioner / IG / DIG -> DM / SP
         public long? ParentReforwardId { get; set; }
     }
-    // An office the logged-in Commissioner / IG / DIG (DM / SP) or DM (SDO / DCLR) or SP (DSP / SDPO) may forward to
+    // An office the logged-in Commissioner / IG / DIG (DM / SP), DM (SDO / DCLR), SP (DSP / SDPO), SDO / DCLR (CO) or
+    // SDPO (थाना) may forward to
     public class ReforwardTargetDto
     {
         public int OfficeId { get; set; }
         public int UnitCode { get; set; }
         public string UnitLabel { get; set; } = string.Empty;
         // The office of the application's own area (preselected in the popup): its district's DM / SP, its
-        // subdivision's SDO / DCLR, or the SDPO of its thana
+        // subdivision's SDO / DCLR, the SDPO of its thana, its anchal's CO or its thana
         public bool IsApplicantDistrict { get; set; }
     }
 
-    // Admin only: close a forwarded application, which moves it from Pending to Disposed
+    // Close a forwarded application, which moves it to Disposed: the DM / SP that received it when Admin sent it to a
+    // regional office or a DM / SP; Admin only for forwards to a branch / section
     public class ApplicationCloseRequest
     {
         [Range(1, long.MaxValue)]
@@ -183,7 +199,8 @@ namespace janshikayat.Models
         public DateTime ClosedAt { get; set; }
     }
 
-    // Admin's Responses page: one forwarded application that the receiving office has replied to
+    // Responses page: one forwarded application with replies. Admin: replies by any receiving office;
+    // DM / SP: applications it forwarded onward or that got a remark (its own, or by SDO / DCLR / SDPO / CO / थाना under it)
     public class ApplicationResponseDto
     {
         public long ApplicantId { get; set; }
@@ -205,6 +222,14 @@ namespace janshikayat.Models
         public DateTime? ClosedAt { get; set; }
         public string? ClosedBy { get; set; }
         public string? ClosureRemarks { get; set; }
+        // Whether this login may close it: Admin only branch / section forwards (one sent to a regional office / DM / SP
+        // is closed by that DM / SP); a DM / SP the applications that reached it
+        public bool CanClose { get; set; }
+        // Office of the login that wrote the last response (e.g. "CO Office, Araria, ARARIA"), when known
+        public string? LastRemarkByOffice { get; set; }
+        // DM / SP page: how many offices it forwarded the application to (an application with no remark yet is listed
+        // once forwarded onward; its LastRemark is then empty)
+        public int OnwardCount { get; set; }
     }
 
     // Public (citizen) tracking by Application_No: workflow status and applicant name, no other personal details

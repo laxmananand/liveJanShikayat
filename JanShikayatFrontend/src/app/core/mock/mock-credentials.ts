@@ -77,5 +77,7 @@ export const DEMO_ROLE_LABELS: Record<AppRole, string> = {
   SuperintendentOfPolice: 'पुलिस अधीक्षक',
   SubDivisionalOfficer: 'अनुमंडल पदाधिकारी',
   Dclr: 'भूमि सुधार उप समाहर्ता',
-  Sdpo: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी'
+  Sdpo: 'पुलिस उपाधीक्षक / अनुमंडल पुलिस पदाधिकारी',
+  CircleOfficer: 'अंचल अधिकारी',
+  ThanaOfficer: 'थाना'
 };

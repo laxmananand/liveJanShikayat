@@ -3,7 +3,10 @@
     <div>
       <span class="section-kicker"><i class="fa-solid fa-share-from-square"></i> अग्रेषित आवेदन / Forwarded Applications</span>
       <h1>अग्रेषित आवेदन</h1>
-      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।' : canForward ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित ' + onwardTo.hi + ' को आगे भेज सकते हैं।' : 'आपके कार्यालय / शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
+      <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।'
+        : isLastLevel ? 'आपके कार्यालय को अग्रेषित आवेदन — "Remarks" से अपनी कार्रवाई / प्रतिवेदन दर्ज करें (PDF वैकल्पिक, अधिकतम 5 MB)।'
+        : canForward ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित ' + onwardTo.hi + ' को आगे भेज सकते हैं।' + (isDistrictHead ? ' आगे भेजने / टिप्पणी के बाद आवेदन "प्राप्त प्रतिवेदन" में आएगा, जहाँ से उसे बंद (Close) करें।' : '')
+        : 'आपके कार्यालय / शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
     </div>
   </header>
 
@@ -67,11 +70,9 @@
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.forward.forwardedAt | date: 'dd/MM/yyyy' }}</td>
           <td data-label="अग्रेषित" title="पूरा अग्रेषण विवरण देखने हेतु 'देखें' दबाएँ / Use View for full forwarding details">
             <span class="recipient">{{ recipient(row.forward) }}</span>
-            <small class="sub onward" *ngFor="let rf of row.forward.reforwards"><i class="fa-solid fa-arrow-right"></i> {{ rf.toOfficeLabel }}</small>
           </td>
           <td data-label="शिकायत का प्रकार">
             {{ row.forward.complaintTypeLabel }}
-            <small class="sub" *ngIf="row.forward.remarks" [title]="row.forward.remarks"><i class="fa-solid fa-comment"></i> {{ row.forward.remarks }}</small>
           </td>
           <td class="col-center" data-label="स्थिति">
             <span class="status-badge" [class.yes]="row.forward.isDisposed" [class.pending]="applicationStatus(row.forward) === 'Pending'" [title]="row.forward.closureRemarks || ''">
