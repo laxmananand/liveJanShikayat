@@ -148,7 +148,7 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
    */
   closerOf(f: ForwardResponse): string {
     if (!(f.officeLabel || f.officeUnitLabel)) return f.prashakhaLabel ? 'प्रशाखा / Section' : 'शाखा / Branch';
-    if (f.reachedDm && f.reachedSp) return 'DM या SP (जो पहले करे)';
+    if (f.reachedDm && f.reachedSp) return 'DM या SP';
     if (f.reachedDm) return 'DM';
     if (f.reachedSp) return 'SP';
     return 'DM / SP (क्षेत्रीय कार्यालय द्वारा भेजे जाने पर)';
