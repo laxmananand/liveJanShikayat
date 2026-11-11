@@ -338,6 +338,14 @@ namespace janshikayat.Controllers
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetForwardHistory(applicantId) });
         }
 
+        // Closure of an application for the Track popup (data null while it is open)
+        [Authorize]
+        [HttpGet("closure/{applicantId:long}")]
+        public IActionResult GetClosure(long applicantId)
+        {
+            return Ok(new { status = "true", message = "Success", data = _IComplain.GetClosure(applicantId) });
+        }
+
         // PDF attached to a remark; served only to logged-in users (the folder is outside wwwroot)
         [Authorize]
         [HttpGet("get-remark-document/{remarkId:long}")]
@@ -398,8 +406,8 @@ namespace janshikayat.Controllers
         private const string ResponsesForbiddenMessage = "Only Admin, DM and SP logins have a Responses page.";
 
         // Closing is one-time and moves the application to Disposed; no remarks or forwards can be added after it.
-        // The DM / SP it reached closes it when Admin sent it to a regional office or a DM / SP; Admin closes only
-        // forwards to a branch / section (IComplain.CanClose).
+        // The DM / SP it reached closes it when Admin sent it to a regional office or a DM / SP; a forward to a
+        // branch / section is closed by that branch / section login. Admin cannot close (IComplain.CanClose).
         [Authorize]
         [HttpPost("close-application")]
         public IActionResult CloseApplication([FromBody] ApplicationCloseRequest request)
@@ -413,7 +421,7 @@ namespace janshikayat.Controllers
                 return StatusCode(403, new
                 {
                     status = "false",
-                    message = "यह आवेदन केवल संबंधित जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) बंद कर सकते हैं। / Only the DM / SP this application was forwarded to can close it."
+                    message = "यह आवेदन केवल वही शाखा / प्रशाखा या जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) बंद कर सकते हैं जिन्हें यह अग्रेषित किया गया है। / Only the branch / section or DM / SP this application was forwarded to can close it."
                 });
             }
 

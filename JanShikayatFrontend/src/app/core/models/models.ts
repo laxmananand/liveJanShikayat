@@ -185,6 +185,16 @@ export interface ForwardHop {
   forwardedAt: string;
 }
 
+/** Closure of an application (GET /Applicant/closure/{id}), for the Track popup */
+export interface ApplicationClosure {
+  applicantId: number;
+  closureRemarks: string | null;
+  closedBy: string;
+  closedAt: string;
+  /** Office / branch of the login that closed it */
+  closedByOffice: string | null;
+}
+
 export interface CompetentAuthorityDesignation {
   id: number;
   code: string;

@@ -7,7 +7,8 @@ namespace janshikayat.Models
     //   Registered: saved in Tbl_Applicant_Details, not forwarded yet
     //   Forwarded : has a Tbl_Applicant_Forward row, the receiving office has not replied
     //   Pending   : the office replied (a Tbl_Applicant_Remarks row by a non-Admin role), waiting for Admin to close it
-    //   Disposed  : closed by the DM / SP, or by Admin for a branch / section (a Tbl_Applicant_Closure row)
+    //   Disposed  : closed by the DM / SP, or by the branch / section for a branch / section forward (never Admin)
+    //               (a Tbl_Applicant_Closure row)
     public static class ApplicationStatus
     {
         public const string Registered = "Registered";
@@ -197,6 +198,8 @@ namespace janshikayat.Models
         public string? ClosureRemarks { get; set; }
         public string ClosedBy { get; set; } = string.Empty;
         public DateTime ClosedAt { get; set; }
+        // Office / branch of the login that closed it (Track popup); null on the close response
+        public string? ClosedByOffice { get; set; }
     }
 
     // Responses page: one forwarded application with replies. Admin: replies by any receiving office;
@@ -222,9 +225,11 @@ namespace janshikayat.Models
         public DateTime? ClosedAt { get; set; }
         public string? ClosedBy { get; set; }
         public string? ClosureRemarks { get; set; }
-        // Whether this login may close it: Admin only branch / section forwards (one sent to a regional office / DM / SP
-        // is closed by that DM / SP); a DM / SP the applications that reached it
+        // Whether this login may close it here: never Admin (view only); a DM / SP the applications that reached it
         public bool CanClose { get; set; }
+        // Admin page: the application reached a DM / an SP, who can close it (both: whoever closes first)
+        public bool ReachedDm { get; set; }
+        public bool ReachedSp { get; set; }
         // Office of the login that wrote the last response (e.g. "CO Office, Araria, ARARIA"), when known
         public string? LastRemarkByOffice { get; set; }
         // DM / SP page: how many offices it forwarded the application to (an application with no remark yet is listed

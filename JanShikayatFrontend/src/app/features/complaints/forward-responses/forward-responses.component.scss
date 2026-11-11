@@ -127,4 +127,30 @@
 
     &:hover { background: #a02d21; }
   }
+
+  .closure-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+    &.closed {
+      background: #e3f4e7;
+      color: #1f6b33;
+    }
+    &.open {
+      background: #fdecea;
+      color: #a02d21;
+    }
+  }
+  .closure-badge + .sub,
+  .closure-badge ~ .sub {
+    display: block;
+    margin-top: 0.15rem;
+    white-space: nowrap;
+  }
 }

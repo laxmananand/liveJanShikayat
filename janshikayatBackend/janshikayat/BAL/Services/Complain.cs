@@ -748,8 +748,15 @@ namespace janshikayat.BAL.Services
                          r.ResponseCount, r.UnseenCount, r.LastResponseAt,
                          lr.Remark AS LastRemark, lr.RemarkBy AS LastRemarkBy, lr.RemarkByRole AS LastRemarkByRole,
                          lr.LastRemarkByOffice,
-                         -- Admin closes branch / section forwards only; the DM / SP closes what reached it
-                         CAST(CASE WHEN @All = 1 AND f.OfficeId IS NOT NULL THEN 0 ELSE 1 END AS BIT) AS CanClose,
+                         -- Admin only views the closure status: the branch / section or DM / SP closes
+                         CAST(0 AS BIT) AS CanClose,
+                         -- Who can close it: every DM / SP it reached (from Admin or a Commissioner / IG / DIG)
+                         CAST(CASE WHEN f.OfficeId = 2 OR EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward x
+                                                                 WHERE x.ApplicantId = f.ApplicantId AND x.ToOfficeId = 2)
+                                   THEN 1 ELSE 0 END AS BIT) AS ReachedDm,
+                         CAST(CASE WHEN f.OfficeId = 5 OR EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward x
+                                                                 WHERE x.ApplicantId = f.ApplicantId AND x.ToOfficeId = 5)
+                                   THEN 1 ELSE 0 END AS BIT) AS ReachedSp,
                          " + ClosureColumns + @"
                   FROM Tbl_Applicant_Forward f
                   CROSS APPLY (SELECT COUNT(*) AS ResponseCount,
@@ -858,9 +865,27 @@ namespace janshikayat.BAL.Services
                 new { ApplicantId = applicantId });
         }
 
+        // The closure of an application (null when open), with the office / branch of the login that closed it
+        public ApplicationClosureDto? GetClosure(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.QueryFirstOrDefault<ApplicationClosureDto>(
+                @"SELECT c.ApplicantId, c.ClosureRemarks, c.ClosedBy, c.ClosedDate AS ClosedAt,
+                         COALESCE(ou.Unit_Name, f.PrashakhaLabel, f.BranchLabel) AS ClosedByOffice
+                  FROM Tbl_Applicant_Closure c
+                  LEFT JOIN Tbl_UserLogin u ON u.UserName = c.ClosedBy
+                  LEFT JOIN vw_Office_Unit ou ON ou.Office_Id = u.Office_Id AND ou.Unit_Code = u.Office_Unit_Code
+                  OUTER APPLY (SELECT TOP 1 x.PrashakhaLabel, x.BranchLabel FROM Tbl_Applicant_Forward x
+                               WHERE x.ApplicantId = c.ApplicantId
+                               ORDER BY x.ForwardedDate DESC, x.ID DESC) f
+                  WHERE c.ApplicantId = @ApplicantId",
+                new { ApplicantId = applicantId });
+        }
+
         // Who may close: when Admin sent the application to a regional office or a DM / SP (Tbl_Applicant_Forward.OfficeId
         // set), only a DM / SP it reached, straight from Admin or from a Commissioner / IG / DIG; when Admin sent it to a
-        // branch / section, only Admin (nobody below would ever receive it).
+        // branch / section, only that branch / section login (its latest forward). Admin never closes; it only views.
         public bool CanClose(long applicantId, AccessScope scope)
         {
             using var conn = _context.CreateConnection();
@@ -873,7 +898,12 @@ namespace janshikayat.BAL.Services
                 @"SELECT CASE WHEN EXISTS (
                       SELECT 1 FROM Tbl_Applicant_Forward f
                       WHERE f.ApplicantId = @ApplicantId
-                        AND ((@All = 1 AND f.OfficeId IS NULL)
+                        AND ((@All = 0 AND @OfficeId IS NULL AND f.OfficeId IS NULL
+                                 AND ((@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
+                                      OR (@PrashakhaId IS NOT NULL AND f.PrashakhaId = @PrashakhaId))
+                                 AND f.ID = (SELECT TOP 1 x.ID FROM Tbl_Applicant_Forward x
+                                             WHERE x.ApplicantId = f.ApplicantId
+                                             ORDER BY x.ForwardedDate DESC, x.ID DESC))
                              OR (@CloserKind = 1 AND f.OfficeId IS NOT NULL
                                  AND ((f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode)
                                       OR EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward rf

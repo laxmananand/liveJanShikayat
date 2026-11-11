@@ -471,6 +471,13 @@
       border: 1px solid #d5d9de;
       cursor: not-allowed;
     }
+
+    // Close application (Branch / Section on Forwarded Applications)
+    &.danger {
+      background: #c0392b;
+
+      &:hover { background: #a02d21; }
+    }
   }
 }
 

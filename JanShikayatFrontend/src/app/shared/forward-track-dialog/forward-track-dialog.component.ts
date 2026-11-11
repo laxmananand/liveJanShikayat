@@ -1,7 +1,8 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { forkJoin } from 'rxjs';
-import { ApplicantRecord, ApplicantRemark, ForwardHop } from '../../core/models/models';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { ApplicantRecord, ApplicantRemark, ApplicationClosure, ForwardHop } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
 import { OFFICE_KIND, ONWARD_KINDS } from '../../core/services/forward.service';
 import { openBlobDocument } from '../../core/utils/document';
@@ -75,7 +76,8 @@ export const NODE_R = 15;
  * "अग्रेषण प्रगति (Forward Progress)": the forward chain of one application as a tree (Admin → Commissioner / IG /
  * DIG → DM / SP → SDO / DCLR / SDPO → CO / थाना), with grey placeholders for levels not reached yet, and beside it
  * the action history of every office reached (forwarding note and remarks). The chart itself is display-only.
- * An application can branch out to several offices at every level.
+ * An application can branch out to several offices at every level. A closed application ends in a final "बंद / Closed"
+ * node that every branch runs into (no grey placeholders then: nothing more can happen).
  */
 @Component({
   selector: 'app-forward-track-dialog',
@@ -101,12 +103,17 @@ export class ForwardTrackDialogComponent implements OnChanges {
   /** Right-hand "Action History": every office the application reached, with its remarks */
   history: TrackNode[] = [];
   private remarks: ApplicantRemark[] = [];
+  /** Closure of the application (null while open) and its final node, right of the tree */
+  closure: ApplicationClosure | null = null;
+  closureNode: { x: number; y: number } | null = null;
   openingDocId: number | null = null;
 
   ngOnChanges(): void {
     this.nodes = [];
     this.edges = [];
     this.history = [];
+    this.closure = null;
+    this.closureNode = null;
     this.errorMessage = '';
     if (!this.record) return;
 
@@ -114,11 +121,14 @@ export class ForwardTrackDialogComponent implements OnChanges {
     this.loading = true;
     forkJoin({
       hops: this.applicantService.getForwardHistory(id),
-      remarks: this.applicantService.getRemarks(id)
+      remarks: this.applicantService.getRemarks(id),
+      // An older server without the closure API still shows the chart
+      closure: this.applicantService.getClosure(id).pipe(catchError(() => of(null)))
     }).subscribe({
-      next: ({ hops, remarks }) => {
+      next: ({ hops, remarks, closure }) => {
         if (this.record?.id !== id) return; // popup moved on to another record
         this.remarks = remarks;
+        this.closure = closure;
         this.build(hops);
         this.loading = false;
       },
@@ -156,10 +166,13 @@ export class ForwardTrackDialogComponent implements OnChanges {
     // Pending placeholders: not forwarded at all yet, or an office that has not sent to the level below it yet
     // (Commissioner / IG / DIG → DM / SP, DM → SDO / DCLR, SP → DSP/SDPO, SDO / DCLR → CO, DSP/SDPO → थाना), each
     // with the rest of its chain greyed out down to CO / थाना.
-    if (!root.children.length) {
-      root.children.push(this.node('p-root', null, true, 'अग्रेषण', 'लंबित', null, 1));
+    // A closed application gets none: it can no longer be forwarded.
+    if (!this.closure) {
+      if (!root.children.length) {
+        root.children.push(this.node('p-root', null, true, 'अग्रेषण', 'लंबित', null, 1));
+      }
+      for (const n of [...byId.values()]) this.addNextSteps(n);
     }
-    for (const n of [...byId.values()]) this.addNextSteps(n);
 
     // Layout: leaves one per row in tree order, a parent centred on its children
     const all: TrackNode[] = [];
@@ -181,17 +194,29 @@ export class ForwardTrackDialogComponent implements OnChanges {
     this.nodes = all;
     // Sibling edges share the stub out of the parent and the vertical spine, so draw the grey (pending) ones first
     // and the green (done) ones on top — otherwise grey paints over green and the trunk looks broken.
-    this.edges = all
-      .flatMap((p) =>
-        p.children.map((c) => {
-          const mid = p.x + COL_W / 2;
-          return {
-            d: `M ${p.x + NODE_R} ${p.y} H ${mid} V ${c.y} H ${c.x - NODE_R}`,
-            done: !c.pending
-          };
-        })
-      )
-      .sort((a, b) => Number(a.done) - Number(b.done));
+    const edges: TrackEdge[] = all.flatMap((p) =>
+      p.children.map((c) => {
+        const mid = p.x + COL_W / 2;
+        return {
+          d: `M ${p.x + NODE_R} ${p.y} H ${mid} V ${c.y} H ${c.x - NODE_R}`,
+          done: !c.pending
+        };
+      })
+    );
+
+    // Closed: a final node one column right of the deepest level, level with the application, which every branch's
+    // last office runs into (each leaf has its own row, so the lines cross no other node)
+    if (this.closure) {
+      maxDepth += 1;
+      const end = { x: PAD_X + maxDepth * COL_W, y: root.y };
+      const mid = end.x - COL_W / 2;
+      for (const leaf of all.filter((n) => !n.children.length)) {
+        edges.push({ d: `M ${leaf.x + NODE_R} ${leaf.y} H ${mid} V ${end.y} H ${end.x - NODE_R}`, done: true });
+      }
+      this.closureNode = end;
+    }
+
+    this.edges = edges.sort((a, b) => Number(a.done) - Number(b.done));
     this.width = PAD_X * 2 + maxDepth * COL_W;
     this.height = PAD_Y + (row - 1) * ROW_H + 70;
 

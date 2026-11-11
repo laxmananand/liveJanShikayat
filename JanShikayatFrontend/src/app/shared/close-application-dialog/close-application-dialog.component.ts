@@ -6,8 +6,8 @@ import { ClosureRecord, ForwardService } from '../../core/services/forward.servi
 
 /**
  * "Close application" confirmation: an optional closing remark, then the application moves to Disposed (no more
- * remarks or forwards, SMS to the applicant). Used by Admin (Responses page, branch / section forwards) and by the
- * DM / SP that received the application (Forwarded Applications page). The server decides who may close.
+ * remarks or forwards, SMS to the applicant). Used by Admin and the DM / SP it reached (Responses page) and by the
+ * branch / section it was forwarded to (Forwarded Applications page). The server decides who may close.
  */
 @Component({
   selector: 'app-close-application-dialog',

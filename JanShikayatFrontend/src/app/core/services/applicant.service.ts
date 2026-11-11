@@ -1,7 +1,7 @@
 import { Injectable, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { ApplicantRecord, ApplicantRemark, ForwardHop, SaveApplicantPayload, SaveApplicantResponse } from '../models/models';
+import { ApplicantRecord, ApplicantRemark, ApplicationClosure, ForwardHop, SaveApplicantPayload, SaveApplicantResponse } from '../models/models';
 import { environment } from '../../../environments/environment';
 import { CachedRequest } from '../utils/cached-request';
 import { AuthService } from './auth.service';
@@ -115,6 +115,13 @@ export class ApplicantService {
     return this.http
       .get<{ data: ForwardHop[] }>(`${this.baseUrl}/forward-history/${applicantId}`)
       .pipe(map((res) => res.data ?? []));
+  }
+
+  /** API: GET /Applicant/closure/{id} → the closure, or null while the application is open. */
+  getClosure(applicantId: number): Observable<ApplicationClosure | null> {
+    return this.http
+      .get<{ data: ApplicationClosure | null }>(`${this.baseUrl}/closure/${applicantId}`)
+      .pipe(map((res) => res.data ?? null));
   }
 
   /** API: POST /Applicant/add-remark (multipart: ApplicantId, Remark, optional PDF Document) (any logged-in role). */

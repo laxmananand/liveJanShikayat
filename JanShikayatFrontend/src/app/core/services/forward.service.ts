@@ -1,4 +1,4 @@
-import { Injectable, effect, inject, signal } from '@angular/core';
+﻿import { Injectable, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -172,10 +172,12 @@ export interface ForwardResponse {
   closedBy: string | null;
   closureRemarks: string | null;
   /**
-   * Whether this login may close it: Admin only branch / section forwards (one sent to a regional office / DM / SP
-   * is closed by that DM / SP); a DM / SP the applications that reached it
+   * Whether this login may close it here: never for Admin (view only); a DM / SP the applications that reached it
    */
   canClose: boolean;
+  /** Admin page: reached a DM / an SP, who can close it (both: whoever closes first) */
+  reachedDm?: boolean;
+  reachedSp?: boolean;
   /** Office of the login that wrote the last response, e.g. "CO Office, Araria, ARARIA" */
   lastRemarkByOffice?: string | null;
   /** DM / SP page: offices it forwarded onward to; listed even before any remark (lastRemark is then empty) */

@@ -6,6 +6,7 @@
       <p class="sub">{{ isAdmin ? 'सभी शाखाओं को अग्रेषित आवेदनों की सूची।'
         : isLastLevel ? 'आपके कार्यालय को अग्रेषित आवेदन — "Remarks" से अपनी कार्रवाई / प्रतिवेदन दर्ज करें (PDF वैकल्पिक, अधिकतम 5 MB)।'
         : canForward ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित ' + onwardTo.hi + ' को आगे भेज सकते हैं।' + (isDistrictHead ? ' आगे भेजने / टिप्पणी के बाद आवेदन "प्राप्त प्रतिवेदन" में आएगा, जहाँ से उसे बंद (Close) करें।' : '')
+        : isBranchLogin ? 'आपकी शाखा / प्रशाखा को अग्रेषित आवेदन — कार्रवाई / टिप्पणी के बाद "Close" से आवेदन बंद (निष्पादित) करें।'
         : 'आपके कार्यालय / शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
     </div>
   </header>
@@ -53,6 +54,7 @@
           <th class="col-center col-remarks">टिप्पणी<small>(Remarks)</small></th>
           <th class="col-center">ट्रैक<small>(Track)</small></th>
           <th class="col-center" *ngIf="canForward">भेजें<small>(Forward)</small></th>
+          <th class="col-center" *ngIf="isBranchLogin">बंद करें<small>(Close)</small></th>
         </tr>
       </thead>
       <tbody>
@@ -108,6 +110,15 @@
               <i class="fa-solid fa-lock"></i> Disposed
             </button>
           </td>
+          <td class="col-center" data-label="बंद करें" *ngIf="isBranchLogin">
+            <button *ngIf="canCloseRow(row)" type="button" class="btn-send danger" (click)="askClose(row)"
+                    title="आवेदन बंद करें — Close application">
+              <i class="fa-solid fa-lock"></i> Close
+            </button>
+            <button *ngIf="row.forward.isDisposed" type="button" class="btn-send locked" disabled title="निष्पादित / Disposed">
+              <i class="fa-solid fa-lock"></i> Disposed
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -128,4 +139,7 @@
 
   <app-reforward-dialog *ngIf="canForward" [record]="reforwarding?.record ?? null" [forward]="reforwarding?.forward ?? null"
                         (closed)="reforwarding = null" (reforwarded)="onReforwarded($event)"></app-reforward-dialog>
+
+  <app-close-application-dialog *ngIf="isBranchLogin" [record]="closing?.record ?? null" (cancelled)="closing = null"
+                                (closedApplication)="onClosed($event)"></app-close-application-dialog>
 </section>

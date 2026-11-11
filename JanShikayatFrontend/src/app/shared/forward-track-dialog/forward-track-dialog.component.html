@@ -35,11 +35,23 @@
                 <text class="t2" [attr.y]="r + 28">{{ clip(n.sub, 18) }}</text>
                 <text class="t3" *ngIf="n.date" [attr.y]="r + 40">{{ n.date | date: 'dd/MM/yyyy' }}</text>
               </g>
+
+              <!-- Closed: the final step -->
+              <g *ngIf="closure && closureNode as c" class="node closed-node" [attr.transform]="'translate(' + c.x + ',' + c.y + ')'">
+                <title>बंद / Closed — {{ closure.closedByOffice || closure.closedBy }}</title>
+                <circle class="dot" [attr.r]="r + 2" />
+                <path class="shackle" d="M -3.5 -1 V -4 A 3.5 3.5 0 0 1 3.5 -4 V -1" />
+                <rect class="body" x="-5.5" y="-1.5" width="11" height="8" rx="1.5" />
+                <text class="t1" [attr.y]="r + 17">बंद / Closed</text>
+                <text class="t2" [attr.y]="r + 30">{{ clip(closure.closedByOffice || closure.closedBy, 18) }}</text>
+                <text class="t3" [attr.y]="r + 42">{{ closure.closedAt | date: 'dd/MM/yyyy' }}</text>
+              </g>
             </svg>
           </div>
           <div class="tk-legend">
             <span><i class="fa-solid fa-circle-check done"></i> अग्रेषित / पूर्ण (Done) — {{ doneCount }}</span>
-            <span><i class="fa-solid fa-circle pending"></i> लंबित (Pending) — {{ pendingCount }}</span>
+            <span *ngIf="!closure"><i class="fa-solid fa-circle pending"></i> लंबित (Pending) — {{ pendingCount }}</span>
+            <span *ngIf="closure" class="closed"><i class="fa-solid fa-lock"></i> आवेदन बंद / Closed — {{ closure.closedAt | date: 'dd/MM/yyyy' }}</span>
           </div>
         </section>
 
@@ -89,6 +101,22 @@
                   </button>
                 </li>
               </ul>
+            </div>
+
+            <!-- Last: the application was closed -->
+            <div class="tk-card tk-closed" *ngIf="closure">
+              <div class="tk-card-head">
+                <strong><i class="fa-solid fa-lock"></i> आवेदन बंद / Application Closed</strong>
+                <span class="chip ok">निष्पादित / Disposed</span>
+              </div>
+              <p class="tk-meta">
+                <span title="बंद करने वाले / Closed by"><i class="fa-solid fa-user-check"></i> {{ closure.closedByOffice || closure.closedBy }} द्वारा बंद</span>
+                <span title="बंद करने की तिथि / Closed on"><i class="fa-regular fa-calendar"></i> {{ closure.closedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </p>
+              <div class="tk-fwd closing" *ngIf="closure.closureRemarks">
+                <span class="tk-label"><i class="fa-solid fa-flag-checkered"></i> समापन टिप्पणी <small>(Closing remark)</small></span>
+                <p>{{ closure.closureRemarks }}</p>
+              </div>
             </div>
           </div>
         </section>

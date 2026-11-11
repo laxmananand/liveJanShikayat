@@ -213,6 +213,26 @@ svg {
   }
 }
 
+// Final "Closed" step: darker green with a white lock
+.closed-node {
+  .dot {
+    fill: #1f5c3a;
+    stroke: #cfe9d8;
+    stroke-width: 3;
+  }
+  .shackle {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+  }
+  .body {
+    fill: #fff;
+  }
+  .t1 {
+    fill: #1f5c3a;
+  }
+}
+
 .tk-legend {
   display: flex;
   flex-wrap: wrap;
@@ -227,6 +247,14 @@ svg {
   }
   .pending {
     color: #cad3e6;
+  }
+  .closed {
+    font-weight: 700;
+    color: #1f5c3a;
+
+    i {
+      color: #1f5c3a;
+    }
   }
 }
 
@@ -250,6 +278,16 @@ svg {
   border-left: 4px solid #2f7d4f;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(16, 29, 59, 0.06);
+
+  // Closure card at the end of the history
+  &.tk-closed {
+    border-left-color: #1f5c3a;
+    background: #f4faf6;
+
+    .tk-card-head strong i {
+      color: #1f5c3a;
+    }
+  }
 
   // Reached, but no remark yet
   &.idle {
@@ -342,6 +380,16 @@ svg {
   p {
     margin: 0;
     white-space: pre-line;
+  }
+
+  // Closing remark (green, like the office remarks)
+  &.closing {
+    background: #e9f5ee;
+    border-left-color: #1f5c3a;
+
+    .tk-label {
+      color: #1f5c3a;
+    }
   }
 }
 

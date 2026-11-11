@@ -20,6 +20,7 @@ namespace janshikayat.BAL.Interfaces
         int GetUnseenResponseCount(AccessScope scope, string adminRole);
         void MarkResponsesSeen(long applicantId, AccessScope scope, string adminRole);
         bool IsClosed(long applicantId);
+        ApplicationClosureDto? GetClosure(long applicantId);
         bool CanClose(long applicantId, AccessScope scope);
         ApplicationClosureDto? CloseApplication(ApplicationCloseRequest request, string closedBy, string? ip);
         (string? ApplicationNo, string? MobileNumber, string? MobileNumber2) GetSmsContact(long applicantId);

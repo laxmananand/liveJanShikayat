@@ -17,6 +17,8 @@ import {
 } from '../../../core/services/forward.service';
 import { ReforwardDialogComponent } from '../../../shared/reforward-dialog/reforward-dialog.component';
 import { ForwardTrackDialogComponent } from '../../../shared/forward-track-dialog/forward-track-dialog.component';
+import { CloseApplicationDialogComponent } from '../../../shared/close-application-dialog/close-application-dialog.component';
+import { ClosureRecord } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { applicationStatus, statusLabel } from '../../../core/utils/labels';
 import { openBase64Document } from '../../../core/utils/document';
@@ -42,7 +44,8 @@ interface ForwardedRow {
     ApplicantDetailsModalComponent,
     DateRangeFilterComponent,
     ReforwardDialogComponent,
-    ForwardTrackDialogComponent
+    ForwardTrackDialogComponent,
+    CloseApplicationDialogComponent
   ],
   templateUrl: './forwarded-applications.component.html',
   styleUrl: '../applicant-records/applicant-records.component.scss'
@@ -93,6 +96,42 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
    */
   get isDistrictHead(): boolean {
     return !this.isAdmin && canCloseApplications(this.auth.currentUser()?.officeId);
+  }
+
+  /** Branch / Section login (no regional office): closes the applications Admin forwarded to it */
+  get isBranchLogin(): boolean {
+    const u = this.auth.currentUser();
+    return !this.isAdmin && u?.officeId == null && (u?.branchId != null || u?.prashakhaId != null);
+  }
+
+  /** Row whose "Close application" popup is open */
+  closing: ForwardedRow | null = null;
+
+  /** Only a branch / section forward is closed here (the server checks it is this login's latest forward) */
+  canCloseRow(row: ForwardedRow): boolean {
+    return this.isBranchLogin && !row.forward.isDisposed && row.forward.officeId == null;
+  }
+
+  askClose(row: ForwardedRow): void {
+    if (this.canCloseRow(row)) this.closing = row;
+  }
+
+  onClosed(c: ClosureRecord): void {
+    const row = this.closing;
+    this.closing = null;
+    if (!row) return;
+    row.forward = {
+      ...row.forward,
+      isDisposed: true,
+      status: 'Disposed',
+      closedAt: c.closedAt,
+      closedBy: c.closedBy,
+      closureRemarks: c.closureRemarks
+    };
+    this.rows = [...this.rows];
+    this.showInfo(
+      `आवेदन संख्या ${row.record.applicationNo || row.record.id} (${row.record.applicantName}) बंद कर दिया गया — स्थिति: निष्पादित (Disposed)।`
+    );
   }
 
   /** CO / थाना: the last level, which replies with a remark (optional PDF) */

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -21,8 +21,8 @@ type StatusTab = 'Pending' | 'Disposed' | '';
 
 /**
  * Responses received (Admin, DM, SP): forwarded applications with replies (remarks).
- *   Admin: replies by any receiving office (Branch / Section / District Administration); closes branch / section
- *     forwards, which moves them from Pending to Disposed.
+ *   Admin: replies by any receiving office (Branch / Section / District Administration) and whether each application
+ *     is closed; it cannot close (the branch / section or the DM / SP does).
  *   DM / SP: replies by the offices under it in that application's chain (SDO / DCLR / DSP-SDPO / CO / थाना);
  *     closes the applications that reached it.
  * Opening a row's remarks marks its replies as seen for this login only.
@@ -142,7 +142,19 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Admin closes only branch / section forwards; one sent to a regional office / DM / SP is closed by that DM / SP. */
+  /**
+   * Who closes an open application. District Administration forward: every DM / SP it reached (both → whoever
+   * closes first); none yet → after the Commissioner / IG / DIG forwards it to a DM / SP. Else the branch / section.
+   */
+  closerOf(f: ForwardResponse): string {
+    if (!(f.officeLabel || f.officeUnitLabel)) return f.prashakhaLabel ? 'प्रशाखा / Section' : 'शाखा / Branch';
+    if (f.reachedDm && f.reachedSp) return 'DM या SP (जो पहले करे)';
+    if (f.reachedDm) return 'DM';
+    if (f.reachedSp) return 'SP';
+    return 'DM / SP (क्षेत्रीय कार्यालय द्वारा भेजे जाने पर)';
+  }
+
+  /** Only the DM / SP closes here (Admin views only; a branch / section closes on its Forwarded Applications page). */
   askClose(row: ResponseRow): void {
     if (row.response.isDisposed || !row.response.canClose) return;
     this.closing = row;
