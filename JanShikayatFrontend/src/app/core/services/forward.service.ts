@@ -40,7 +40,7 @@ export interface ForwardRecord {
 }
 
 /** Mst_Regional_Office.Office_Id */
-export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5, SDO: 6, DCLR: 7, SDPO: 8, CO: 9, Thana: 10 } as const;
+export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5, SDO: 6, DCLR: 7, SDPO: 8, CO: 9, Thana: 10, Department: 11 } as const;
 
 /** The last level: CO / थाना receive and reply (remark, optional PDF) but forward no further. */
 export function isLastLevelOffice(officeId: number | null | undefined): boolean {

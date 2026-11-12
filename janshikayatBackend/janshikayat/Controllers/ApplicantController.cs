@@ -407,7 +407,7 @@ namespace janshikayat.Controllers
 
         // Closing is one-time and moves the application to Disposed; no remarks or forwards can be added after it.
         // The DM / SP it reached closes it when Admin sent it to a regional office or a DM / SP; a forward to a
-        // branch / section is closed by that branch / section login. Admin cannot close (IComplain.CanClose).
+        // branch / section / department is closed by that login. Admin cannot close (IComplain.CanClose).
         [Authorize]
         [HttpPost("close-application")]
         public IActionResult CloseApplication([FromBody] ApplicationCloseRequest request)
@@ -421,7 +421,7 @@ namespace janshikayat.Controllers
                 return StatusCode(403, new
                 {
                     status = "false",
-                    message = "यह आवेदन केवल वही शाखा / प्रशाखा या जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) बंद कर सकते हैं जिन्हें यह अग्रेषित किया गया है। / Only the branch / section or DM / SP this application was forwarded to can close it."
+                    message = "यह आवेदन केवल वही शाखा / प्रशाखा / विभाग या जिलाधिकारी (DM) / पुलिस अधीक्षक (SP) बंद कर सकते हैं जिन्हें यह अग्रेषित किया गया है। / Only the branch / section / department or DM / SP this application was forwarded to can close it."
                 });
             }
 

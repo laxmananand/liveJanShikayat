@@ -143,7 +143,9 @@ namespace janshikayat.BAL.Services
         }
 
         // Returns null when the application does not exist (or is inactive), or the
-        // branch / complaint type does not match the Mst_Category -> Mst_Branch -> Mst_Complain_Sub_Type mapping
+        // branch / complaint type does not match the Mst_Category -> Mst_Branch -> Mst_Complain_Sub_Type mapping.
+        // The Department category has no branch / complaint type: it goes to one Mst_Departments row instead, saved as
+        // OfficeId = OfficeKind.Department / OfficeUnitCode = DepartmentId with BranchId / ComplaintTypeId "0".
         public ApplicantForwardDto? ForwardApplicant(ApplicantForwardRequest request, string forwardedBy, string? ip)
         {
             using var conn = _context.CreateConnection();
@@ -151,9 +153,13 @@ namespace janshikayat.BAL.Services
             var parameters = new DynamicParameters(request);
             parameters.Add("@ForwardedBy", forwardedBy);
             parameters.Add("@ForwardedIp", ip);
+            parameters.Add("@DepartmentOffice", OfficeKind.Department);
 
             return conn.QueryFirstOrDefault<ApplicantForwardDto>(
-                @"INSERT INTO Tbl_Applicant_Forward
+                @"DECLARE @IsDepartment bit = CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
+                                                               WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT)
+                                                                 AND c.Category = 'Department') THEN 1 ELSE 0 END;
+                  INSERT INTO Tbl_Applicant_Forward
                        (ApplicantId, CategoryId, CategoryLabel, BranchId, BranchLabel,
                         ComplaintTypeId, ComplaintTypeLabel, Remarks, ForwardedBy, ForwardedIp,
                         PrashakhaId, PrashakhaLabel, OfficeId, OfficeLabel, OfficeUnitCode, OfficeUnitLabel)
@@ -166,6 +172,11 @@ namespace janshikayat.BAL.Services
                          @ComplaintTypeId, @ComplaintTypeLabel, @Remarks, @ForwardedBy, @ForwardedIp,
                          @PrashakhaId, @PrashakhaLabel, @OfficeId, @OfficeLabel, @OfficeUnitCode, @OfficeUnitLabel
                   WHERE EXISTS (SELECT 1 FROM Tbl_Applicant_Details WHERE ID = @ApplicantId AND Is_Active = 1)
+                    AND ((@IsDepartment = 1
+                          AND @OfficeId = @DepartmentOffice
+                          AND EXISTS (SELECT 1 FROM Mst_Departments d WHERE CAST(d.DepartmentId AS INT) = @OfficeUnitCode)
+                          AND @BranchId = '0' AND @ComplaintTypeId = '0' AND @PrashakhaId IS NULL)
+                      OR (@IsDepartment = 0
                     AND EXISTS (SELECT 1 FROM Mst_Branch b
                                 WHERE b.Complain_id = TRY_CAST(@BranchId AS BIGINT) AND b.Is_Active = 1
                                   AND TRY_CAST(@CategoryId AS INT) IN (b.Home_Categ, b.Section_Categ, b.District_Categ, b.Regional_Categ))
@@ -193,7 +204,7 @@ namespace janshikayat.BAL.Services
                                                                  ELSE CASE WHEN @OfficeUnitCode IS NULL THEN 1 ELSE 0 END
                                                             END) = 1) THEN 1 ELSE 0 END
                               ELSE CASE WHEN @OfficeId IS NULL AND @OfficeUnitCode IS NULL THEN 1 ELSE 0 END
-                         END) = 1",
+                         END) = 1))",
                 parameters);
         }
 
@@ -428,7 +439,7 @@ namespace janshikayat.BAL.Services
         // Applications a login may see, for a query whose forward is f (Tbl_Applicant_Forward, LEFT JOINed
         // where unforwarded applications count) and whose parameters are an AccessScope:
         //   Admin all; Branch / Prashakha their forwards; Commissioner its own forwards and those to the DM offices
-        //   of its division; DM / IG / DIG / SP their own forwards; every office also those forwarded onward to it
+        //   of its division; DM / IG / DIG / SP / Department (11) their own forwards; every office also those forwarded onward to it
         //   (Tbl_Applicant_Reforward: DM / SP from Commissioner / IG / DIG, SDO / DCLR from DM, SDPO from SP,
         //   CO from SDO / DCLR, थाना from SDPO)
         private const string ScopeFilter =
@@ -438,7 +449,7 @@ namespace janshikayat.BAL.Services
                OR (@OfficeId = 1 AND ((f.OfficeId = 1 AND f.OfficeUnitCode = @OfficeUnitCode)
                                       OR (f.OfficeId = 2 AND f.OfficeUnitCode IN (SELECT m.Dist_Code FROM Mst_DM_Office m
                                                                                   WHERE m.Division_Code = @OfficeUnitCode))))
-               OR (@OfficeId IN (2, 3, 4, 5) AND f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode)
+               OR (@OfficeId IN (2, 3, 4, 5, 11) AND f.OfficeId = @OfficeId AND f.OfficeUnitCode = @OfficeUnitCode)
                OR (@OfficeId IS NOT NULL AND EXISTS (SELECT 1 FROM Tbl_Applicant_Reforward rf
                                                      WHERE rf.ApplicantId = f.ApplicantId
                                                        AND rf.ToOfficeId = @OfficeId AND rf.ToOfficeUnitCode = @OfficeUnitCode)))";
@@ -893,12 +904,19 @@ namespace janshikayat.BAL.Services
             var parameters = new DynamicParameters(scope);
             parameters.Add("@ApplicantId", applicantId);
             parameters.Add("@CloserKind", OfficeKind.CanCloseApplications(scope.OfficeId) ? 1 : 0);
+            parameters.Add("@DepartmentOffice", OfficeKind.Department);
 
             return conn.ExecuteScalar<bool>(
                 @"SELECT CASE WHEN EXISTS (
                       SELECT 1 FROM Tbl_Applicant_Forward f
                       WHERE f.ApplicantId = @ApplicantId
-                        AND ((@All = 0 AND @OfficeId IS NULL AND f.OfficeId IS NULL
+                        -- A department closes what Admin forwarded to it (its latest forward), like a branch / section
+                        AND ((@All = 0 AND @OfficeId = @DepartmentOffice
+                                 AND f.OfficeId = @DepartmentOffice AND f.OfficeUnitCode = @OfficeUnitCode
+                                 AND f.ID = (SELECT TOP 1 x.ID FROM Tbl_Applicant_Forward x
+                                             WHERE x.ApplicantId = f.ApplicantId
+                                             ORDER BY x.ForwardedDate DESC, x.ID DESC))
+                             OR (@All = 0 AND @OfficeId IS NULL AND f.OfficeId IS NULL
                                  AND ((@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
                                       OR (@PrashakhaId IS NOT NULL AND f.PrashakhaId = @PrashakhaId))
                                  AND f.ID = (SELECT TOP 1 x.ID FROM Tbl_Applicant_Forward x

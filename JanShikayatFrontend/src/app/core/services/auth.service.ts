@@ -73,6 +73,8 @@ function mapRole(code: string | null | undefined): AppRole {
       return 'SuperAdmin';
     case 'branch':
     case '3':
+    case 'department':
+    case '4':
       return 'DepartmentHead';
     case 'commissioner':
       return 'Commissioner';

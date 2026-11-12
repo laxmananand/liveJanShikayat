@@ -94,6 +94,9 @@ namespace janshikayat.Models
         // Last level (010_co_thana_forward.sql): CO under SDO / DCLR (unit = Blocks.BlockCode), थाना under SDPO (mst_thana.PS_Code)
         public const int CircleOfficer = 9;
         public const int Thana = 10;
+        // A state department (013_department_branch_logins.sql: unit = Mst_Departments.DepartmentId). Admin forwards
+        // straight to it; it replies and closes its own forwards, like a branch / section, and forwards no further.
+        public const int Department = 11;
 
         // Logins that may forward what they received onward to DM / SP
         public static bool IsRegional(int? officeId) =>

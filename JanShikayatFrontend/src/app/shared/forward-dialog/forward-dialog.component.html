@@ -83,8 +83,7 @@
         <input id="fwEmail" type="text" readonly class="fw-readonly"
                [value]="complaintTypes.length ? complaintTypes[0].label : ''"
                [placeholder]="form.controls.branchId.value ? 'इस विभाग का ईमेल उपलब्ध नहीं / No email for this department' : '-- पहले विभाग चुनें / Select department first --'" />
-        <span class="fw-error" *ngIf="form.controls.branchId.value && !complaintTypes.length">इस विभाग का ईमेल उपलब्ध नहीं है, अग्रेषित नहीं किया जा सकता। / No email on record — cannot forward.</span>
-        <small class="fw-note" *ngIf="complaintTypes.length"><i class="fa-solid fa-circle-info"></i> आवेदन इस ईमेल पर विभाग को भेजा जाएगा (डेमो — ईमेल सेवा अभी उपलब्ध नहीं)। / Will be emailed to the department (demo).</small>
+        <small class="fw-note" *ngIf="form.controls.branchId.value"><i class="fa-solid fa-circle-info"></i> आवेदन विभाग के लॉगिन पर भेजा जाएगा। / Goes to the department's login.</small>
       </div>
 
       <!-- 3. Complaint type -->

@@ -98,18 +98,29 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
     return !this.isAdmin && canCloseApplications(this.auth.currentUser()?.officeId);
   }
 
-  /** Branch / Section login (no regional office): closes the applications Admin forwarded to it */
+  /** Department login (office kind 11): Admin forwards straight to it and it closes those, like a branch / section */
+  get isDepartmentLogin(): boolean {
+    return !this.isAdmin && this.auth.currentUser()?.officeId === OFFICE_KIND.Department;
+  }
+
+  /** Branch / Section (no regional office) or Department login: closes the applications Admin forwarded to it */
   get isBranchLogin(): boolean {
     const u = this.auth.currentUser();
-    return !this.isAdmin && u?.officeId == null && (u?.branchId != null || u?.prashakhaId != null);
+    return (
+      this.isDepartmentLogin ||
+      (!this.isAdmin && u?.officeId == null && (u?.branchId != null || u?.prashakhaId != null))
+    );
   }
 
   /** Row whose "Close application" popup is open */
   closing: ForwardedRow | null = null;
 
-  /** Only a branch / section forward is closed here (the server checks it is this login's latest forward) */
+  /**
+   * Only a branch / section / department forward is closed here (the server checks it is this login's latest forward)
+   */
   canCloseRow(row: ForwardedRow): boolean {
-    return this.isBranchLogin && !row.forward.isDisposed && row.forward.officeId == null;
+    if (!this.isBranchLogin || row.forward.isDisposed) return false;
+    return this.isDepartmentLogin ? row.forward.officeId === OFFICE_KIND.Department : row.forward.officeId == null;
   }
 
   askClose(row: ForwardedRow): void {

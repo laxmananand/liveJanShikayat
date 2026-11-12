@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApplicantRecord } from '../../core/models/models';
 import { ForwardOption } from '../../core/config/forward-options';
-import { ForwardRecord, ForwardService } from '../../core/services/forward.service';
+import { ForwardRecord, ForwardService, OFFICE_KIND } from '../../core/services/forward.service';
 import { MasterService } from '../../core/services/master.service';
 import { AuthService } from '../../core/services/auth.service';
+
+/** Department forwards have no complaint type; this fills the step so the form validates. */
+const DEPARTMENT_NO_TYPE = 'department';
 
 /**
  * Forward popup: category → branch → complaint type (+ optional remark).
@@ -14,8 +17,9 @@ import { AuthService } from '../../core/services/auth.service';
  * category (Mst_Regional_Office) and then one unit of it (vw_Office_Unit: 9 Commissioners / 38 DM offices / 4 IG / 8 DIG / 40 SP);
  * an office without a list skips that step and goes straight to the branch.
  * Options come from Mst_Category → Mst_Branch (Home/Section/District/Regional_Categ) → Mst_Complain_Sub_Type.
- * The "Department" category instead lists Mst_Departments and shows that department's email in step 3;
- * sending it by email is not built yet, so that forward is a frontend-only demo (nothing is saved).
+ * The "Department" category instead lists Mst_Departments and shows that department's email in step 3 for reference;
+ * the forward is saved as office kind 11 (OFFICE_KIND.Department) with the DepartmentId, and that department's login
+ * (013_department_branch_logins.sql) receives and closes it.
  */
 @Component({
   selector: 'app-forward-dialog',
@@ -265,13 +269,11 @@ export class ForwardDialogComponent implements OnChanges {
     const selected = branchId.value;
     if (!selected) return;
 
-    // Department: step 3 is the department's email, filled in and read-only
+    // Department: no complaint type; step 3 shows the department's email (for reference), read-only
     if (this.isDepartment) {
       const email = this.departmentEmails.get(selected) ?? '';
-      if (email) {
-        this.complaintTypes = [{ id: 'email', label: email }];
-        complaintTypeId.setValue('email');
-      }
+      this.complaintTypes = [{ id: DEPARTMENT_NO_TYPE, label: email }];
+      complaintTypeId.setValue(DEPARTMENT_NO_TYPE);
       return;
     }
 
@@ -314,45 +316,43 @@ export class ForwardDialogComponent implements OnChanges {
     this.submitting = true;
     const remarks = (this.form.controls.remarks.value ?? '').trim();
 
-    if (this.isDepartment) {
-      // DEMO: the email service is not built yet, so nothing is sent or saved.
-      // Replace with the real email/forward API when it exists.
-      const demo: ForwardRecord = {
-        applicantId: this.record.id,
-        categoryId: category.id,
-        categoryLabel: category.label,
-        branchId: branch.id,
-        branchLabel: branch.label,
-        complaintTypeId: type.id,
-        complaintTypeLabel: type.label,
-        remarks,
-        forwardedBy: this.auth.currentUser()?.fullName ?? '',
-        forwardedAt: new Date().toISOString()
-      };
-      setTimeout(() => {
-        this.submitting = false;
-        this.forwarded.emit(demo);
-      }, 600);
-      return;
-    }
+    // Department: saved as office kind 11 / DepartmentId; that department's login receives it (no branch / type: "0")
+    const payload = this.isDepartment
+      ? {
+          applicantId: this.record.id,
+          categoryId: category.id,
+          categoryLabel: category.label,
+          branchId: '0',
+          branchLabel: branch.label,
+          complaintTypeId: '0',
+          complaintTypeLabel: type.label || 'विभाग / Department',
+          remarks,
+          prashakhaId: null,
+          prashakhaLabel: null,
+          officeId: OFFICE_KIND.Department,
+          officeLabel: 'विभाग / Department',
+          officeUnitCode: +branch.id,
+          officeUnitLabel: branch.label
+        }
+      : {
+          applicantId: this.record.id,
+          categoryId: category.id,
+          categoryLabel: category.label,
+          branchId: branch.id,
+          branchLabel: branch.label,
+          complaintTypeId: type.id,
+          complaintTypeLabel: type.label,
+          remarks,
+          prashakhaId: prashakha ? +prashakha.id : null,
+          prashakhaLabel: prashakha?.label ?? null,
+          officeId: office ? +office.id : null,
+          officeLabel: office?.label ?? null,
+          officeUnitCode: officeUnit ? +officeUnit.id : null,
+          officeUnitLabel: officeUnit?.label ?? null
+        };
 
     this.forwardService
-      .forward({
-        applicantId: this.record.id,
-        categoryId: category.id,
-        categoryLabel: category.label,
-        branchId: branch.id,
-        branchLabel: branch.label,
-        complaintTypeId: type.id,
-        complaintTypeLabel: type.label,
-        remarks,
-        prashakhaId: prashakha ? +prashakha.id : null,
-        prashakhaLabel: prashakha?.label ?? null,
-        officeId: office ? +office.id : null,
-        officeLabel: office?.label ?? null,
-        officeUnitCode: officeUnit ? +officeUnit.id : null,
-        officeUnitLabel: officeUnit?.label ?? null
-      })
+      .forward(payload)
       .subscribe({
         next: (saved) => {
           this.submitting = false;
