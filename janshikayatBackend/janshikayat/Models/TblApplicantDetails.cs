@@ -95,7 +95,12 @@ namespace janshikayat.Models
         public string? PanchayatName { get; set; }
         public string? BlockName { get; set; }
         public string? DISTRICTNAME { get; set; }
+        // Stored path of the applicant's document (wwwroot-relative); never sent, the file comes from get-document/{id}
+        [System.Text.Json.Serialization.JsonIgnore]
         public string? DocumentPath { get; set; }
+        // Size in bytes of the document file, null when there is none or the file is missing
+        public long? DocumentSize { get; set; }
+        public bool HasDocument => DocumentSize != null;
         public string? Application_Source { get; set; }
         public long Thana { get; set; }
         public string? Police_Station { get; set; }

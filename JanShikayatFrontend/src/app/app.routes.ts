@@ -27,7 +27,12 @@ export const routes: Routes = [
     component: PublicLayoutComponent,
     children: [
       { path: '', pathMatch: 'full', component: LandingComponent, title: 'विभागीय जन शिकायत निदान पोर्टल | गृह विभाग, बिहार सरकार' },
-      { path: 'register', component: PublicRegisterComponent, title: 'ऑनलाइन शिकायत दर्ज करें | जन शिकायत निदान पोर्टल' }
+      {
+        path: 'register',
+        component: PublicRegisterComponent,
+        canActivate: [() => FEATURES.onlineComplaint || inject(Router).createUrlTree(['/'])],
+        title: 'ऑनलाइन शिकायत दर्ज करें | जन शिकायत निदान पोर्टल'
+      }
     ]
   },
 

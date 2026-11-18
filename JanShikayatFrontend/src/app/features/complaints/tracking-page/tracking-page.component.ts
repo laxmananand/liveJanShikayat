@@ -14,9 +14,11 @@ import {
   ComplaintDetail,
   ComplaintListItem
 } from '../../../core/models/models';
+import { formatFileSize } from '../../../core/utils/document';
 import { STATUS_STAGES, applicationStatus, statusLabel, statusStageIndex, sourceLabel, statusProgress } from '../../../core/utils/labels';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 import { ForwardTrackDialogComponent } from '../../../shared/forward-track-dialog/forward-track-dialog.component';
+import { DEFAULT_PAGE_SIZE, PaginatePipe, PaginatorComponent, pageOffset } from '../../../shared/paginator/paginator';
 
 /** One live application (Tbl_Applicant_Details) plus its latest forward (Tbl_Applicant_Forward). */
 export interface TrackedGrievanceItem extends ComplaintListItem {
@@ -41,30 +43,10 @@ export interface TrackedGrievanceItem extends ComplaintListItem {
 /** Detail drawer data: the live record shaped like a ComplaintDetail, plus the tracked row it came from. */
 type TrackedDetail = ComplaintDetail & { tracked: TrackedGrievanceItem };
 
-/** Decode a base64 document (with or without a `data:` prefix) into a Blob; null if it cannot be read. */
-function base64ToBlob(documentBase64: string): Blob | null {
-  const [header, base64] = documentBase64.startsWith('data:')
-    ? documentBase64.split(',')
-    : ['data:application/pdf;base64', documentBase64];
-  const mime = header.match(/data:([^;]+)/)?.[1] ?? 'application/pdf';
-  try {
-    return new Blob([Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))], { type: mime });
-  } catch {
-    return null;
-  }
-}
-
-/** File size of a base64 document without decoding it. */
-function base64Size(documentBase64: string): string {
-  const base64 = documentBase64.includes(',') ? documentBase64.split(',')[1] : documentBase64;
-  const bytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
-  return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(2)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
 @Component({
   selector: 'app-tracking-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardTrackDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardTrackDialogComponent, PaginatorComponent, PaginatePipe],
   templateUrl: './tracking-page.component.html',
   styleUrl: './tracking-page.component.scss'
 })
@@ -87,6 +69,11 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
   districts: string[] = [];
   trackedList: TrackedGrievanceItem[] = [];
   filteredList: TrackedGrievanceItem[] = [];
+
+  /** Table paging (the whole list stays loaded, so filters and counts still cover all of it) */
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  readonly pageOffset = pageOffset;
 
   // State flags
   loading = false;
@@ -249,9 +236,9 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
             ? `अग्रेषित: ${day(forward.forwardedAt)}`
             : 'एडमिन / प्रविष्टि सहायक',
       lifecycleStage: statusStageIndex(status) + 1,
-      hasPdf: !!r.documentBase64,
+      hasPdf: r.hasDocument,
       pdfFileName: `Aavedan_${(r.applicationNo || String(r.id)).replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-      pdfFileSize: r.documentBase64 ? base64Size(r.documentBase64) : 'दस्तावेज़ नहीं'
+      pdfFileSize: r.documentSize != null ? formatFileSize(r.documentSize) : 'दस्तावेज़ नहीं'
     };
   }
 
@@ -323,6 +310,7 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
     }
 
     this.filteredList = result;
+    this.page = 1;
   }
 
   private updateMetrics(): void {
@@ -343,13 +331,27 @@ export class TrackingPageComponent implements OnInit, OnDestroy {
     this.currentDocSize = item.pdfFileSize || '';
     this.currentDocType = 'मूल आवेदन पत्र (PDF)';
 
-    const blob = item.record.documentBase64 ? base64ToBlob(item.record.documentBase64) : null;
-    this.isFallbackDoc = !blob;
-    if (blob) {
-      this.rawBlobUrl = URL.createObjectURL(blob);
-      this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.rawBlobUrl);
+    this.isFallbackDoc = !item.record.hasDocument;
+    if (!item.record.hasDocument) {
+      this.loadingPdf = false;
+      return;
     }
-    this.loadingPdf = false;
+    // Downloaded only when opened; ignored if the popup was closed or another row opened meanwhile
+    this.loadingPdf = true;
+    this.applicantService.getApplicantDocument(item.record.id).subscribe({
+      next: (blob) => {
+        if (this.activePdfComplaint !== item) return;
+        this.revokePdfUrl();
+        this.rawBlobUrl = URL.createObjectURL(blob);
+        this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.rawBlobUrl);
+        this.loadingPdf = false;
+      },
+      error: () => {
+        if (this.activePdfComplaint !== item) return;
+        this.isFallbackDoc = true;
+        this.loadingPdf = false;
+      }
+    });
   }
 
   closePdfModal(): void {

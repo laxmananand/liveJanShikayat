@@ -16,6 +16,7 @@ namespace janshikayat.BAL.Interfaces
         IEnumerable<ApplicantRemarkDto> GetRemarks(long applicantId);
         IEnumerable<ForwardHopDto> GetForwardHistory(long applicantId);
         string? GetRemarkDocumentPath(long remarkId);
+        (string FullPath, string ContentType)? GetApplicantDocument(long applicantId);
         IEnumerable<ApplicationResponseDto> GetResponses(AccessScope scope, string adminRole);
         int GetUnseenResponseCount(AccessScope scope, string adminRole);
         void MarkResponsesSeen(long applicantId, AccessScope scope, string adminRole);

@@ -11,6 +11,7 @@ import { ApplicantDetailsModalComponent } from '../../../shared/applicant-detail
 import { CloseApplicationDialogComponent } from '../../../shared/close-application-dialog/close-application-dialog.component';
 import { DateRange, inDateRange } from '../../../core/utils/date-range';
 import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
+import { DEFAULT_PAGE_SIZE, PaginatePipe, PaginatorComponent, pageOffset } from '../../../shared/paginator/paginator';
 
 interface ResponseRow {
   record: ApplicantRecord;
@@ -30,7 +31,7 @@ type StatusTab = 'Pending' | 'Disposed' | '';
 @Component({
   selector: 'app-forward-responses',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, CloseApplicationDialogComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, DateRangeFilterComponent, CloseApplicationDialogComponent, PaginatorComponent, PaginatePipe],
   templateUrl: './forward-responses.component.html',
   styleUrls: ['../applicant-records/applicant-records.component.scss', './forward-responses.component.scss']
 })
@@ -49,6 +50,11 @@ export class ForwardResponsesComponent implements OnInit, OnDestroy {
   successMessage = '';
   private successTimer?: ReturnType<typeof setTimeout>;
   searchTerm = '';
+
+  /** Table paging (the whole list stays loaded, so filters and counts still cover all of it) */
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  readonly pageOffset = pageOffset;
   statusTab: StatusTab = 'Pending';
   readonly dateFields: DateField[] = [
     { key: 'response', label: 'प्रतिवेदन दिनांक' },

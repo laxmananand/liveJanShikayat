@@ -1,6 +1,7 @@
 <section class="quick-actions-section" id="register">
   <div class="container">
-    <div class="quick-card-wrap glass-elevation">
+    <div class="quick-card-wrap glass-elevation" [class.two-cards]="!onlineComplaint">
+      @if (onlineComplaint) {
       <a class="quick-card primary-action" routerLink="/register">
         <div class="qa-icon-wrap">
           <i class="fa-solid fa-file-pen"></i>
@@ -13,6 +14,7 @@
           <i class="fa-solid fa-arrow-right"></i>
         </div>
       </a>
+      }
 
       <a class="quick-card" routerLink="/" fragment="track">
         <div class="qa-icon-wrap">
@@ -27,6 +29,7 @@
         </div>
       </a>
 
+      @if (onlineComplaint) {
       <a class="quick-card" routerLink="/register" fragment="documents">
         <div class="qa-icon-wrap">
           <i class="fa-solid fa-file-pdf"></i>
@@ -39,6 +42,7 @@
           <i class="fa-solid fa-arrow-right"></i>
         </div>
       </a>
+      }
 
       <a class="quick-card" [routerLink]="adminLink">
         <div class="qa-icon-wrap">

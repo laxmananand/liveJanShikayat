@@ -5,18 +5,19 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApplicantService } from '../../../core/services/applicant.service';
 import { ApplicantRecord } from '../../../core/models/models';
-import { openBase64Document } from '../../../core/utils/document';
+import { openDownloadedDocument } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 import { ForwardDialogComponent } from '../../../shared/forward-dialog/forward-dialog.component';
 import { ForwardRecord, ForwardService, forwardRecipient } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { DateRange, inDateRange, isRangeActive } from '../../../core/utils/date-range';
 import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
+import { DEFAULT_PAGE_SIZE, PaginatePipe, PaginatorComponent, pageOffset } from '../../../shared/paginator/paginator';
 
 @Component({
   selector: 'app-applicant-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardDialogComponent, DateRangeFilterComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ApplicantDetailsModalComponent, ForwardDialogComponent, DateRangeFilterComponent, PaginatorComponent, PaginatePipe],
   templateUrl: './applicant-records.component.html',
   styleUrl: './applicant-records.component.scss'
 })
@@ -34,6 +35,11 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
   loading = true;
   errorMessage = '';
   searchTerm = '';
+
+  /** Table paging (the whole list stays loaded, so filters and counts still cover all of it) */
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  readonly pageOffset = pageOffset;
   readonly dateFields: DateField[] = [
     { key: 'received', label: 'आवेदन प्राप्ति की तिथि' },
     { key: 'forwarded', label: 'अग्रेषित दिनांक' }
@@ -127,8 +133,9 @@ export class ApplicantRecordsComponent implements OnInit, OnDestroy {
   }
 
   openDoc(r: ApplicantRecord): void {
-    if (r.documentBase64 && !openBase64Document(r.documentBase64)) {
+    if (!r.hasDocument) return;
+    openDownloadedDocument(this.applicantService.getApplicantDocument(r.id), () => {
       this.errorMessage = 'दस्तावेज़ खोला नहीं जा सका।';
-    }
+    });
   }
 }

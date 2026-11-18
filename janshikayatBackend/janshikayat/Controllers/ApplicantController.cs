@@ -87,7 +87,8 @@ namespace janshikayat.Controllers
             }
         }
 
-        //[Authorize] // TEMP: disabled for testing
+        // Every applicant's personal details: logged-in users only
+        [Authorize]
         [HttpGet("get-all")]
         public IActionResult GetApplicants()
         {
@@ -96,6 +97,7 @@ namespace janshikayat.Controllers
         }
 
 
+        [Authorize]
         [HttpPost("get-all-applicant-status")]
         public IActionResult GetApplicantsByDistrict([FromForm] ApplicantDetailsDtoRequestParam request)
         {
@@ -344,6 +346,19 @@ namespace janshikayat.Controllers
         public IActionResult GetClosure(long applicantId)
         {
             return Ok(new { status = "true", message = "Success", data = _IComplain.GetClosure(applicantId) });
+        }
+
+        // The document uploaded with an application (the lists only say whether there is one); logged-in users only
+        [Authorize]
+        [HttpGet("get-document/{applicantId:long}")]
+        public IActionResult GetApplicantDocument(long applicantId)
+        {
+            var document = _IComplain.GetApplicantDocument(applicantId);
+            if (document == null)
+            {
+                return NotFound(new { status = "false", message = "Document not found." });
+            }
+            return PhysicalFile(document.Value.FullPath, document.Value.ContentType);
         }
 
         // PDF attached to a remark; served only to logged-in users (the folder is outside wwwroot)

@@ -18,6 +18,7 @@ import { ApplicantRecord } from '../../../core/models/models';
 import { roleLabel } from '../../../core/utils/labels';
 import { toDayKey } from '../../../core/utils/date-range';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
+import { DEFAULT_PAGE_SIZE, PaginatePipe, PaginatorComponent, pageOffset } from '../../../shared/paginator/paginator';
 
 /** Drill-down order; each level's code / name live in the query string (d / dn, b / bn, t / tn, p / pn). */
 const LEVELS: { level: PendencyLevel; code: string; name: string; label: string; heading: string }[] = [
@@ -50,7 +51,7 @@ const STATUS_FILTER_TEXT: Record<PendencyStatus, string> = {
 @Component({
   selector: 'app-pendency-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, PaginatorComponent, PaginatePipe],
   templateUrl: './pendency-report.component.html',
   styleUrls: ['../../complaints/applicant-records/applicant-records.component.scss', './pendency-report.component.scss']
 })
@@ -77,6 +78,11 @@ export class PendencyReportComponent {
 
   rows: PendencyRow[] = [];
   applications: PendencyApplication[] = [];
+
+  /** Table paging (the whole list stays loaded, so filters and counts still cover all of it) */
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  readonly pageOffset = pageOffset;
   loading = false;
   errorMessage = '';
   generatedAt: Date | null = null;
@@ -244,7 +250,10 @@ export class PendencyReportComponent {
 
     request.subscribe({
       next: (data) => {
-        if (this.listView) this.applications = data as PendencyApplication[];
+        if (this.listView) {
+          this.applications = data as PendencyApplication[];
+          this.page = 1;
+        }
         else this.rows = data as PendencyRow[];
         this.generatedAt = new Date();
         this.loading = false;

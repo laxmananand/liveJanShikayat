@@ -7,8 +7,9 @@ import { ApplicantService } from '../../../core/services/applicant.service';
 import { ForwardRecord, ForwardService } from '../../../core/services/forward.service';
 import { ApplicantRecord } from '../../../core/models/models';
 import { STATUS_STAGES, applicationStatus, statusLabel } from '../../../core/utils/labels';
-import { openBase64Document } from '../../../core/utils/document';
+import { openDownloadedDocument } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
+import { DEFAULT_PAGE_SIZE, PaginatePipe, PaginatorComponent, pageOffset } from '../../../shared/paginator/paginator';
 
 /**
  * Real complaints from GET /Applicant/get-all, each with the status of its forward (applicationStatus).
@@ -17,7 +18,7 @@ import { ApplicantDetailsModalComponent } from '../../../shared/applicant-detail
 @Component({
   selector: 'app-complaint-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ApplicantDetailsModalComponent, PaginatorComponent, PaginatePipe],
   templateUrl: './complaint-list.component.html',
   styleUrls: ['../applicant-records/applicant-records.component.scss', './complaint-list.component.scss']
 })
@@ -34,6 +35,11 @@ export class ComplaintListComponent implements OnInit {
   selected: ApplicantRecord | null = null;
   /** Latest forward per application id */
   forwards = new Map<number, ForwardRecord>();
+
+  /** Table paging (the whole list stays loaded, so filters and counts still cover all of it) */
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  readonly pageOffset = pageOffset;
 
   statuses = [
     { value: '', label: 'सभी स्थितियां' },
@@ -104,6 +110,7 @@ export class ComplaintListComponent implements OnInit {
 
   /** get-all returns everything, so status / district / search are filtered here. */
   applyLocalFilters(): void {
+    this.page = 1;
     // No citizen (online) complaints come from this API yet
     if (this.sourceFilter === 'Online') {
       this.complaints = [];
@@ -142,8 +149,9 @@ export class ComplaintListComponent implements OnInit {
   }
 
   openDoc(r: ApplicantRecord): void {
-    if (r.documentBase64 && !openBase64Document(r.documentBase64)) {
+    if (!r.hasDocument) return;
+    openDownloadedDocument(this.applicantService.getApplicantDocument(r.id), () => {
       this.errorMessage = 'दस्तावेज़ खोला नहीं जा सका।';
-    }
+    });
   }
 }

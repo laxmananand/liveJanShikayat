@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApplicantRecord, ApplicantRemark, ForwardHop } from '../../core/models/models';
 import { ApplicantService } from '../../core/services/applicant.service';
 import { ForwardRecord, ForwardService, OFFICE_KIND } from '../../core/services/forward.service';
-import { openBase64Document, openBlobDocument } from '../../core/utils/document';
+import { openBlobDocument, openDownloadedDocument } from '../../core/utils/document';
 import { applicationStatus, statusLabel } from '../../core/utils/labels';
 
 /** Hindi name of a regional office kind, shown under the receiver in the forward history. */
@@ -240,8 +240,7 @@ export class ApplicantDetailsModalComponent implements OnChanges {
   }
 
   openDoc(r: ApplicantRecord): void {
-    if (r.documentBase64 && !openBase64Document(r.documentBase64)) {
-      alert('दस्तावेज़ खोला नहीं जा सका।');
-    }
+    if (!r.hasDocument) return;
+    openDownloadedDocument(this.applicantService.getApplicantDocument(r.id), () => alert('दस्तावेज़ खोला नहीं जा सका।'));
   }
 }

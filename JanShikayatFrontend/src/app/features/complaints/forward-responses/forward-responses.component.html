@@ -9,13 +9,13 @@
   </header>
 
   <div class="status-tabs" role="tablist">
-    <button type="button" role="tab" [class.active]="statusTab === 'Pending'" [attr.aria-selected]="statusTab === 'Pending'" (click)="statusTab = 'Pending'">
+    <button type="button" role="tab" [class.active]="statusTab === 'Pending'" [attr.aria-selected]="statusTab === 'Pending'" (click)="statusTab = 'Pending'; page = 1">
       <i class="fa-solid fa-hourglass-half"></i> लंबित / Pending <span class="tab-count">{{ count('Pending') }}</span>
     </button>
-    <button type="button" role="tab" [class.active]="statusTab === 'Disposed'" [attr.aria-selected]="statusTab === 'Disposed'" (click)="statusTab = 'Disposed'">
+    <button type="button" role="tab" [class.active]="statusTab === 'Disposed'" [attr.aria-selected]="statusTab === 'Disposed'" (click)="statusTab = 'Disposed'; page = 1">
       <i class="fa-solid fa-circle-check"></i> निष्पादित / Disposed <span class="tab-count">{{ count('Disposed') }}</span>
     </button>
-    <button type="button" role="tab" [class.active]="statusTab === ''" [attr.aria-selected]="statusTab === ''" (click)="statusTab = ''">
+    <button type="button" role="tab" [class.active]="statusTab === ''" [attr.aria-selected]="statusTab === ''" (click)="statusTab = ''; page = 1">
       <i class="fa-solid fa-layer-group"></i> सभी / All <span class="tab-count">{{ count('') }}</span>
     </button>
   </div>
@@ -23,11 +23,11 @@
   <div class="records-toolbar">
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, आवेदक का नाम, मोबाइल नंबर" />
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="page = 1" placeholder="आवेदन संख्या, आवेदक का नाम, मोबाइल नंबर" />
     </div>
   </div>
 
-  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
+  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange" (rangeChange)="page = 1"></app-date-range-filter>
 
   <div class="alert alert-error" *ngIf="errorMessage">
     <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
@@ -62,8 +62,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of filtered; let i = index" [class.row-unseen]="row.response.unseenCount > 0 && !row.response.isDisposed">
-          <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+        <tr *ngFor="let row of filtered | paginate: page : pageSize; let i = index" [class.row-unseen]="row.response.unseenCount > 0 && !row.response.isDisposed">
+          <td class="col-sn" data-label="क्रम सं.">{{ pageOffset(page, filtered.length, pageSize) + i + 1 }}</td>
           <td data-label="आवेदन संख्या">
             <span class="app-no">{{ row.record.applicationNo || '—' }}</span>
             <span class="new-tag" *ngIf="row.response.unseenCount > 0 && !row.response.isDisposed">नया / New</span>
@@ -118,6 +118,7 @@
       </tbody>
     </table>
   </div>
+  <app-paginator *ngIf="!loading && filtered.length" [total]="filtered.length" [(page)]="page" [(pageSize)]="pageSize"></app-paginator>
 
   <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
     <p *ngIf="statusTab === 'Pending'">कोई लंबित प्रतिवेदन नहीं है।</p>

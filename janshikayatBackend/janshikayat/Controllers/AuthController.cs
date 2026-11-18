@@ -22,10 +22,13 @@ namespace janshikayat.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly MobileSevaOtpSender _smsSender;
         private readonly OtpCodeStore _otpStore;
-        private static readonly Dictionary<string, string> CaptchaStore = new();
+        private readonly CaptchaStore _captchaStore;
+        private readonly LoginAttemptStore _loginAttempts;
         public AuthController(IConfiguration configuration, IAuthService IAuthService, IHttpContextAccessor httpContextAccessor,
-            MobileSevaOtpSender smsSender, OtpCodeStore otpStore)
+            MobileSevaOtpSender smsSender, OtpCodeStore otpStore, CaptchaStore captchaStore, LoginAttemptStore loginAttempts)
         {
+            _captchaStore = captchaStore;
+            _loginAttempts = loginAttempts;
             _configuration = configuration;
             _IAuthService = IAuthService;
             _httpContextAccessor = httpContextAccessor;
@@ -39,7 +42,7 @@ namespace janshikayat.Controllers
 
             string captchaText = _IAuthService.GenerateCaptchaText(6);
 
-            CaptchaStore[captchaId] = captchaText;
+            _captchaStore.Add(captchaId, captchaText);
 
             string svg = _IAuthService.GenerateCaptchaSvg(captchaText);
 
@@ -57,40 +60,9 @@ namespace janshikayat.Controllers
         [HttpPost("verify-captcha")]
         public IActionResult VerifyCaptcha([FromBody] CaptchaVerifyRequest model)
         {
-            if (model == null ||
-                string.IsNullOrWhiteSpace(model.CaptchaId) ||
-                string.IsNullOrWhiteSpace(model.CaptchaCode))
-            {
-                return Ok(new
-                {
-                    status = false,
-                    message = "Captcha is required."
-                });
-            }
-
-            if (!CaptchaStore.TryGetValue(model.CaptchaId, out string? captchaText))
-            {
-                return Ok(new
-                {
-                    status = false,
-                    message = "Captcha expired or invalid."
-                });
-            }
-
-            if (!string.Equals(
-                    captchaText,
-                    model.CaptchaCode,
-                    StringComparison.Ordinal))
-            {
-                return Ok(new
-                {
-                    status = false,
-                    message = "Invalid captcha."
-                });
-            }
-
-            // Remove captcha after successful verification
-            CaptchaStore.Remove(model.CaptchaId);
+            var captchaError = _captchaStore.Consume(model?.CaptchaId, model?.CaptchaCode);
+            if (captchaError != null)
+                return Ok(new { status = false, message = captchaError });
 
             return Ok(new
             {
@@ -101,6 +73,7 @@ namespace janshikayat.Controllers
 
         // ================= LOGIN =================
         [HttpPost("login")]
+        [EnableRateLimiting(LoginRateLimit)]
         public IActionResult Login([FromBody] LoginParam model)
         {
             if (model == null ||
@@ -114,51 +87,34 @@ namespace janshikayat.Controllers
                 });
             }
 
-            // 1) Captcha check
-            if (string.IsNullOrWhiteSpace(model.CaptchaId) ||
-                string.IsNullOrWhiteSpace(model.CaptchaCode))
+            // 1) Captcha check (used up whether right or wrong)
+            var captchaError = _captchaStore.Consume(model.CaptchaId, model.CaptchaCode);
+            if (captchaError != null)
+                return Ok(new { status = false, message = captchaError });
+
+            // 2) Too many wrong passwords for this username: locked for a while
+            var lockedMinutes = _loginAttempts.LockedMinutes(model.UserName);
+            if (lockedMinutes > 0)
             {
                 return Ok(new
                 {
                     status = false,
-                    message = "Captcha is required."
+                    message = $"गलत पासवर्ड कई बार डाला गया। कृपया {lockedMinutes} मिनट बाद प्रयास करें। / Too many wrong passwords. Try again in {lockedMinutes} minutes."
                 });
             }
 
-            if (!CaptchaStore.TryGetValue(model.CaptchaId, out string? captchaText))
-            {
-                return Ok(new
-                {
-                    status = false,
-                    message = "Captcha expired or invalid."
-                });
-            }
-
-            if (!string.Equals(
-                    captchaText,
-                    model.CaptchaCode,
-                    StringComparison.Ordinal))
-            {
-                return Ok(new
-                {
-                    status = false,
-                    message = "Invalid captcha."
-                });
-            }
-
-            // consume captcha
-            CaptchaStore.Remove(model.CaptchaId);
-
-            // 2) Authenticate
+            // 3) Authenticate
             var result = _IAuthService.Login(model);
             if (result == null)
             {
+                _loginAttempts.Fail(model.UserName);
                 return Ok(new
                 {
                     status = false,
                     message = "Invalid username or password."
                 });
             }
+            _loginAttempts.Succeed(model.UserName);
 
             return Ok(new
             {
@@ -172,7 +128,8 @@ namespace janshikayat.Controllers
         // SMS template in Otp:Sms:Templates (appsettings.json), registered on DLT; used for login and for verifying a new number
         private const string OtpSmsTemplate = "LoginOtp";
 
-        // Policy name registered in Program.cs
+        // Policy names registered in Program.cs
+        public const string LoginRateLimit = "Login";
         public const string OtpSendRateLimit = "OtpSend";
 
         [HttpPost("otp/send")]

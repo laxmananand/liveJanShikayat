@@ -13,6 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add Services
 builder.Services.AddControllers();
+
+// gzip / brotli for API responses: the JSON lists shrink to a fraction of their size
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.MimeTypes = new[] { "application/json", "text/plain" };
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -32,6 +39,10 @@ builder.Services.AddMobileSevaOtp();
 // OTPs waiting to be entered (OTP login and verifying a newly added mobile number)
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<OtpCodeStore>();
+
+// Login captchas (expire after 5 minutes, one check each) and wrong-password lockout per username
+builder.Services.AddSingleton<CaptchaStore>();
+builder.Services.AddSingleton<LoginAttemptStore>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -128,15 +139,25 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+    // Password logins: at most 30 per minute per IP (offices share one IP), then 429
+    options.AddPolicy(janshikayat.Controllers.AuthController.LoginRateLimit, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1) }));
 });
 
 var app = builder.Build();
 
-// Swagger
-app.UseSwagger();
-app.UseSwaggerUI();
+// Swagger only on a developer's PC: on the server it would list every endpoint to anyone
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // Middleware
+app.UseResponseCompression();
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();

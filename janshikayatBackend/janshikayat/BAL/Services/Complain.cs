@@ -69,52 +69,57 @@ namespace janshikayat.BAL.Services
             );
 
 
+            var list = applicants.ToList();
+            SetDocumentSizes(list);
+            return list;
+        }
+
+        // The list carries only whether a document exists and its size; the file itself is fetched on demand
+        // (GetApplicantDocument), so a list response stays small however many applications there are.
+        private void SetDocumentSizes(IEnumerable<ApplicantDetailsDto> applicants)
+        {
             foreach (var item in applicants)
             {
-                item.DocumentPath =
-                    ConvertFileToBase64(item.DocumentPath);
+                var fullPath = ResolveDocumentPath(item.DocumentPath);
+                item.DocumentSize = fullPath == null ? null : new FileInfo(fullPath).Length;
             }
-            return applicants;
         }
-        public string? ConvertFileToBase64(string? filePath)
+
+        // Full path of a stored document ("/janshikayatDocument/x.pdf" under wwwroot), or null when it is not there.
+        // Only the file name is kept from the stored value, so it can never point outside the documents folder.
+        private string? ResolveDocumentPath(string? storedPath)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
+            var fileName = Path.GetFileName(storedPath);
+            if (string.IsNullOrWhiteSpace(fileName))
                 return null;
 
-            try
-            {
-                // Remove starting /
-                filePath = filePath.TrimStart('/');
+            var fullPath = Path.Combine(_environment.WebRootPath, ApplicantDocumentFolder, fileName);
+            return System.IO.File.Exists(fullPath) ? fullPath : null;
+        }
 
-                // wwwroot/BiharStateDisability/filename.pdf
-                string fullPath = Path.Combine(
-                    _environment.WebRootPath,
-                    filePath.Replace("/", Path.DirectorySeparatorChar.ToString())
-                );
+        private const string ApplicantDocumentFolder = "janshikayatDocument";
 
-                if (!System.IO.File.Exists(fullPath))
-                    return null;
+        // The applicant's document: full path and content type, or null when the application has none
+        public (string FullPath, string ContentType)? GetApplicantDocument(long applicantId)
+        {
+            using var conn = _context.CreateConnection();
 
-                byte[] fileBytes = System.IO.File.ReadAllBytes(fullPath);
-
-                string extension = Path.GetExtension(fullPath).ToLowerInvariant();
-
-                string contentType = extension switch
-                {
-                    ".pdf" => "application/pdf",
-                    ".jpg" => "image/jpeg",
-                    ".jpeg" => "image/jpeg",
-                    ".png" => "image/png",
-                    ".gif" => "image/gif",
-                    _ => "application/octet-stream"
-                };
-
-                return $"data:{contentType};base64,{Convert.ToBase64String(fileBytes)}";
-            }
-            catch
-            {
+            var stored = conn.QueryFirstOrDefault<string?>(
+                "SELECT DocumentPath FROM Tbl_Applicant_Details WHERE ID = @ID AND Is_Active = 1",
+                new { ID = applicantId });
+            var fullPath = ResolveDocumentPath(stored);
+            if (fullPath == null)
                 return null;
-            }
+
+            var contentType = Path.GetExtension(fullPath).ToLowerInvariant() switch
+            {
+                ".pdf" => "application/pdf",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                _ => "application/octet-stream"
+            };
+            return (fullPath, contentType);
         }
 
         public IEnumerable<ApplicantDetailsDto> GetApplicantstatus(ApplicantDetailsDtoRequestParam request)
@@ -134,12 +139,9 @@ namespace janshikayat.BAL.Services
             );
 
 
-            foreach (var item in applicants)
-            {
-                item.DocumentPath =
-                    ConvertFileToBase64(item.DocumentPath);
-            }
-            return applicants;
+            var list = applicants.ToList();
+            SetDocumentSizes(list);
+            return list;
         }
 
         // Returns null when the application does not exist (or is inactive), or the

@@ -21,7 +21,7 @@ export class ApplicantService {
   private auth = inject(AuthService);
   private baseUrl = `${environment.apiUrl}/Applicant`;
 
-  /** get-all is heavy (documents as base64), so it is kept in memory across sidebar navigation. */
+  /** get-all lists every application, so it is kept in memory across sidebar navigation. */
   private applicantsCache = new CachedRequest(() => this.fetchApplicants(), 60_000);
 
   constructor() {
@@ -96,7 +96,8 @@ export class ApplicantService {
           areaType: pick(r, 'areaType', 'AreaType') ?? '',
           wardName: pick(r, 'wardName', 'WardName') ?? '',
           mohalla: pick(r, 'mohalla', 'Mohalla') ?? '',
-          documentBase64: pick(r, 'documentPath', 'DocumentPath') ?? null,
+          hasDocument: !!pick(r, 'hasDocument', 'HasDocument'),
+          documentSize: pick(r, 'documentSize', 'DocumentSize') ?? null,
           applicationSource: pick(r, 'application_Source', 'Application_Source') ?? 'Offline'
         }))
       )
@@ -133,6 +134,11 @@ export class ApplicantService {
     return this.http
       .post<{ data: ApplicantRemark }>(`${this.baseUrl}/add-remark`, fd)
       .pipe(map((res) => res.data));
+  }
+
+  /** API: GET /Applicant/get-document/{applicantId} → the document uploaded with the application (any logged-in role). */
+  getApplicantDocument(applicantId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/get-document/${applicantId}`, { responseType: 'blob' });
   }
 
   /** API: GET /Applicant/get-remark-document/{remarkId} → the PDF attached to a remark (any logged-in role). */

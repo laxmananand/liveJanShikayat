@@ -43,10 +43,10 @@
 
       <div class="vd-block">
         <dt>दस्तावेज़</dt>
-        <button *ngIf="s.documentBase64" type="button" class="vd-pdf" (click)="openDoc(s)">
+        <button *ngIf="s.hasDocument" type="button" class="vd-pdf" (click)="openDoc(s)">
           <i class="fa-solid fa-file-pdf"></i> View PDF
         </button>
-        <dd *ngIf="!s.documentBase64" class="muted">कोई दस्तावेज़ उपलब्ध नहीं</dd>
+        <dd *ngIf="!s.hasDocument" class="muted">कोई दस्तावेज़ उपलब्ध नहीं</dd>
       </div>
 
       <div class="vd-block" *ngIf="firstHop || forward">

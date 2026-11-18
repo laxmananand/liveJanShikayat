@@ -311,7 +311,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of filteredList" class="tracking-row" [class.highlighted]="item.complaintNumber === copiedId">
+          <tr *ngFor="let item of filteredList | paginate: page : pageSize" class="tracking-row" [class.highlighted]="item.complaintNumber === copiedId">
             <!-- 1. Tracking ID & Source -->
             <td class="td-tracking-id">
               <div class="tracking-pill-box">
@@ -471,7 +471,7 @@
        DATA GRID: CARDS VIEW (ALTERNATIVE MODERN DISPLAY)
        ══════════════════════════════════════════════════════ -->
   <div class="cards-grid-container" *ngIf="!loading && viewMode === 'cards' && filteredList.length > 0">
-    <div class="tracking-card-item" *ngFor="let item of filteredList">
+    <div class="tracking-card-item" *ngFor="let item of filteredList | paginate: page : pageSize">
       <div class="card-top-strip">
         <div class="card-ref-badge">
           <span class="ref-code">{{ item.complaintNumber }}</span>
@@ -537,6 +537,8 @@
       </div>
     </div>
   </div>
+
+  <app-paginator *ngIf="!loading && filteredList.length" [total]="filteredList.length" [(page)]="page" [(pageSize)]="pageSize"></app-paginator>
 
   <!-- ── Empty State ── -->
   <div class="empty-results-card" *ngIf="!loading && filteredList.length === 0">

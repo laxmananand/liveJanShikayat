@@ -21,10 +21,11 @@ import { CloseApplicationDialogComponent } from '../../../shared/close-applicati
 import { ClosureRecord } from '../../../core/services/forward.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { applicationStatus, statusLabel } from '../../../core/utils/labels';
-import { openBase64Document } from '../../../core/utils/document';
+import { openDownloadedDocument } from '../../../core/utils/document';
 import { ApplicantDetailsModalComponent } from '../../../shared/applicant-details/applicant-details-modal.component';
 import { DateRange, inDateRange, isRangeActive } from '../../../core/utils/date-range';
 import { DateField, DateRangeFilterComponent } from '../../../shared/date-range-filter/date-range-filter.component';
+import { DEFAULT_PAGE_SIZE, PaginatePipe, PaginatorComponent, pageOffset } from '../../../shared/paginator/paginator';
 
 interface ForwardedRow {
   record: ApplicantRecord;
@@ -45,7 +46,9 @@ interface ForwardedRow {
     DateRangeFilterComponent,
     ReforwardDialogComponent,
     ForwardTrackDialogComponent,
-    CloseApplicationDialogComponent
+    CloseApplicationDialogComponent,
+    PaginatorComponent,
+    PaginatePipe
   ],
   templateUrl: './forwarded-applications.component.html',
   styleUrl: '../applicant-records/applicant-records.component.scss'
@@ -59,6 +62,11 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   loading = true;
   errorMessage = '';
   searchTerm = '';
+
+  /** Table paging (the whole list stays loaded, so filters and counts still cover all of it) */
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  readonly pageOffset = pageOffset;
   readonly dateFields: DateField[] = [
     { key: 'forwarded', label: 'अग्रेषित दिनांक' },
     { key: 'received', label: 'आवेदन प्राप्ति की तिथि' },
@@ -280,8 +288,9 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   }
 
   openDoc(r: ApplicantRecord): void {
-    if (r.documentBase64 && !openBase64Document(r.documentBase64)) {
+    if (!r.hasDocument) return;
+    openDownloadedDocument(this.applicantService.getApplicantDocument(r.id), () => {
       this.errorMessage = 'दस्तावेज़ खोला नहीं जा सका।';
-    }
+    });
   }
 }

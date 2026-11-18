@@ -130,7 +130,10 @@ export class LoginComponent implements OnDestroy {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err?.error?.message || err?.message || 'यूज़रनेम, पासवर्ड या कैप्चा गलत है।';
+        this.errorMessage =
+          err?.status === 429
+            ? 'बहुत अधिक लॉगिन प्रयास। कृपया एक मिनट बाद प्रयास करें। / Too many login attempts. Please try again in a minute.'
+            : err?.error?.message || err?.message || 'यूज़रनेम, पासवर्ड या कैप्चा गलत है।';
         this.refreshCaptcha();
         // A used captcha is never valid again, so put the cursor where the new one goes
         setTimeout(() => document.getElementById('captcha')?.focus());

@@ -158,3 +158,21 @@
     font-size: 0.65rem;
   }
 }
+
+/* Only Track and Login while the online complaint form is hidden (FEATURES.onlineComplaint) */
+.quick-card-wrap.two-cards {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width: 991.98px) {
+  .quick-card-wrap.two-cards .quick-card {
+    border-bottom: 0;
+  }
+}
+@media (max-width: 575.98px) {
+  .quick-card-wrap.two-cards {
+    grid-template-columns: 1fr;
+  }
+  .quick-card-wrap.two-cards .quick-card:first-child {
+    border-bottom: 1px solid #d4dbec;
+  }
+}

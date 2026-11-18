@@ -57,8 +57,8 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let c of complaints; let i = index">
-        <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+      <tr *ngFor="let c of complaints | paginate: page : pageSize; let i = index">
+        <td class="col-sn" data-label="क्रम सं.">{{ pageOffset(page, complaints.length, pageSize) + i + 1 }}</td>
         <td data-label="आवेदन संख्या"><span class="app-no">{{ c.applicationNo || c.id }}</span></td>
         <td data-label="आवेदक का नाम">{{ c.applicantName }}</td>
         <td data-label="पिता / पति का नाम">{{ c.fatherHusbandName || '—' }}</td>
@@ -76,7 +76,7 @@
             <button type="button" class="icon-btn view" (click)="openComplaint(c)" title="पूरा विवरण देखें / View details">
               <i class="fa-solid fa-eye"></i>
             </button>
-            <button type="button" class="icon-btn pdf" *ngIf="c.documentBase64" (click)="openDoc(c)" title="दस्तावेज़ देखें / View document">
+            <button type="button" class="icon-btn pdf" *ngIf="c.hasDocument" (click)="openDoc(c)" title="दस्तावेज़ देखें / View document">
               <i class="fa-solid fa-file-pdf"></i>
             </button>
           </div>
@@ -85,6 +85,7 @@
     </tbody>
   </table>
 </div>
+<app-paginator *ngIf="!loading && complaints.length" [total]="complaints.length" [(page)]="page" [(pageSize)]="pageSize"></app-paginator>
 
 <div *ngIf="!loading && !complaints.length && !errorMessage" class="empty-state">
   {{ sourceFilter === 'Online' ? 'अभी कोई ऑनलाइन (नागरिक) शिकायत उपलब्ध नहीं है।' : 'चयनित फ़िल्टर के लिए कोई शिकायत नहीं मिली।' }}

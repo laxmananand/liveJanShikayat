@@ -14,11 +14,11 @@
   <div class="records-toolbar">
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" [(ngModel)]="searchTerm" placeholder="आवेदन संख्या, आवेदक का नाम, मोबाइल नंबर, जिला, शाखा या शिकायत के प्रकार से खोजें" />
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="page = 1" placeholder="आवेदन संख्या, आवेदक का नाम, मोबाइल नंबर, जिला, शाखा या शिकायत के प्रकार से खोजें" />
     </div>
   </div>
 
-  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange"></app-date-range-filter>
+  <app-date-range-filter [fields]="dateFields" [(range)]="dateRange" (rangeChange)="page = 1"></app-date-range-filter>
 
   <div class="alert alert-info" *ngIf="infoMessage">
     <i class="fa-solid fa-circle-info"></i> {{ infoMessage }}
@@ -58,8 +58,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of filtered; let i = index">
-          <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+        <tr *ngFor="let row of filtered | paginate: page : pageSize; let i = index">
+          <td class="col-sn" data-label="क्रम सं.">{{ pageOffset(page, filtered.length, pageSize) + i + 1 }}</td>
           <td data-label="आवेदन संख्या"><span class="app-no">{{ row.record.applicationNo || '—' }}</span></td>
           <td data-label="आवेदक का नाम">{{ row.record.applicantName }}</td>
           <td data-label="पिता / पति का नाम">{{ row.record.fatherHusbandName || '—' }}</td>
@@ -86,7 +86,7 @@
               <button type="button" class="icon-btn view" (click)="openDetails(row, false)" title="पूरा विवरण देखें / View details">
                 <i class="fa-solid fa-eye"></i>
               </button>
-              <button type="button" class="icon-btn pdf" *ngIf="row.record.documentBase64" (click)="openDoc(row.record)" title="दस्तावेज़ देखें / View document">
+              <button type="button" class="icon-btn pdf" *ngIf="row.record.hasDocument" (click)="openDoc(row.record)" title="दस्तावेज़ देखें / View document">
                 <i class="fa-solid fa-file-pdf"></i>
               </button>
             </div>
@@ -123,6 +123,7 @@
       </tbody>
     </table>
   </div>
+  <app-paginator *ngIf="!loading && filtered.length" [total]="filtered.length" [(page)]="page" [(pageSize)]="pageSize"></app-paginator>
 
   <div class="empty-state" *ngIf="!loading && !filtered.length && !errorMessage">
     <p *ngIf="hasBranch && !rows.length">अभी तक कोई आवेदन अग्रेषित नहीं हुआ है।</p>

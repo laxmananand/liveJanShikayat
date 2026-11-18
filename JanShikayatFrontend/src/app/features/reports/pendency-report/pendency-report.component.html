@@ -115,8 +115,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let a of applications; let i = index">
-            <td class="col-sn" data-label="क्रम सं.">{{ i + 1 }}</td>
+          <tr *ngFor="let a of applications | paginate: page : pageSize; let i = index">
+            <td class="col-sn" data-label="क्रम सं.">{{ pageOffset(page, applications.length, pageSize) + i + 1 }}</td>
             <td data-label="आवेदन संख्या"><span class="app-no">{{ a.applicationNo || '—' }}</span></td>
             <td data-label="आवेदक का नाम">{{ a.applicantName }}</td>
             <td data-label="पिता / पति का नाम">{{ a.fatherHusbandName || '—' }}</td>
@@ -148,6 +148,7 @@
         </tbody>
       </table>
     </div>
+    <app-paginator *ngIf="!loading && listView && applications.length" [total]="applications.length" [(page)]="page" [(pageSize)]="pageSize"></app-paginator>
 
     <div class="empty-state" *ngIf="!loading && !errorMessage && (listView ? !applications.length : !rows.length)">
       <p>{{ isAdmin ? 'चयनित मानदंड के अनुसार कोई आवेदन नहीं मिला।' : 'आपके क्षेत्राधिकार में चयनित मानदंड के अनुसार कोई आवेदन नहीं मिला।' }}</p>

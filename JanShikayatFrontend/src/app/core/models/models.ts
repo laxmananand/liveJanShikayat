@@ -148,7 +148,8 @@ export interface ApplicantRecord {
   areaType: string; // 'R', 'U' or ''
   wardName: string;
   mohalla: string;
-  documentBase64: string | null; // base64 of the stored file, or null
+  hasDocument: boolean; // a document was uploaded with the application (fetched on demand: get-document/{id})
+  documentSize: number | null; // its size in bytes
   applicationSource: string;
 }
 

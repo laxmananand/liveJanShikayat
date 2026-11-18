@@ -1,22 +1,25 @@
+import { Observable } from 'rxjs';
+
 let lastObjectUrl: string | null = null;
 
 /**
- * Open a base64 document (with or without a `data:` prefix) in a new tab. Browsers block
- * opening `data:` URLs in a tab, so it is turned into a Blob and opened through an object URL.
- * Returns false if the base64 could not be decoded.
+ * Download a document and open it in a new tab. Call it from the click itself: the tab is opened
+ * straight away (so popup blockers allow it) and filled when the file arrives; closed again on error.
  */
-export function openBase64Document(documentBase64: string): boolean {
-  const [header, base64] = documentBase64.startsWith('data:')
-    ? documentBase64.split(',')
-    : ['data:application/pdf;base64', documentBase64];
-  const mime = header.match(/data:([^;]+)/)?.[1] ?? 'application/pdf';
-  try {
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    openBlobDocument(new Blob([bytes], { type: mime }));
-    return true;
-  } catch {
-    return false;
-  }
+export function openDownloadedDocument(download: Observable<Blob>, onError: () => void): void {
+  const tab = window.open('', '_blank');
+  download.subscribe({
+    next: (blob) => openBlobDocument(blob, tab),
+    error: () => {
+      tab?.close();
+      onError();
+    }
+  });
+}
+
+/** "1.25 MB" / "340 KB" for a size in bytes. */
+export function formatFileSize(bytes: number): string {
+  return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(2)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 /**
