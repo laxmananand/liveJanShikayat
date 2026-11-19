@@ -1,4 +1,4 @@
-// "टिकट संख्या" view popup: plain header, 4-column label / value grid, document, forward history and remarks tables.
+// "आवेदन संख्या" view popup: plain header, 4-column label / value grid, document, forward history and remarks tables.
 
 .vd-backdrop {
   position: fixed;
@@ -47,44 +47,51 @@
   }
 }
 
+// "वर्तमान स्थिति:" sits right before the status badge (the head's 0.75rem gap is pulled in to keep them together)
+.vd-status-label {
+  margin-right: -0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5670;
+  white-space: nowrap;
+}
+
+// Same colours as the स्थिति badge in the complaint lists (applicant-records .status-badge)
 .vd-status {
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 700;
-  background: #e8f1fb;
-  color: #1f5f99;
+  background: #555;
+  color: #fff;
 
   &[data-status='Pending'] {
-    background: #fff4e0;
-    color: #9a5b00;
+    background: #b45309;
   }
   &[data-status='Disposed'] {
-    background: #e2f3e7;
-    color: #2f7d4f;
-  }
-  &[data-status='Registered'] {
-    background: #eef0f4;
-    color: #4a5a7c;
+    background: #2e9e44;
   }
 }
 
+// The only way to close the popup, so it stands out in red
 .vd-x {
-  background: none;
-  border: none;
+  background: #fdecec;
+  border: 1.5px solid #f5b5b5;
   font-size: 1.3rem;
-  color: #424e6d;
+  color: #dc2626;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 6px;
 
   &:hover {
-    background: #dae1f1;
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
   }
 }
 
 .vd-body {
-  padding: 1.1rem 1.25rem 0.5rem;
+  padding: 1.1rem 1.25rem 1.25rem;
   overflow-y: auto;
 }
 
@@ -317,13 +324,6 @@ dd {
   font-weight: 600;
 }
 
-.vd-foot {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.85rem 1.25rem 1rem;
-  border-top: 1px solid #dae1f1;
-}
-
 .vd-btn {
   display: inline-flex;
   align-items: center;
@@ -342,8 +342,7 @@ dd {
   }
 }
 
-// Secondary (Close, Attach PDF): white with border, like the app's ghost buttons
-.vd-btn-close,
+// Secondary (Attach PDF): white with border, like the app's ghost buttons
 .vd-btn-light {
   background: #fff;
   border-color: #cad3e6;

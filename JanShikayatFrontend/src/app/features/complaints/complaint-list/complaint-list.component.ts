@@ -138,6 +138,11 @@ export class ComplaintListComponent implements OnInit {
     return applicationStatus(this.forwards.get(r.id));
   }
 
+  /** Latest forward, so the popup shows the same status as the list */
+  forwardOf(r: ApplicantRecord | null): ForwardRecord | null {
+    return (r && this.forwards.get(r.id)) ?? null;
+  }
+
   /** Closure of a Disposed application (locks its remarks), else null */
   closureOf(r: ApplicantRecord | null): ForwardRecord | null {
     const f = r ? this.forwards.get(r.id) : undefined;

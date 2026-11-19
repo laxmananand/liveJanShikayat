@@ -1,5 +1,5 @@
-<div class="tk-backdrop" *ngIf="record as s" (click)="close()">
-  <div class="tk-modal" role="dialog" aria-modal="true" aria-labelledby="trackTitle" (click)="$event.stopPropagation()">
+<div class="tk-backdrop" *ngIf="record as s">
+  <div class="tk-modal" role="dialog" aria-modal="true" aria-labelledby="trackTitle">
     <div class="tk-head">
       <h2 id="trackTitle"><i class="fa-solid fa-sitemap"></i> अग्रेषण प्रगति <span>(Forward Progress)</span>: {{ s.applicationNo || s.id }}</h2>
       <button type="button" class="tk-x" (click)="close()" aria-label="बंद करें"><i class="fa-solid fa-xmark"></i></button>
@@ -121,10 +121,6 @@
           </div>
         </section>
       </div>
-    </div>
-
-    <div class="tk-foot">
-      <button type="button" class="tk-btn" (click)="close()"><i class="fa-solid fa-xmark"></i> Close</button>
     </div>
   </div>
 </div>

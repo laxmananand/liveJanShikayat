@@ -47,17 +47,20 @@
   }
 }
 
+// The only way to close the popup, so it stands out in red
 .tk-x {
-  background: none;
-  border: none;
+  background: #fdecec;
+  border: 1.5px solid #f5b5b5;
   font-size: 1.3rem;
-  color: #424e6d;
+  color: #dc2626;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 6px;
 
   &:hover {
-    background: #dae1f1;
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
   }
 }
 
@@ -462,33 +465,6 @@ svg {
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
-}
-
-.tk-foot {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.85rem 1.25rem 1rem;
-  border-top: 1px solid #dae1f1;
-}
-
-// App ghost button (white with border), as in the other popups
-.tk-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.6rem 1.1rem;
-  border: 1.5px solid #cad3e6;
-  border-radius: 8px;
-  background: #fff;
-  color: #26324a;
-  font: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:hover {
-    background: #f3f5fb;
-  }
 }
 
 @media (max-width: 900px) {

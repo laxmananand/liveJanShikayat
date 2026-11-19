@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApplicantRecord, ApplicantRemark, ForwardHop } from '../../core/models/models';
@@ -234,7 +234,7 @@ export class ApplicantDetailsModalComponent implements OnChanges {
     });
   }
 
-  @HostListener('document:keydown.escape')
+  /** The popup closes only from the ✕ in its header (no backdrop click, Esc key or footer button). */
   close(): void {
     if (this.record) this.closed.emit();
   }
