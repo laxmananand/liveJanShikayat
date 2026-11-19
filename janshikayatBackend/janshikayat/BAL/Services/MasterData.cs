@@ -162,7 +162,9 @@ namespace janshikayat.BAL.Services
         {
             using var conn = _context.CreateConnection();
 
-            var sql = "select Sub_Type_id, Complain_Id, Sub_Type from Mst_Complain_Sub_Type where Complain_Id = @ComplainId order by Sub_Type_id";
+            // "अन्य" (Other) last, even after types merged in from another branch (016: Probation into Prison)
+            var sql = @"select Sub_Type_id, Complain_Id, Sub_Type from Mst_Complain_Sub_Type where Complain_Id = @ComplainId
+                        order by case when ltrim(rtrim(Sub_Type)) = N'अन्य' then 1 else 0 end, Sub_Type_id";
 
             return conn.Query<MstComplainSubType>(sql, new { ComplainId = complainId }).ToList();
         }
