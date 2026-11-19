@@ -8,8 +8,8 @@ import { Component } from '@angular/core';
     <footer class="footer-strip">
       <p>
         <span>© {{ year }}</span>
-        <span>विभागीय जन शिकायत निदान पोर्टल</span>
-        <span>अधिकृत गृह विभाग, बिहार सरकार</span>
+        <span>गृह विभाग जन शिकायत निदान पोर्टल</span>
+        <span>अधिकृत विभागीय प्रणाली</span>
         <span>सर्वाधिकार सुरक्षित</span>
       </p>
       <div class="nic-credit">
