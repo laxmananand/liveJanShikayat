@@ -34,7 +34,7 @@
         <div><dt>अग्रेषित करने वाला विभाग</dt><dd class="hi">{{ firstHop?.fromLabel || (forward ? 'गृह विभाग' : '—') }}</dd></div>
 
         <div *ngIf="firstHop || forward" class="span-2"><dt>अग्रेषित किया गया</dt><dd>{{ firstHop?.toLabel || forwardTo || '—' }}</dd></div>
-        <div *ngIf="branch" class="span-2"><dt>शाखा</dt><dd>{{ branch }}</dd></div>
+        <div *ngIf="branch" class="span-2"><dt>{{ branchHeading }}</dt><dd>{{ branch }}</dd></div>
         <div *ngIf="complaintType" class="span-2">
           <dt>{{ forward && isEmailForward(forward) ? 'ईमेल' : 'शिकायत का प्रकार' }}</dt><dd>{{ complaintType }}</dd>
         </div>
@@ -80,7 +80,7 @@
                     <span>
                       {{ h.toLabel }}
                       <small *ngIf="officeKind(h)">{{ officeKind(h) }}</small>
-                      <small *ngIf="h.branchLabel && h.branchLabel !== h.toLabel">शाखा: {{ h.branchLabel }}</small>
+                      <small *ngIf="h.branchLabel && h.branchLabel !== h.toLabel">{{ branchWord(h.categoryLabel) }}: {{ h.branchLabel }}</small>
                     </span>
                   </span>
                 </td>

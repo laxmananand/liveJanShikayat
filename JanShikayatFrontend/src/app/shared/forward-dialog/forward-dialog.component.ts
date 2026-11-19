@@ -73,6 +73,14 @@ export class ForwardDialogComponent implements OnChanges {
   }
 
   /** Section forwards go to a Prashakha first (matched by name, like Department). */
+  // The branch step is called "शाखा / Branch" under Home (and before a category is picked), "विषय / Subject" otherwise
+  get branchTerm(): { hi: string; en: string; enLower: string } {
+    const c = this.categories.find((x) => x.id === this.form.controls.categoryId.value);
+    return !c || c.label.trim().toLowerCase() === 'home'
+      ? { hi: 'शाखा', en: 'Branch', enLower: 'branch' }
+      : { hi: 'विषय', en: 'Subject', enLower: 'subject' };
+  }
+
   get isSection(): boolean {
     const c = this.categories.find((x) => x.id === this.form.controls.categoryId.value);
     return c?.label.trim().toLowerCase() === 'section';

@@ -179,6 +179,7 @@ export interface ForwardHop {
   toOfficeId: number | null; // Mst_Regional_Office.Office_Id, null for branch / section
   toUnitCode?: number | null;
   toLabel: string;
+  categoryLabel?: string | null; // category picked when forwarding (level 1)
   branchLabel?: string | null; // शाखा picked when forwarding (level 1)
   complaintTypeLabel?: string | null;
   remarks: string | null;

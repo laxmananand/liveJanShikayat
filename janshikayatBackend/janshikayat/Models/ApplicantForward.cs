@@ -300,7 +300,8 @@ namespace janshikayat.Models
         public int? ToOfficeId { get; set; }
         public int? ToUnitCode { get; set; }
         public string ToLabel { get; set; } = string.Empty;
-        // शाखा (Mst_Branch) and complaint type picked when forwarding; level 1 only for now
+        // Category, शाखा (Mst_Branch) and complaint type picked when forwarding; level 1 only for now
+        public string? CategoryLabel { get; set; }
         public string? BranchLabel { get; set; }
         public string? ComplaintTypeLabel { get; set; }
         public string? Remarks { get; set; }

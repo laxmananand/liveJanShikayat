@@ -61,7 +61,7 @@
 
       <!-- Branch -->
       <div class="fw-field">
-        <label for="fwBranch"><span class="fw-step">{{ 2 + stepOffset }}</span> {{ isDepartment ? 'विभाग / Department' : 'शाखा / Branch' }} <span class="req">*</span></label>
+        <label for="fwBranch"><span class="fw-step">{{ 2 + stepOffset }}</span> {{ isDepartment ? 'विभाग / Department' : branchTerm.hi + ' / ' + branchTerm.en }} <span class="req">*</span></label>
         <select id="fwBranch" formControlName="branchId" (change)="onBranchChange()" [class.has-error]="isInvalid('branchId')">
           <option value="" disabled>{{
             loadingBranches ? 'लोड हो रहा है… / Loading…'
@@ -70,11 +70,11 @@
             : hasOffices && !form.controls.officeId.value ? '-- पहले कार्यालय चुनें / Select office first --'
             : hasOffices && showOfficeUnit && !form.controls.officeUnitId.value ? '-- पहले अधिकारी चुनें / Select officer first --'
             : isDepartment && branches.length ? '-- विभाग चुनें / Select department --'
-            : branches.length ? '-- शाखा चुनें / Select branch --'
-            : '-- इस श्रेणी में कोई शाखा नहीं / No branch in this category --' }}</option>
+            : branches.length ? '-- ' + branchTerm.hi + ' चुनें / Select ' + branchTerm.enLower + ' --'
+            : '-- इस श्रेणी में कोई ' + branchTerm.hi + ' नहीं / No ' + branchTerm.enLower + ' in this category --' }}</option>
           <option *ngFor="let b of branches" [value]="b.id">{{ b.label }}</option>
         </select>
-        <span class="fw-error" *ngIf="isInvalid('branchId')">{{ isDepartment ? 'कृपया विभाग चुनें / Please select a department.' : 'कृपया शाखा चुनें / Please select a branch.' }}</span>
+        <span class="fw-error" *ngIf="isInvalid('branchId')">{{ isDepartment ? 'कृपया विभाग चुनें / Please select a department.' : 'कृपया ' + branchTerm.hi + ' चुनें / Please select a ' + branchTerm.enLower + '.' }}</span>
       </div>
 
       <!-- 3. Department: its email, filled in automatically -->
@@ -92,7 +92,7 @@
         <select id="fwType" formControlName="complaintTypeId" [class.has-error]="isInvalid('complaintTypeId')">
           <option value="" disabled>{{
             loadingTypes ? 'लोड हो रहा है… / Loading…'
-            : !form.controls.branchId.value ? '-- पहले शाखा चुनें / Select branch first --'
+            : !form.controls.branchId.value ? '-- पहले ' + branchTerm.hi + ' चुनें / Select ' + branchTerm.enLower + ' first --'
             : complaintTypes.length ? '-- प्रकार चुनें / Select type --'
             : '-- कोई प्रकार उपलब्ध नहीं / No type available --' }}</option>
           <option *ngFor="let t of complaintTypes" [value]="t.id">{{ t.label }}</option>

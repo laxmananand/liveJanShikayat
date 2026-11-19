@@ -640,7 +640,7 @@ namespace janshikayat.BAL.Services
                       SELECT 'F' + CAST(f.ID AS VARCHAR(20)) AS Id, CAST(NULL AS VARCHAR(21)) AS ParentId, 1 AS Level,
                              @AdminDepartment AS FromLabel, f.OfficeId AS ToOfficeId, f.OfficeUnitCode AS ToUnitCode,
                              COALESCE(f.OfficeUnitLabel, f.OfficeLabel, f.PrashakhaLabel, f.BranchLabel, '') AS ToLabel,
-                             f.BranchLabel, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt, f.ID AS Seq
+                             f.CategoryLabel, f.BranchLabel, f.ComplaintTypeLabel, f.Remarks, f.ForwardedBy, f.ForwardedDate AS ForwardedAt, f.ID AS Seq
                       FROM Tbl_Applicant_Forward f
                       WHERE f.ApplicantId = @ApplicantId
                       UNION ALL
@@ -649,7 +649,7 @@ namespace janshikayat.BAL.Services
                                   ELSE 'R' + CAST(ch.ParentReforwardId AS VARCHAR(20)) END,
                              ch.Level,
                              rf.FromOfficeLabel, rf.ToOfficeId, rf.ToOfficeUnitCode, rf.ToOfficeLabel,
-                             NULL, NULL, rf.Remarks, rf.ForwardedBy, rf.ForwardedDate, rf.ID
+                             NULL, NULL, NULL, rf.Remarks, rf.ForwardedBy, rf.ForwardedDate, rf.ID
                       FROM chain ch
                       JOIN Tbl_Applicant_Reforward rf ON rf.ID = ch.ID
                   ) h

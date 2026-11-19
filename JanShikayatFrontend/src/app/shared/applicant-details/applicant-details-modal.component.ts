@@ -79,6 +79,15 @@ export class ApplicantDetailsModalComponent implements OnChanges {
     return this.firstHop?.branchLabel || this.forward?.branchLabel || '';
   }
 
+  /** "शाखा" for a Home forward, "विषय" for any other category (same wording as the forward popup) */
+  branchWord(categoryLabel?: string | null): string {
+    return !categoryLabel || categoryLabel.trim().toLowerCase() === 'home' ? 'शाखा' : 'विषय';
+  }
+
+  get branchHeading(): string {
+    return this.branchWord(this.firstHop?.categoryLabel || this.forward?.categoryLabel);
+  }
+
   get complaintType(): string {
     return this.firstHop?.complaintTypeLabel || this.forward?.complaintTypeLabel || '';
   }
