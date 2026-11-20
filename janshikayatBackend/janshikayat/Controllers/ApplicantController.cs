@@ -78,7 +78,9 @@ namespace janshikayat.Controllers
 
             if (flag > 0)
             {
-                NotifyApplicant(applicant.Mobile_Number, applicant.Mobile_Number2, applicationNo, RegisteredSmsTemplate);
+                // Template: श्री/श्रीमती {name}, ... आवेदन संख्या {applicationNo} ...
+                NotifyApplicant(applicant.Mobile_Number, applicant.Mobile_Number2, applicationNo, RegisteredSmsTemplate,
+                    SmsName(applicant.Applicant_Name), applicationNo);
                 return Ok(new { Flag = flag, Message = message, ApplicationNo = applicationNo });
             }
             else
@@ -458,7 +460,7 @@ namespace janshikayat.Controllers
                 return NotFound(new { status = "false", message = "Application not found or not forwarded yet." });
             }
             var contact = _IComplain.GetSmsContact(request.ApplicantId);
-            NotifyApplicant(contact.MobileNumber, contact.MobileNumber2, contact.ApplicationNo, ClosedSmsTemplate);
+            NotifyApplicant(contact.MobileNumber, contact.MobileNumber2, contact.ApplicationNo, ClosedSmsTemplate, contact.ApplicationNo);
 
             return Ok(new { status = "true", message = "Application closed.", data = saved });
         }
@@ -487,7 +489,8 @@ namespace janshikayat.Controllers
         // SMS with the application number to the applicant's mobile (the second one when the first is missing
         // or not 10 digits). Sent in the background so a slow gateway does not hold up the response; a failed
         // or skipped SMS is only logged, since the application itself is already saved.
-        private void NotifyApplicant(string? mobileNumber, string? mobileNumber2, string? applicationNo, string templateName)
+        // values fill the template's variables in order (see Otp:Sms:Templates)
+        private void NotifyApplicant(string? mobileNumber, string? mobileNumber2, string? applicationNo, string templateName, params string?[] values)
         {
             var mobile = new[] { mobileNumber, mobileNumber2 }
                 .Select(m => m?.Trim())
@@ -508,13 +511,20 @@ namespace janshikayat.Controllers
             {
                 try
                 {
-                    await _smsSender.SendMessageAsync(mobile, applicationNo, templateName, CancellationToken.None);
+                    await _smsSender.SendMessageAsync(mobile, templateName, values.Select(v => v ?? "").ToArray(), CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "{Template} SMS for application {ApplicationNo} failed.", templateName, applicationNo);
                 }
             });
+        }
+
+        // A DLT {#alp#} variable takes at most 30 characters, so a longer name is cut to fit
+        private static string SmsName(string? name)
+        {
+            var trimmed = string.Join(' ', (name ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            return trimmed.Length <= 30 ? trimmed : trimmed[..30].TrimEnd();
         }
 
         // Policy name registered in Program.cs

@@ -94,9 +94,19 @@ public sealed partial class MobileSevaOtpSender(IConfiguration configuration, IH
     /// the SMS. A template with Hindi (non-ASCII) text goes as a Unicode SMS.
     /// </summary>
     public Task<bool> SendMessageAsync(string mobileNumber, string value, string templateName, CancellationToken cancellationToken)
-        => SendTemplateAsync(mobileNumber, value, templateName, isOtp: false, cancellationToken);
+        => SendTemplateAsync(mobileNumber, [value], templateName, isOtp: false, cancellationToken);
 
-    private async Task<bool> SendTemplateAsync(string mobileNumber, string value, string templateName, bool isOtp, CancellationToken cancellationToken)
+    /// <summary>
+    /// Sends a notification with a template of several variables; values fill its variables in
+    /// order (the first value goes in the first {#..#}, and so on), and there must be one per variable.
+    /// </summary>
+    public Task<bool> SendMessageAsync(string mobileNumber, string templateName, string[] values, CancellationToken cancellationToken)
+        => SendTemplateAsync(mobileNumber, values, templateName, isOtp: false, cancellationToken);
+
+    private Task<bool> SendTemplateAsync(string mobileNumber, string value, string templateName, bool isOtp, CancellationToken cancellationToken)
+        => SendTemplateAsync(mobileNumber, [value], templateName, isOtp, cancellationToken);
+
+    private async Task<bool> SendTemplateAsync(string mobileNumber, string[] values, string templateName, bool isOtp, CancellationToken cancellationToken)
     {
         if (mobileNumber is not { Length: 10 } || !mobileNumber.All(char.IsAsciiDigit))
         {
@@ -108,7 +118,15 @@ public sealed partial class MobileSevaOtpSender(IConfiguration configuration, IH
             throw new ArgumentException($"Otp:Sms:Templates has no template {templateName}.", nameof(templateName));
         }
 
-        var message = Variable().Replace(template.Text, value.Replace("$", "$$"), 1);
+        var variableCount = Variable().Count(template.Text);
+        if (values.Length != variableCount)
+        {
+            throw new ArgumentException($"Template {templateName} has {variableCount} variable(s) but {values.Length} value(s) were given.", nameof(values));
+        }
+
+        // Each variable in turn gets the next value
+        var next = 0;
+        var message = Variable().Replace(template.Text, _ => values[next++]);
 
         if (mode.DummyCode is not null)
         {
@@ -209,10 +227,10 @@ public sealed partial class MobileSevaOtpSender(IConfiguration configuration, IH
             throw new InvalidOperationException($"{section.Path}:TemplateId must be the template id given by DLT, in digits.");
         }
 
-        // The OTP or the application number is the template's one variable.
-        if (text is null || Variable().Count(text) != 1)
+        // At least one variable (the OTP, the application number, the applicant's name ...)
+        if (text is null || Variable().Count(text) < 1)
         {
-            throw new InvalidOperationException($"{section.Path}:Text must be the registered template text, with one variable such as {{#var#}} where the value goes.");
+            throw new InvalidOperationException($"{section.Path}:Text must be the registered template text, with at least one variable such as {{#var#}} where a value goes.");
         }
 
         return new SmsTemplate(templateId, text);
