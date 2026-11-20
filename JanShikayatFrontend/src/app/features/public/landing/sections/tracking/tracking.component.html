@@ -40,7 +40,7 @@
           </div>
 
           <!-- Live result from the database -->
-          <div class="track-result" *ngIf="result">
+          <div class="track-result" *ngIf="result" #trackCard>
             <div class="tr-head">
               <div class="tr-ref">
                 <i class="fa-solid fa-file-shield"></i>
@@ -97,6 +97,10 @@
                 </div>
               </li>
             </ol>
+
+            <button type="button" class="tr-download" (click)="download(trackCard)" title="डाउनलोड करें" aria-label="डाउनलोड करें">
+              <i class="fa-solid fa-download"></i>
+            </button>
           </div>
         </form>
       </div>

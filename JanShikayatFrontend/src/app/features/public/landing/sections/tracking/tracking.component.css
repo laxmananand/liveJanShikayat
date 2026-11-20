@@ -192,6 +192,28 @@
   cursor: pointer;
 }
 
+.track-result {
+  position: relative;
+}
+
+.tr-download {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  border: 0;
+  background: #e7ecf6;
+  color: #4a5a7c;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tr-download:hover {
+  background: #d4dbec;
+  color: #101d3b;
+}
+
 .tr-close:hover {
   background: #d4dbec;
   color: #101d3b;

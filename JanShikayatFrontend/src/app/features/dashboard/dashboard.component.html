@@ -40,13 +40,6 @@
       <span class="hero-value">{{ summary.totalComplaints }}</span>
       <span class="hero-meta">आज: <b>{{ receivedToday }}</b> · इस माह: <b>{{ receivedThisMonth }}</b></span>
     </div>
-    <div class="hero-side" *ngIf="canSeeOnlineComplaints">
-      <button type="button" class="online-pill" (click)="$event.stopPropagation(); navigateToOnline()">
-        <i class="fa-solid fa-globe"></i>
-        <span>नागरिक पोर्टल से प्राप्त: <b>{{ summary.onlineSubmissions }}</b></span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
-    </div>
     <i class="fa-solid fa-arrow-right hero-arrow"></i>
   </div>
 

@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PublicService } from '../../../../../core/services/public.service';
 import { PublicTracking } from '../../../../../core/models/models';
 import { statusLabel, statusProgress } from '../../../../../core/utils/labels';
+import { toPng } from 'html-to-image';
 
 @Component({
   selector: 'app-tracking',
@@ -68,6 +69,19 @@ export class TrackingComponent implements OnInit {
   clear(): void {
     this.result = null;
     this.errorMessage = '';
+  }
+
+  // Saves the status card as a PNG, leaving out the close/download buttons.
+  async download(card: HTMLElement): Promise<void> {
+    const dataUrl = await toPng(card, {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      filter: (node) => !(node instanceof HTMLElement && (node.classList.contains('tr-close') || node.classList.contains('tr-download')))
+    });
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${this.result?.complaintNumber || 'complaint'}-status.png`;
+    a.click();
   }
 
   timelineLabel(index: number, status: string): string {

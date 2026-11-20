@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
     <footer class="footer-strip">
       <p>
         <span>© {{ year }}</span>
-        <span>गृह विभाग जन शिकायत निदान पोर्टल</span>
+        <span>गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल</span>
         <span>अधिकृत विभागीय प्रणाली</span>
         <span>सर्वाधिकार सुरक्षित</span>
       </p>

@@ -26,18 +26,18 @@ export const routes: Routes = [
     path: '',
     component: PublicLayoutComponent,
     children: [
-      { path: '', pathMatch: 'full', component: LandingComponent, title: 'गृह विभाग जन शिकायत निदान पोर्टल | बिहार सरकार' },
+      { path: '', pathMatch: 'full', component: LandingComponent, title: 'गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल' },
       {
         path: 'register',
         component: PublicRegisterComponent,
         canActivate: [() => FEATURES.onlineComplaint || inject(Router).createUrlTree(['/'])],
-        title: 'ऑनलाइन शिकायत दर्ज करें | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'ऑनलाइन शिकायत दर्ज करें | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       }
     ]
   },
 
   // ── Department login ──
-  { path: 'login', component: LoginComponent, canActivate: [guestGuard], title: 'विभागीय लॉगिन | गृह विभाग जन शिकायत निदान पोर्टल' },
+  { path: 'login', component: LoginComponent, canActivate: [guestGuard], title: 'विभागीय लॉगिन | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल' },
 
   // ── Officer dashboard (authenticated) ──
   {
@@ -45,14 +45,14 @@ export const routes: Routes = [
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', component: DashboardComponent, title: 'डैशबोर्ड | गृह विभाग जन शिकायत निदान पोर्टल' },
-      { path: 'complaints', component: ComplaintListComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायतें | गृह विभाग जन शिकायत निदान पोर्टल' },
+      { path: 'dashboard', component: DashboardComponent, title: 'डैशबोर्ड | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल' },
+      { path: 'complaints', component: ComplaintListComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायतें | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल' },
       {
         path: 'complaints/entry',
         component: EntryPageComponent,
         // Only Admin may create new entries; the backend enforces the same rule
         canActivate: [roleGuard(['SuperAdmin'])],
-        title: 'शिकायत प्रविष्टि (Entry Page) | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'शिकायत प्रविष्टि (Entry Page) | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       },
       {
         path: 'entry',
@@ -63,12 +63,12 @@ export const routes: Routes = [
         path: 'complaints/finalised',
         component: ApplicantRecordsComponent,
         canActivate: [roleGuard(['SuperAdmin'])],
-        title: 'अंतिम आवेदन | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'अंतिम आवेदन | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       },
       {
         path: 'complaints/forwarded',
         component: ForwardedApplicationsComponent,
-        title: 'अग्रेषित आवेदन | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'अग्रेषित आवेदन | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       },
       {
         path: 'complaints/responses',
@@ -76,7 +76,7 @@ export const routes: Routes = [
         // Admin: replies to its forwards. DM / SP: replies by the offices under them (SDO / DCLR / SDPO / CO / थाना).
         // The backend decides which rows each sees and who may close.
         canActivate: [roleGuard(['SuperAdmin', 'DistrictMagistrate', 'SuperintendentOfPolice'])],
-        title: 'प्राप्त प्रतिवेदन | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'प्राप्त प्रतिवेदन | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       },
       {
         path: 'complaints/records',
@@ -86,7 +86,7 @@ export const routes: Routes = [
       {
         path: 'complaints/tracking',
         component: TrackingPageComponent,
-        title: 'शिकायत ट्रैकिंग (Grievance Tracking) | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'शिकायत ट्रैकिंग (Grievance Tracking) | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       },
       {
         path: 'tracking',
@@ -102,15 +102,15 @@ export const routes: Routes = [
         path: 'reports/pendency',
         component: PendencyReportComponent,
         // Every login; the server limits the report to the user's own hierarchy
-        title: 'पेंडेंसी रिपोर्ट (Pendency Report) | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'पेंडेंसी रिपोर्ट (Pendency Report) | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       },
-      { path: 'complaints/:id', component: ComplaintDetailComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायत विवरण | गृह विभाग जन शिकायत निदान पोर्टल' },
+      { path: 'complaints/:id', component: ComplaintDetailComponent, canActivate: [roleGuard(['SuperAdmin'])], title: 'शिकायत विवरण | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल' },
       {
         path: 'admin/users',
         component: UserManagementComponent,
         // Temporarily hidden (FEATURES.userManagement): a direct URL goes to the dashboard
         canActivate: [() => FEATURES.userManagement || inject(Router).createUrlTree(['/dashboard']), roleGuard(['SuperAdmin'])],
-        title: 'उपयोगकर्ता प्रबंधन | गृह विभाग जन शिकायत निदान पोर्टल'
+        title: 'उपयोगकर्ता प्रबंधन | गृह विभाग बिहार सरकार, जन शिकायत निदान पोर्टल'
       }
     ]
   },
