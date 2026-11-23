@@ -24,8 +24,10 @@
   padding: 25px 0;
 }
 
+/* No padding change here: the header is sticky (in flow), so shrinking it on scroll
+   moves the page, scroll anchoring pulls scrollY back under the 20px threshold, and the
+   header flips between states (wobble). Keep the height fixed; only the look changes. */
 .site-header.is-scrolled .main-navbar {
-  padding: 10px 0;
   background: #e7ecf6;
   border-bottom-color: rgba(23, 75, 217, 0.2);
   box-shadow: 0 6px 16px rgba(16, 29, 59, 0.10);

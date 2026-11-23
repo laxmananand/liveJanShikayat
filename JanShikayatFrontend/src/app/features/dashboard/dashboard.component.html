@@ -36,7 +36,7 @@
   <div class="hero-tile" (click)="navigateToComplaints()" role="link" tabindex="0" (keyup.enter)="navigateToComplaints()">
     <div class="hero-icon"><i class="fa-solid fa-layer-group"></i></div>
     <div>
-      <span class="hero-label">{{ isAdmin ? 'कुल शिकायतें' : 'मुझे अग्रेषित शिकायतें' }}</span>
+      <span class="hero-label">{{ isAdmin ? 'कुल पंजीकृत शिकायतें' : 'मुझे अग्रेषित शिकायतें' }}</span>
       <span class="hero-value">{{ summary.totalComplaints }}</span>
       <span class="hero-meta">आज: <b>{{ receivedToday }}</b> · इस माह: <b>{{ receivedThisMonth }}</b></span>
     </div>
@@ -69,10 +69,10 @@
     <ng-container *ngIf="!pendencyLoading && !pendencyError">
       <div class="pendency-chips">
         <button type="button" class="pendency-chip" (click)="openPendencyList('')">
-          <span>कुल आवेदन</span><b>{{ pendencyTotals.total }}</b>
+          <span>कुल पंजीकृत आवेदन</span><b>{{ pendencyTotals.total }}</b>
         </button>
         <button type="button" class="pendency-chip" *ngIf="isAdmin" (click)="openPendencyList('registered')">
-          <span>पंजीकृत</span><b>{{ pendencyTotals.registered }}</b>
+          <span>नये पंजीकृत</span><b>{{ pendencyTotals.registered }}</b>
         </button>
         <button type="button" class="pendency-chip warn" (click)="openPendencyList('forwarded')">
           <span>अग्रेषित</span><b>{{ pendencyTotals.forwarded }}</b>
@@ -91,7 +91,7 @@
             <tr>
               <th>जिला</th>
               <th class="num">कुल</th>
-              <th class="num" *ngIf="isAdmin">पंजीकृत</th>
+              <th class="num" *ngIf="isAdmin">नये पंजीकृत</th>
               <th class="num">अग्रेषित</th>
               <th class="num">लंबित</th>
               <th class="num">निष्पादित</th>

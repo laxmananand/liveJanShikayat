@@ -37,7 +37,7 @@ const STATUS_TEXT: Record<PendencyApplication['status'], string> = {
 
 const STATUS_FILTER_TEXT: Record<PendencyStatus, string> = {
   '': 'सभी आवेदन',
-  registered: 'पंजीकृत',
+  registered: 'नये पंजीकृत',
   forwarded: 'अग्रेषित',
   pending: 'लंबित',
   disposed: 'निष्पादित'
@@ -302,7 +302,7 @@ export class PendencyReportComponent {
     const header = this.listView
       ? ['क्रम सं.', 'आवेदन संख्या', 'आवेदक का नाम', 'पिता / पति का नाम', 'मोबाइल नंबर', 'जिला', 'अनुमंडल', 'अंचल', 'थाना',
          'आवेदन प्राप्ति की तिथि', 'अग्रेषित', 'शिकायत का प्रकार', 'अग्रेषित दिनांक', 'स्थिति', 'निष्पादन दिनांक', 'दिन']
-      : ['क्रम सं.', this.level.label, 'कुल आवेदन', ...(this.isAdmin ? ['पंजीकृत'] : []), 'अग्रेषित', 'लंबित', 'निष्पादित'];
+      : ['क्रम सं.', this.level.label, 'कुल पंजीकृत आवेदन', ...(this.isAdmin ? ['नये पंजीकृत'] : []), 'अग्रेषित', 'लंबित', 'निष्पादित'];
 
     const day = (v: string | null) => (v ? v.slice(0, 10).split('-').reverse().join('/') : '');
     const body: (string | number)[][] = this.listView

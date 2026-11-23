@@ -82,7 +82,7 @@ export class DashboardComponent implements OnInit {
         this.tiles = [
           // Other logins only receive forwarded applications, so only Admin has Registered ones
           ...(this.isAdmin
-            ? [{ status: 'Registered', label: 'पंजीकृत', icon: 'fa-file-circle-check', tone: 'navy', value: s.registered }]
+            ? [{ status: 'Registered', label: 'नये पंजीकृत शिकायतें', icon: 'fa-file-circle-check', tone: 'navy', value: s.registered }]
             : []),
           { status: 'Forwarded', label: 'अग्रेषित', icon: 'fa-share-nodes', tone: 'violet', value: s.forwarded },
           { status: 'Pending', label: 'लंबित', icon: 'fa-hourglass-half', tone: 'amber', value: s.pending },
