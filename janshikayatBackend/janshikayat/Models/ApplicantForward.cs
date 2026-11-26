@@ -47,7 +47,25 @@ namespace janshikayat.Models
         public int? OfficeUnitCode { get; set; }
         [StringLength(300)]
         public string? OfficeUnitLabel { get; set; }
+        // Home Department sections (Mst_Prashakha.ID) to tag, for monitoring only. Allowed only on a forward to a
+        // district-level / regional office (DM, SP, Commissioner, IG, DIG); the label is read from Mst_Prashakha.
+        [MaxLength(10)]
+        public List<int>? TagPrashakhaIds { get; set; }
+
+        public IReadOnlyList<int> TagIds() => (TagPrashakhaIds ?? new List<int>()).Distinct().ToList();
     }
+
+    // A Home Department section tagged on a forward (Tbl_Applicant_Section_Tag): its login sees the application
+    // (view only) to monitor it and follow up with the district authority
+    public class SectionTagDto
+    {
+        public long ApplicantId { get; set; }
+        public int PrashakhaId { get; set; }
+        public string PrashakhaLabel { get; set; } = string.Empty;
+        public string TaggedBy { get; set; } = string.Empty;
+        public DateTime TaggedAt { get; set; }
+    }
+
     public class ApplicantForwardDto
     {
         public long ApplicantId { get; set; }
@@ -77,6 +95,8 @@ namespace janshikayat.Models
         public string? ClosureRemarks { get; set; }
         // Onward forwards by the receiving Commissioner / IG / DIG to a DM and / or SP (Tbl_Applicant_Reforward)
         public List<ReforwardDto> Reforwards { get; set; } = new();
+        // Home Department sections tagged for monitoring (Tbl_Applicant_Section_Tag)
+        public List<SectionTagDto> SectionTags { get; set; } = new();
     }
 
     // Regional office kinds (Mst_Regional_Office.Office_Id)
@@ -112,6 +132,10 @@ namespace janshikayat.Models
         // Only the DM / SP that received an application closes it, when Admin sent it to a regional office or a DM / SP
         public static bool CanCloseApplications(int? officeId) =>
             officeId is DistrictMagistrate or SuperintendentOfPolice;
+
+        // Admin's forward to one of these may also tag Home Department sections (020_section_tag.sql)
+        public static readonly int[] SectionTaggable =
+            { Commissioner, DistrictMagistrate, InspectorGeneral, DeputyInspectorGeneral, SuperintendentOfPolice };
     }
 
     // Onward forward of a received application to one or more offices below the sender, each office at most once per

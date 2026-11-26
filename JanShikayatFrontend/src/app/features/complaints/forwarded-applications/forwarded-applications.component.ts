@@ -124,6 +124,25 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
   closing: ForwardedRow | null = null;
 
   /**
+   * Section login, and the application was forwarded to a DM / SP / … with this section only tagged on it:
+   * view only (monitor status / action taken), no remark or close.
+   */
+  isTagOnly(row: ForwardedRow): boolean {
+    const mine = this.auth.currentUser()?.prashakhaId;
+    return !this.isAdmin && mine != null && row.forward.prashakhaId !== mine &&
+      (row.forward.sectionTags ?? []).some((t) => t.prashakhaId === mine);
+  }
+
+  /** "Special(Prashakha-C)" etc. for the Forwarded To column */
+  tagLabels(f: ForwardRecord): string {
+    return (f.sectionTags ?? []).map((t) => t.prashakhaLabel).join(', ');
+  }
+
+  get hasTaggedRows(): boolean {
+    return this.rows.some((r) => this.isTagOnly(r));
+  }
+
+  /**
    * Only a branch / section / department forward is closed here (the server checks it is this login's latest forward)
    */
   canCloseRow(row: ForwardedRow): boolean {
@@ -260,7 +279,8 @@ export class ForwardedApplicationsComponent implements OnInit, OnDestroy {
           r.mobileNumber.includes(q) ||
           r.districtName.toLowerCase().includes(q) ||
           f.branchLabel.toLowerCase().includes(q) ||
-          f.complaintTypeLabel.toLowerCase().includes(q))
+          f.complaintTypeLabel.toLowerCase().includes(q) ||
+          this.tagLabels(f).toLowerCase().includes(q))
     );
   }
 

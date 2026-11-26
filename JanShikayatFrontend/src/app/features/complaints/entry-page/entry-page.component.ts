@@ -96,7 +96,7 @@ export class EntryPageComponent implements OnInit, OnDestroy {
   // Application sources from the image
   applicationSources = [
     { id: 'CPGRAMS', label: 'CPGRAMS' },
-    { id: 'CM Dashboard', label: 'CM Dashboard' },
+    { id: 'Sankalp Portal', label: 'Sankalp Portal' },
     { id: 'Sahyog Portal', label: 'Sahyog Portal' },
     { id: 'PMO Grievance Portal', label: 'PMO Grievance Portal' },
     { id: 'Offline', label: 'Offline' },

@@ -100,6 +100,16 @@
         <span class="fw-error" *ngIf="isInvalid('complaintTypeId')">कृपया शिकायत का प्रकार चुनें / Please select a complaint type.</span>
       </div>
 
+      <!-- DM / SP / Commissioner / IG / DIG: optionally tag a Home Department section to monitor it -->
+      <div class="fw-field" *ngIf="canTagSection">
+        <label for="fwTagSection"><i class="fa-solid fa-tag"></i> प्रशाखा चुनें / Select Section <small>(वैकल्पिक / optional)</small></label>
+        <select id="fwTagSection" formControlName="tagPrashakhaId">
+          <option value="">{{ loadingPrashakhas ? 'लोड हो रहा है… / Loading…' : '-- कोई नहीं / None --' }}</option>
+          <option *ngFor="let p of prashakhas" [value]="p.id">{{ p.label }}</option>
+        </select>
+        <small class="fw-note"><i class="fa-solid fa-circle-info"></i> टैग की गई प्रशाखा इस आवेदन की स्थिति व कार्रवाई देख सकेगी (केवल निगरानी)। / The tagged section can monitor its status and action taken (view only).</small>
+      </div>
+
       <!-- Remarks -->
       <div class="fw-field">
         <label for="fwRemarks">टिप्पणी / Remarks <small>(वैकल्पिक / optional)</small></label>

@@ -37,10 +37,32 @@ export interface ForwardRecord {
   closureRemarks?: string | null;
   /** Onward forwards by the receiving Commissioner / IG / DIG to a DM and / or SP */
   reforwards?: ReforwardRecord[];
+  /** Home Department sections tagged for monitoring (forwards to DM / SP / Commissioner / IG / DIG only) */
+  sectionTags?: SectionTag[];
+  /** Sent only when forwarding: Mst_Prashakha ids to tag */
+  tagPrashakhaIds?: number[];
+}
+
+/** A Home Department section (Mst_Prashakha) tagged on a forward: its login sees the application, view only. */
+export interface SectionTag {
+  applicantId: number;
+  prashakhaId: number;
+  prashakhaLabel: string;
+  taggedBy: string;
+  taggedAt: string;
 }
 
 /** Mst_Regional_Office.Office_Id */
 export const OFFICE_KIND = { Commissioner: 1, DM: 2, IG: 3, DIG: 4, SP: 5, SDO: 6, DCLR: 7, SDPO: 8, CO: 9, Thana: 10, Department: 11 } as const;
+
+/** Office kinds whose forward may also tag Home Department sections (OfficeKind.SectionTaggable on the server). */
+export const SECTION_TAGGABLE_KINDS: readonly number[] = [
+  OFFICE_KIND.Commissioner,
+  OFFICE_KIND.DM,
+  OFFICE_KIND.IG,
+  OFFICE_KIND.DIG,
+  OFFICE_KIND.SP
+];
 
 /** The last level: CO / थाना receive and reply (remark, optional PDF) but forward no further. */
 export function isLastLevelOffice(officeId: number | null | undefined): boolean {
@@ -145,7 +167,7 @@ export function forwardRecipient(f: Pick<ForwardRecord, 'branchLabel' | 'prashak
 }
 
 /** Fields the client sends; the server fills in who forwarded it and when. */
-export type ForwardPayload = Omit<ForwardRecord, 'forwardedBy' | 'forwardedAt' | 'status' | 'firstResponseAt' | 'isDisposed' | 'closedAt' | 'closedBy' | 'closureRemarks'>;
+export type ForwardPayload = Omit<ForwardRecord, 'forwardedBy' | 'forwardedAt' | 'status' | 'firstResponseAt' | 'isDisposed' | 'closedAt' | 'closedBy' | 'closureRemarks' | 'sectionTags'>;
 
 /**
  * Responses page: a forwarded application with replies. Admin: replies by any receiving office; DM / SP: replies by

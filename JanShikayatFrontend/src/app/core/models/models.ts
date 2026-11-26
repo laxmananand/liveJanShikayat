@@ -115,7 +115,7 @@ export interface SaveApplicantPayload {
   areaType?: string; // R = Rural, U = Urban; optional
   ward?: number; // optional
   mohalla?: string; // required for Urban
-  applicationSource: string; // CPGRAMS | CM Dashboard | Sahyog Portal | PMO Grievance Portal | Offline | Other
+  applicationSource: string; // CPGRAMS | Sankalp Portal | Sahyog Portal | PMO Grievance Portal | Offline | Other
   createdBy?: string;
   photograph: File;
 }

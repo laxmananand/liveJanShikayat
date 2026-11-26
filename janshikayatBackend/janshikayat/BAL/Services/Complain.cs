@@ -148,16 +148,20 @@ namespace janshikayat.BAL.Services
         // branch / complaint type does not match the Mst_Category -> Mst_Branch -> Mst_Complain_Sub_Type mapping.
         // The Department category has no branch / complaint type: it goes to one Mst_Departments row instead, saved as
         // OfficeId = OfficeKind.Department / OfficeUnitCode = DepartmentId with BranchId / ComplaintTypeId "0".
+        // Home Department sections in request.TagPrashakhaIds are tagged in the same transaction; any tag that is not a
+        // Mst_Prashakha row, or a forward that is not to a DM / SP / Commissioner / IG / DIG, saves nothing (null).
         public ApplicantForwardDto? ForwardApplicant(ApplicantForwardRequest request, string forwardedBy, string? ip)
         {
             using var conn = _context.CreateConnection();
+            conn.Open();
+            using var tx = conn.BeginTransaction();
 
             var parameters = new DynamicParameters(request);
             parameters.Add("@ForwardedBy", forwardedBy);
             parameters.Add("@ForwardedIp", ip);
             parameters.Add("@DepartmentOffice", OfficeKind.Department);
 
-            return conn.QueryFirstOrDefault<ApplicantForwardDto>(
+            var saved = conn.QueryFirstOrDefault<ApplicantForwardDto>(
                 @"DECLARE @IsDepartment bit = CASE WHEN EXISTS (SELECT 1 FROM Mst_Category c
                                                                WHERE c.Category_Id = TRY_CAST(@CategoryId AS INT)
                                                                  AND c.Category = 'Department') THEN 1 ELSE 0 END;
@@ -207,7 +211,43 @@ namespace janshikayat.BAL.Services
                                                             END) = 1) THEN 1 ELSE 0 END
                               ELSE CASE WHEN @OfficeId IS NULL AND @OfficeUnitCode IS NULL THEN 1 ELSE 0 END
                          END) = 1))",
-                parameters);
+                parameters, tx);
+            if (saved == null)
+            {
+                tx.Rollback();
+                return null;
+            }
+
+            foreach (var prashakhaId in request.TagIds())
+            {
+                var tag = conn.QueryFirstOrDefault<SectionTagDto>(
+                    @"INSERT INTO Tbl_Applicant_Section_Tag (ApplicantId, PrashakhaId, PrashakhaLabel, TaggedBy, TaggedIp)
+                      OUTPUT inserted.ApplicantId, inserted.PrashakhaId, inserted.PrashakhaLabel, inserted.TaggedBy,
+                             inserted.TaggedDate AS TaggedAt
+                      SELECT TOP 1 @ApplicantId, CAST(p.ID AS INT), p.Name, @TaggedBy, @TaggedIp
+                      FROM Mst_Prashakha p
+                      WHERE CAST(p.ID AS INT) = @PrashakhaId
+                        AND EXISTS (SELECT 1 FROM Tbl_Applicant_Forward f
+                                    WHERE f.ApplicantId = @ApplicantId AND f.OfficeId IN @Taggable)",
+                    new
+                    {
+                        request.ApplicantId,
+                        PrashakhaId = prashakhaId,
+                        TaggedBy = forwardedBy,
+                        TaggedIp = ip,
+                        Taggable = OfficeKind.SectionTaggable
+                    },
+                    tx);
+                if (tag == null)
+                {
+                    tx.Rollback();
+                    return null;
+                }
+                saved.SectionTags.Add(tag);
+            }
+
+            tx.Commit();
+            return saved;
         }
 
         // An application is forwarded only once (UX_Applicant_Forward_ApplicantId)
@@ -277,8 +317,19 @@ namespace janshikayat.BAL.Services
                     new { Ids = forwards.Select(f => f.ApplicantId).Distinct().ToArray() })
                 .ToLookup(r => r.ApplicantId);
 
+            var tags = conn.Query<SectionTagDto>(
+                    @"SELECT t.ApplicantId, t.PrashakhaId, t.PrashakhaLabel, t.TaggedBy, t.TaggedDate AS TaggedAt
+                      FROM Tbl_Applicant_Section_Tag t
+                      WHERE t.ApplicantId IN @Ids
+                      ORDER BY t.ID",
+                    new { Ids = forwards.Select(f => f.ApplicantId).Distinct().ToArray() })
+                .ToLookup(t => t.ApplicantId);
+
             foreach (var f in forwards)
+            {
                 f.Reforwards = byApplicant[f.ApplicantId].ToList();
+                f.SectionTags = tags[f.ApplicantId].ToList();
+            }
         }
 
         private const string ReforwardColumns =
@@ -443,11 +494,13 @@ namespace janshikayat.BAL.Services
         //   Admin all; Branch / Prashakha their forwards; Commissioner its own forwards and those to the DM offices
         //   of its division; DM / IG / DIG / SP / Department (11) their own forwards; every office also those forwarded onward to it
         //   (Tbl_Applicant_Reforward: DM / SP from Commissioner / IG / DIG, SDO / DCLR from DM, SDPO from SP,
-        //   CO from SDO / DCLR, थाना from SDPO)
+        //   CO from SDO / DCLR, थाना from SDPO); a Prashakha also those tagged to it (Tbl_Applicant_Section_Tag, view only)
         private const string ScopeFilter =
             @"(@All = 1
                OR (@BranchId IS NOT NULL AND f.BranchId = CAST(@BranchId AS VARCHAR(50)))
                OR (@PrashakhaId IS NOT NULL AND f.PrashakhaId = @PrashakhaId)
+               OR (@PrashakhaId IS NOT NULL AND EXISTS (SELECT 1 FROM Tbl_Applicant_Section_Tag st
+                                                        WHERE st.ApplicantId = f.ApplicantId AND st.PrashakhaId = @PrashakhaId))
                OR (@OfficeId = 1 AND ((f.OfficeId = 1 AND f.OfficeUnitCode = @OfficeUnitCode)
                                       OR (f.OfficeId = 2 AND f.OfficeUnitCode IN (SELECT m.Dist_Code FROM Mst_DM_Office m
                                                                                   WHERE m.Division_Code = @OfficeUnitCode))))
@@ -876,6 +929,20 @@ namespace janshikayat.BAL.Services
             return conn.ExecuteScalar<bool>(
                 "SELECT CASE WHEN EXISTS (SELECT 1 FROM Tbl_Applicant_Closure WHERE ApplicantId = @ApplicantId) THEN 1 ELSE 0 END",
                 new { ApplicantId = applicantId });
+        }
+
+        // The Prashakha is only tagged on this application (monitoring), not the one it was forwarded to
+        public bool IsSectionTagOnly(long applicantId, int prashakhaId)
+        {
+            using var conn = _context.CreateConnection();
+
+            return conn.ExecuteScalar<bool>(
+                @"SELECT CASE WHEN EXISTS (SELECT 1 FROM Tbl_Applicant_Section_Tag
+                                           WHERE ApplicantId = @ApplicantId AND PrashakhaId = @PrashakhaId)
+                               AND NOT EXISTS (SELECT 1 FROM Tbl_Applicant_Forward
+                                               WHERE ApplicantId = @ApplicantId AND PrashakhaId = @PrashakhaId)
+                              THEN 1 ELSE 0 END",
+                new { ApplicantId = applicantId, PrashakhaId = prashakhaId });
         }
 
         // The closure of an application (null when open), with the office / branch of the login that closed it

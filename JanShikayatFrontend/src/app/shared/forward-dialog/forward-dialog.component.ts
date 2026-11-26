@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApplicantRecord } from '../../core/models/models';
 import { ForwardOption } from '../../core/config/forward-options';
-import { ForwardRecord, ForwardService, OFFICE_KIND } from '../../core/services/forward.service';
+import { ForwardRecord, ForwardService, OFFICE_KIND, SECTION_TAGGABLE_KINDS } from '../../core/services/forward.service';
 import { MasterService } from '../../core/services/master.service';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -20,6 +20,8 @@ const DEPARTMENT_NO_TYPE = 'department';
  * The "Department" category instead lists Mst_Departments and shows that department's email in step 3 for reference;
  * the forward is saved as office kind 11 (OFFICE_KIND.Department) with the DepartmentId, and that department's login
  * (013_department_branch_logins.sql) receives and closes it.
+ * A forward to a DM / SP / Commissioner / IG / DIG may also tag a Home Department section (Mst_Prashakha, optional,
+ * 020_section_tag.sql): that section's login sees the application view-only, to monitor it and follow up.
  */
 @Component({
   selector: 'app-forward-dialog',
@@ -63,8 +65,16 @@ export class ForwardDialogComponent implements OnChanges {
     officeUnitId: [{ value: '', disabled: true }, Validators.required],
     branchId: [{ value: '', disabled: true }, Validators.required],
     complaintTypeId: [{ value: '', disabled: true }, Validators.required],
+    /** Optional: Home Department section to tag (monitoring only) */
+    tagPrashakhaId: [''],
     remarks: ['', Validators.maxLength(500)]
   });
+
+  /** The chosen office is a DM / SP / Commissioner / IG / DIG, so a Home Department section can be tagged. */
+  get canTagSection(): boolean {
+    const officeId = this.form.controls.officeId.value;
+    return this.hasOffices && !!officeId && SECTION_TAGGABLE_KINDS.includes(+officeId);
+  }
 
   /** Mst_Category row whose targets are Mst_Departments (matched by name, as its Category_Id has changed before). */
   get isDepartment(): boolean {
@@ -111,7 +121,7 @@ export class ForwardDialogComponent implements OnChanges {
   ngOnChanges(): void {
     // Every time the popup opens it starts empty
     if (this.record) {
-      this.form.reset({ categoryId: '', prashakhaId: '', officeId: '', officeUnitId: '', branchId: '', complaintTypeId: '', remarks: '' });
+      this.form.reset({ categoryId: '', prashakhaId: '', officeId: '', officeUnitId: '', branchId: '', complaintTypeId: '', tagPrashakhaId: '', remarks: '' });
       this.form.controls.prashakhaId.disable();
       this.form.controls.officeId.disable();
       this.form.controls.officeUnitId.disable();
@@ -157,10 +167,12 @@ export class ForwardDialogComponent implements OnChanges {
     complaintTypeId.disable();
     this.branches = [];
     this.complaintTypes = [];
+    this.form.controls.tagPrashakhaId.reset('');
     const selected = categoryId.value;
     if (!selected) return;
 
-    if (this.isSection) this.loadPrashakhas();
+    // Section: the receiving Prashakha; District Administration / Regional Office: the optional section tag
+    if (this.isSection || this.hasOffices) this.loadPrashakhas();
     if (this.hasOffices) this.loadOffices(+selected);
 
     this.loadingBranches = true;
@@ -244,6 +256,7 @@ export class ForwardDialogComponent implements OnChanges {
     officeUnitId.disable();
     branchId.disable();
     this.officeUnits = [];
+    if (!this.canTagSection) this.form.controls.tagPrashakhaId.reset('');
     const selected = officeId.value;
     if (!selected) return;
 
@@ -356,7 +369,8 @@ export class ForwardDialogComponent implements OnChanges {
           officeId: office ? +office.id : null,
           officeLabel: office?.label ?? null,
           officeUnitCode: officeUnit ? +officeUnit.id : null,
-          officeUnitLabel: officeUnit?.label ?? null
+          officeUnitLabel: officeUnit?.label ?? null,
+          tagPrashakhaIds: this.canTagSection && this.form.controls.tagPrashakhaId.value ? [+this.form.controls.tagPrashakhaId.value] : []
         };
 
     this.forwardService
@@ -374,7 +388,7 @@ export class ForwardDialogComponent implements OnChanges {
               : err?.status === 409
                 ? 'यह आवेदन पहले ही अग्रेषित हो चुका है और लॉक है। / Already forwarded — locked.'
                 : err?.status === 404
-                ? 'आवेदन, प्रशाखा, कार्यालय, शाखा या शिकायत का प्रकार मान्य नहीं है। / Application, Prashakha, office, branch or complaint type not found.'
+                ? 'आवेदन, प्रशाखा, कार्यालय, शाखा, शिकायत का प्रकार या टैग की गई प्रशाखा मान्य नहीं है। / Application, Prashakha, office, branch, complaint type or tagged section not found.'
                 : 'अग्रेषण सहेजा नहीं जा सका। / Could not save the forward.';
         }
       });

@@ -8,6 +8,7 @@
         : canForward ? 'आपके कार्यालय को अग्रेषित आवेदन — इन्हें संबंधित ' + onwardTo.hi + ' को आगे भेज सकते हैं।' + (isDistrictHead ? ' आगे भेजने / टिप्पणी के बाद आवेदन "प्राप्त प्रतिवेदन" में आएगा, जहाँ से उसे बंद (Close) करें।' : '')
         : isBranchLogin ? (isDepartmentLogin ? 'आपके विभाग' : 'आपकी शाखा / प्रशाखा') + ' को अग्रेषित आवेदन — कार्रवाई / टिप्पणी के बाद "Close" से आवेदन बंद (निष्पादित) करें।'
         : 'आपके कार्यालय / शाखा को अग्रेषित आवेदनों की सूची।' }}</p>
+      <p class="sub" *ngIf="hasTaggedRows"><i class="fa-solid fa-tag"></i> "टैग" वाले आवेदन जिला स्तरीय पदाधिकारी को अग्रेषित हैं और आपकी प्रशाखा को केवल निगरानी हेतु टैग किए गए हैं — स्थिति व कार्रवाई "देखें" / "Track" से देखें। / Tagged applications are with the district authority; your section monitors them (view only).</p>
     </div>
   </header>
 
@@ -72,6 +73,9 @@
           <td class="nowrap" data-label="अग्रेषित दिनांक">{{ row.forward.forwardedAt | date: 'dd/MM/yyyy' }}</td>
           <td data-label="अग्रेषित" title="पूरा अग्रेषण विवरण देखने हेतु 'देखें' दबाएँ / Use View for full forwarding details">
             <span class="recipient">{{ recipient(row.forward) }}</span>
+            <small class="tag-note" *ngIf="row.forward.sectionTags?.length" [title]="'टैग की गई प्रशाखा / Tagged section: ' + tagLabels(row.forward)">
+              <br /><i class="fa-solid fa-tag"></i> {{ isTagOnly(row) ? 'टैग / Tagged (निगरानी)' : 'टैग: ' + tagLabels(row.forward) }}
+            </small>
           </td>
           <td data-label="शिकायत का प्रकार">
             {{ row.forward.complaintTypeLabel }}
@@ -92,7 +96,8 @@
             </div>
           </td>
           <td class="col-center col-remarks" data-label="टिप्पणी">
-            <button type="button" class="btn-send" (click)="openDetails(row, true)" title="टिप्पणी देखें / जोड़ें — View / add remarks">
+            <button type="button" class="btn-send" (click)="openDetails(row, !isTagOnly(row))"
+                    [title]="isTagOnly(row) ? 'टिप्पणी देखें (केवल निगरानी) — View remarks (monitoring only)' : 'टिप्पणी देखें / जोड़ें — View / add remarks'">
               <i class="fa-solid fa-comment-dots"></i> Remarks
             </button>
           </td>

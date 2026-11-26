@@ -152,7 +152,7 @@ namespace janshikayat.Controllers
             }
             if (saved == null)
             {
-                return NotFound(new { status = "false", message = "Application, branch, complaint type, Prashakha or office not found." });
+                return NotFound(new { status = "false", message = "Application, branch, complaint type, Prashakha, office or tagged section not found (a section can be tagged only on a forward to DM / SP / Commissioner / IG / DIG)." });
             }
             return Ok(new { status = "true", message = "Application forwarded.", data = saved });
         }
@@ -285,6 +285,12 @@ namespace janshikayat.Controllers
             if (_IComplain.IsClosed(request.ApplicantId))
             {
                 return Conflict(new { status = "false", message = DisposedMessage });
+            }
+            // A section tagged for monitoring only views the application; the district authority replies on it
+            var remarkScope = CurrentScope();
+            if (remarkScope.PrashakhaId is int tagged && _IComplain.IsSectionTagOnly(request.ApplicantId, tagged))
+            {
+                return StatusCode(403, new { status = "false", message = "यह आवेदन आपकी प्रशाखा को केवल निगरानी हेतु टैग है। / This application is tagged to your section for monitoring only." });
             }
 
             string? documentPath = null;

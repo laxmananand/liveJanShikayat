@@ -35,9 +35,9 @@ namespace janshikayat.Models
         // Required only for Urban
         [StringLength(200)]
         public string? Mohalla { get; set; }
-        // CPGRAMS / CM Dashboard / Sahyog Portal / PMO Grievance Portal / Offline / Other (stored for source-wise reports)
+        // CPGRAMS / Sankalp Portal / Sahyog Portal / PMO Grievance Portal / Offline / Other (must match CK_Applicant_Details_Application_Source / Mst_Source)
         [Required]
-        [RegularExpression("^(CPGRAMS|CM Dashboard|Sahyog Portal|PMO Grievance Portal|Offline|Other)$",
+        [RegularExpression("^(CPGRAMS|Sankalp Portal|Sahyog Portal|PMO Grievance Portal|Offline|Other)$",
             ErrorMessage = "Invalid application source.")]
         public string Application_Source { get; set; } = "Offline";
         [Required]
